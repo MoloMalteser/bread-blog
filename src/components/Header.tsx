@@ -31,9 +31,12 @@ const Header = () => {
                 <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                   Features
                 </a>
-                <a href="#about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  About
-                </a>
+                <Link to="/pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  Preise
+                </Link>
+                <Link to="/about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  Über uns
+                </Link>
               </>
             )}
             {userData && (

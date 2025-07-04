@@ -18,6 +18,9 @@ interface Post {
   createdAt: string;
   tags: string[];
   views: number;
+  authorId: string;
+  authorUsername: string;
+  authorDisplayName: string;
 }
 
 const Editor = () => {
@@ -25,6 +28,7 @@ const Editor = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
+  const [user, setUser] = useState<any>(null);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [tags, setTags] = useState<string[]>([]);
@@ -39,18 +43,23 @@ const Editor = () => {
       navigate('/login');
       return;
     }
+    const currentUser = JSON.parse(userData);
+    setUser(currentUser);
 
     // Load existing post if editing
     if (postId) {
       const savedPosts = localStorage.getItem('bread-posts');
       if (savedPosts) {
         const posts: Post[] = JSON.parse(savedPosts);
-        const post = posts.find(p => p.id === postId);
+        const post = posts.find(p => p.id === postId && p.authorId === currentUser.id);
         if (post) {
           setTitle(post.title);
           setContent(post.content);
           setTags(post.tags);
           setIsPublished(post.published);
+        } else {
+          // Post not found or not owned by user
+          navigate('/dashboard');
         }
       }
     }
@@ -79,7 +88,7 @@ const Editor = () => {
   };
 
   const handleSave = async (showToast = true) => {
-    if (!title.trim()) return;
+    if (!title.trim() || !user) return;
 
     setIsSaving(true);
     
@@ -89,17 +98,20 @@ const Editor = () => {
       content: content.trim(),
       excerpt: content.trim().substring(0, 120) + (content.length > 120 ? '...' : ''),
       published: isPublished,
-      createdAt: postId ? new Date().toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+      createdAt: postId ? new Date().toLocaleDateString('de-DE') : new Date().toLocaleDateString('de-DE'),
       tags,
-      views: 0
+      views: 0,
+      authorId: user.id,
+      authorUsername: user.username,
+      authorDisplayName: user.displayName
     };
 
-    // Save to localStorage (in real app this would be database)
+    // Save to localStorage
     const savedPosts = localStorage.getItem('bread-posts');
     let posts: Post[] = savedPosts ? JSON.parse(savedPosts) : [];
     
     if (postId) {
-      posts = posts.map(p => p.id === postId ? post : p);
+      posts = posts.map(p => p.id === postId && p.authorId === user.id ? post : p);
     } else {
       posts.unshift(post);
     }
@@ -137,6 +149,8 @@ const Editor = () => {
       addTag();
     }
   };
+
+  if (!user) return null;
 
   return (
     <div className="min-h-screen bg-background">

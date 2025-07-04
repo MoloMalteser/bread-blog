@@ -17,6 +17,9 @@ interface Post {
   createdAt: string;
   tags: string[];
   views: number;
+  authorId: string;
+  authorUsername: string;
+  authorDisplayName: string;
 }
 
 interface User {
@@ -33,16 +36,19 @@ const Profile = () => {
   const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
-    // In real app, this would fetch user data from API
+    // Check if current user is viewing their own profile
     const userData = localStorage.getItem('bread-user');
     if (userData) {
       const currentUser = JSON.parse(userData);
       setIsOwner(currentUser.username === username);
       
-      // For demo, we use the same user data
-      setUser(currentUser);
-    } else {
-      // Demo user for public viewing
+      if (currentUser.username === username) {
+        setUser(currentUser);
+      }
+    }
+
+    // If not owner, create demo user
+    if (!isOwner) {
       setUser({
         id: 'demo',
         username: username || 'demo',
@@ -51,14 +57,31 @@ const Profile = () => {
       });
     }
 
-    // Load posts
+    // Load posts for this user
     const savedPosts = localStorage.getItem('bread-posts');
     if (savedPosts) {
       const allPosts: Post[] = JSON.parse(savedPosts);
-      const publishedPosts = allPosts.filter(post => post.published);
-      setPosts(publishedPosts);
+      let userPosts: Post[] = [];
+      
+      if (isOwner) {
+        // Show all posts (including drafts) for owner
+        const userData = localStorage.getItem('bread-user');
+        if (userData) {
+          const currentUser = JSON.parse(userData);
+          userPosts = allPosts.filter(post => 
+            post.authorId === currentUser.id && post.published
+          );
+        }
+      } else {
+        // Show only published posts for public viewing
+        userPosts = allPosts.filter(post => 
+          post.authorUsername === username && post.published
+        );
+      }
+      
+      setPosts(userPosts);
     }
-  }, [username]);
+  }, [username, isOwner]);
 
   if (!user) {
     return (

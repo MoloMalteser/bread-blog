@@ -18,11 +18,9 @@ interface Post {
   createdAt: string;
   tags: string[];
   views: number;
-}
-
-interface User {
-  username: string;
-  displayName: string;
+  authorId: string;
+  authorUsername: string;
+  authorDisplayName: string;
 }
 
 const Post = () => {
@@ -30,7 +28,6 @@ const Post = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [post, setPost] = useState<Post | null>(null);
-  const [author, setAuthor] = useState<User | null>(null);
   const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
@@ -49,24 +46,14 @@ const Post = () => {
         localStorage.setItem('bread-posts', JSON.stringify(updatedPosts));
         
         setPost(foundPost);
+        
+        // Check if current user is owner
+        const userData = localStorage.getItem('bread-user');
+        if (userData) {
+          const user = JSON.parse(userData);
+          setIsOwner(user.id === foundPost.authorId);
+        }
       }
-    }
-
-    // Check if user is owner
-    const userData = localStorage.getItem('bread-user');
-    if (userData) {
-      const user = JSON.parse(userData);
-      setIsOwner(true);
-      setAuthor({
-        username: user.username,
-        displayName: user.displayName
-      });
-    } else {
-      // Demo author for public viewing
-      setAuthor({
-        username: 'demo',
-        displayName: 'Demo User'
-      });
     }
   }, [postId]);
 
@@ -164,14 +151,12 @@ const Post = () => {
           
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4 text-muted-foreground">
-              {author && (
-                <Link 
-                  to={`/profile/${author.username}`}
-                  className="hover:text-foreground transition-colors"
-                >
-                  Von {author.displayName}
-                </Link>
-              )}
+              <Link 
+                to={`/profile/${post.authorUsername}`}
+                className="hover:text-foreground transition-colors"
+              >
+                Von {post.authorDisplayName}
+              </Link>
               <span>•</span>
               <div className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
@@ -229,16 +214,14 @@ const Post = () => {
               Geschrieben mit 🍞 und Liebe bei Bread
             </p>
             
-            {author && (
-              <div>
-                <Link 
-                  to={`/profile/${author.username}`}
-                  className="text-primary hover:underline"
-                >
-                  Mehr Posts von {author.displayName} →
-                </Link>
-              </div>
-            )}
+            <div>
+              <Link 
+                to={`/profile/${post.authorUsername}`}
+                className="text-primary hover:underline"
+              >
+                Mehr Posts von {post.authorDisplayName} →
+              </Link>
+            </div>
           </div>
         </footer>
       </article>

@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Header from '@/components/Header';
-import { PlusCircle, Edit3, Eye, Calendar } from 'lucide-react';
+import { PlusCircle, Edit3, Eye, Calendar, Trash2 } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
 
 interface Post {
   id: string;
@@ -16,12 +17,16 @@ interface Post {
   createdAt: string;
   tags: string[];
   views: number;
+  authorId: string;
+  authorUsername: string;
+  authorDisplayName: string;
 }
 
 const Dashboard = () => {
   const [user, setUser] = useState<any>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     const userData = localStorage.getItem('bread-user');
@@ -29,40 +34,66 @@ const Dashboard = () => {
       navigate('/login');
       return;
     }
-    setUser(JSON.parse(userData));
+    const currentUser = JSON.parse(userData);
+    setUser(currentUser);
 
-    // Load demo posts
+    // Load user's posts only
     const savedPosts = localStorage.getItem('bread-posts');
     if (savedPosts) {
-      setPosts(JSON.parse(savedPosts));
+      const allPosts: Post[] = JSON.parse(savedPosts);
+      const userPosts = allPosts.filter(post => post.authorId === currentUser.id);
+      setPosts(userPosts);
     } else {
-      // Demo posts
+      // Create demo posts for new user
       const demoPosts: Post[] = [
         {
           id: '1',
           title: 'Mein erster Gedanke',
-          content: 'Heute hatte ich einen wunderbaren Gedanken über die Schönheit des Einfachen...',
+          content: 'Heute hatte ich einen wunderbaren Gedanken über die Schönheit des Einfachen. Es ist faszinierend, wie die kleinen Dinge im Leben oft die größte Wirkung haben...',
           excerpt: 'Heute hatte ich einen wunderbaren Gedanken über die Schönheit des Einfachen...',
           published: true,
-          createdAt: '2024-01-15',
+          createdAt: new Date().toLocaleDateString('de-DE'),
           tags: ['gedanken', 'einfachheit'],
-          views: 42
+          views: 42,
+          authorId: currentUser.id,
+          authorUsername: currentUser.username,
+          authorDisplayName: currentUser.displayName
         },
         {
           id: '2',
           title: 'Entwurf: Über das Schreiben',
-          content: 'Schreiben ist wie Brot backen - es braucht Zeit, Geduld und die richtigen Zutaten...',
+          content: 'Schreiben ist wie Brot backen - es braucht Zeit, Geduld und die richtigen Zutaten. Manchmal entstehen die besten Texte dann, wenn man sie am wenigsten erwartet...',
           excerpt: 'Schreiben ist wie Brot backen - es braucht Zeit, Geduld...',
           published: false,
-          createdAt: '2024-01-10',
+          createdAt: new Date().toLocaleDateString('de-DE'),
           tags: ['schreiben', 'kreativität'],
-          views: 0
+          views: 0,
+          authorId: currentUser.id,
+          authorUsername: currentUser.username,
+          authorDisplayName: currentUser.displayName
         }
       ];
       setPosts(demoPosts);
       localStorage.setItem('bread-posts', JSON.stringify(demoPosts));
     }
   }, [navigate]);
+
+  const deletePost = (postId: string) => {
+    const savedPosts = localStorage.getItem('bread-posts');
+    if (savedPosts) {
+      const allPosts: Post[] = JSON.parse(savedPosts);
+      const updatedPosts = allPosts.filter(post => post.id !== postId);
+      localStorage.setItem('bread-posts', JSON.stringify(updatedPosts));
+      
+      const userPosts = updatedPosts.filter(post => post.authorId === user.id);
+      setPosts(userPosts);
+      
+      toast({
+        title: "Post gelöscht",
+        description: "Der Post wurde erfolgreich gelöscht",
+      });
+    }
+  };
 
   const publishedPosts = posts.filter(post => post.published);
   const draftPosts = posts.filter(post => !post.published);
@@ -153,9 +184,14 @@ const Dashboard = () => {
                             ))}
                           </div>
                         </div>
-                        <Button variant="ghost" size="sm" onClick={() => navigate(`/editor/${post.id}`)}>
-                          <Edit3 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="sm" onClick={() => navigate(`/editor/${post.id}`)}>
+                            <Edit3 className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => deletePost(post.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -200,9 +236,14 @@ const Dashboard = () => {
                             ))}
                           </div>
                         </div>
-                        <Button variant="ghost" size="sm" onClick={() => navigate(`/editor/${post.id}`)}>
-                          <Edit3 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="sm" onClick={() => navigate(`/editor/${post.id}`)}>
+                            <Edit3 className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => deletePost(post.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
