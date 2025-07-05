@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   'https://pzrdesbjuxykihqumrvi.supabase',
-  ' your-public-anon-key'
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6cmRlc2JqdXh5a2locXVtcnZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2OTQ4NTQsImV4cCI6MjA2NzI3MDg1NH0.NmcR-aSKElAAJYmqLsPE6QHbYDefZRG4SkN32PkCAp0'
 );
 
 const ADMIN_USERNAME = 'admin';
