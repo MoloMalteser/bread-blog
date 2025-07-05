@@ -93,7 +93,7 @@ const Pricing = () => {
                 </div>
               </div>
               
-              <Link to="/register" className="block">
+              <Link to="/auth" className="block">
                 <Button className="w-full">
                   Kostenlos starten
                 </Button>
