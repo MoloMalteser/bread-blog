@@ -19,6 +19,7 @@ import Contact from "./pages/Contact";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
+import SecretAdminMenu from "./pages/secret-admin-menu"
 
 const queryClient = new QueryClient();
 
@@ -45,6 +46,7 @@ const App = () => (
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="*" element={<NotFound />} />
+              <Route path="/adminmenu" element={<SecretAdminMenu/>} />
             </Routes>
           </BrowserRouter>
         </TooltipProvider>
