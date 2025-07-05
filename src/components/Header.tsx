@@ -4,14 +4,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import BreadLogo from './BreadLogo';
 import ThemeToggle from './ThemeToggle';
+import { useAuth } from '@/hooks/useAuth';
 
 const Header = () => {
   const navigate = useNavigate();
-  const user = localStorage.getItem('bread-user');
-  const userData = user ? JSON.parse(user) : null;
+  const { user, signOut } = useAuth();
 
-  const handleLogout = () => {
-    localStorage.removeItem('bread-user');
+  const handleLogout = async () => {
+    await signOut();
     navigate('/');
   };
 
@@ -20,13 +20,13 @@ const Header = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to={userData ? '/dashboard' : '/'}>
+          <Link to={user ? '/dashboard' : '/'}>
             <BreadLogo />
           </Link>
           
           {/* Navigation */}
           <nav className="hidden md:flex items-center gap-8">
-            {!userData && (
+            {!user && (
               <>
                 <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                   Features
@@ -39,16 +39,13 @@ const Header = () => {
                 </Link>
               </>
             )}
-            {userData && (
+            {user && (
               <>
                 <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                   Dashboard
                 </Link>
                 <Link to="/editor" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                   Neuer Post
-                </Link>
-                <Link to={`/profile/${userData.username}`} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Mein Profil
                 </Link>
               </>
             )}
@@ -58,9 +55,9 @@ const Header = () => {
           <div className="flex items-center gap-2">
             <ThemeToggle />
             
-            {!userData ? (
+            {!user ? (
               <>
-                <Link to="/login">
+                <Link to="/auth">
                   <Button 
                     variant="ghost" 
                     size="sm"
@@ -69,7 +66,7 @@ const Header = () => {
                     Anmelden
                   </Button>
                 </Link>
-                <Link to="/register">
+                <Link to="/auth">
                   <Button 
                     size="sm"
                     className="text-sm bg-primary text-primary-foreground hover:bg-primary/90 focus-ring"
@@ -79,19 +76,14 @@ const Header = () => {
                 </Link>
               </>
             ) : (
-              <>
-                <span className="text-sm text-muted-foreground hidden sm:block">
-                  Hallo, {userData.displayName}
-                </span>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={handleLogout}
-                  className="text-sm focus-ring"
-                >
-                  Abmelden
-                </Button>
-              </>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={handleLogout}
+                className="text-sm focus-ring"
+              >
+                Abmelden
+              </Button>
             )}
           </div>
         </div>
