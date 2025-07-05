@@ -19,6 +19,11 @@ const NotFound = () => {
         <a href="/" className="text-blue-500 hover:text-blue-700 underline">
           Return to Home
         </a>
+        <Link to="/game" className="block">
+                <Button className="w-full">
+                  Play Game
+                </Button>
+              </Link>
       </div>
     </div>
   );
