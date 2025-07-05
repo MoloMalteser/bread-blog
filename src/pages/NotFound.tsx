@@ -23,7 +23,7 @@ const NotFound = () => {
                 <Button className="w-full">
                   Play Game
                 </Button>
-              </Link>
+        </Link>
       </div>
     </div>
   );
