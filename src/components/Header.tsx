@@ -20,7 +20,7 @@ const Header = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to={user ? '/dashboard' : '/'}>
+          <Link to={user ? '/feed' : '/'}>
             <BreadLogo />
           </Link>
           
@@ -41,6 +41,9 @@ const Header = () => {
             )}
             {user && (
               <>
+                <Link to="/feed" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  Feed
+                </Link>
                 <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                   Dashboard
                 </Link>

@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import Editor from "./pages/Editor";
 import Profile from "./pages/Profile";
 import Post from "./pages/Post";
+import Feed from "./pages/Feed";
 import Pricing from "./pages/Pricing";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/editor/:postId" element={<Editor />} />
             <Route path="/profile/:username" element={<Profile />} />
             <Route path="/post/:slug" element={<Post />} />
+            <Route path="/feed" element={<Feed />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />

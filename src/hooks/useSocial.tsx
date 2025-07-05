@@ -1,0 +1,239 @@
+
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
+
+export interface Like {
+  id: string;
+  user_id: string;
+  post_id: string;
+  created_at: string;
+}
+
+export interface Comment {
+  id: string;
+  user_id: string;
+  post_id: string;
+  content: string;
+  created_at: string;
+  profiles?: {
+    username: string;
+  };
+}
+
+export interface Follow {
+  id: string;
+  follower_id: string;
+  following_id: string;
+  created_at: string;
+}
+
+export const useSocial = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  // Like functionality
+  const toggleLike = async (postId: string) => {
+    if (!user) return false;
+
+    // Check if already liked
+    const { data: existingLike } = await supabase
+      .from('likes')
+      .select('id')
+      .eq('post_id', postId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (existingLike) {
+      // Unlike
+      const { error } = await supabase
+        .from('likes')
+        .delete()
+        .eq('id', existingLike.id);
+
+      if (error) {
+        toast({
+          title: "Fehler",
+          description: error.message,
+          variant: "destructive"
+        });
+        return false;
+      }
+      return false; // unliked
+    } else {
+      // Like
+      const { error } = await supabase
+        .from('likes')
+        .insert({
+          post_id: postId,
+          user_id: user.id
+        });
+
+      if (error) {
+        toast({
+          title: "Fehler",
+          description: error.message,
+          variant: "destructive"
+        });
+        return false;
+      }
+      return true; // liked
+    }
+  };
+
+  // Get like count and user's like status for a post
+  const getLikeInfo = async (postId: string) => {
+    const { data: likes, error } = await supabase
+      .from('likes')
+      .select('user_id')
+      .eq('post_id', postId);
+
+    if (error) return { count: 0, isLiked: false };
+
+    const count = likes?.length || 0;
+    const isLiked = user ? likes?.some(like => like.user_id === user.id) || false : false;
+
+    return { count, isLiked };
+  };
+
+  // Comment functionality
+  const addComment = async (postId: string, content: string) => {
+    if (!user) return null;
+
+    const { data, error } = await supabase
+      .from('comments')
+      .insert({
+        post_id: postId,
+        user_id: user.id,
+        content: content.trim()
+      })
+      .select(`
+        *,
+        profiles (
+          username
+        )
+      `)
+      .single();
+
+    if (error) {
+      toast({
+        title: "Fehler beim Kommentieren",
+        description: error.message,
+        variant: "destructive"
+      });
+      return null;
+    }
+
+    return data;
+  };
+
+  // Get comments for a post
+  const getComments = async (postId: string) => {
+    const { data, error } = await supabase
+      .from('comments')
+      .select(`
+        *,
+        profiles (
+          username
+        )
+      `)
+      .eq('post_id', postId)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching comments:', error);
+      return [];
+    }
+
+    return data || [];
+  };
+
+  // Follow functionality
+  const toggleFollow = async (userId: string) => {
+    if (!user || user.id === userId) return false;
+
+    // Check if already following
+    const { data: existingFollow } = await supabase
+      .from('follows')
+      .select('id')
+      .eq('follower_id', user.id)
+      .eq('following_id', userId)
+      .single();
+
+    if (existingFollow) {
+      // Unfollow
+      const { error } = await supabase
+        .from('follows')
+        .delete()
+        .eq('id', existingFollow.id);
+
+      if (error) {
+        toast({
+          title: "Fehler",
+          description: error.message,
+          variant: "destructive"
+        });
+        return false;
+      }
+      
+      toast({
+        title: "Nicht mehr gefolgt",
+        description: "Du folgst diesem Nutzer nicht mehr"
+      });
+      return false; // unfollowed
+    } else {
+      // Follow
+      const { error } = await supabase
+        .from('follows')
+        .insert({
+          follower_id: user.id,
+          following_id: userId
+        });
+
+      if (error) {
+        toast({
+          title: "Fehler",
+          description: error.message,
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      toast({
+        title: "Gefolgt",
+        description: "Du folgst diesem Nutzer jetzt"
+      });
+      return true; // followed
+    }
+  };
+
+  // Get follow status
+  const getFollowStatus = async (userId: string) => {
+    if (!user || user.id === userId) return false;
+
+    const { data } = await supabase
+      .from('follows')
+      .select('id')
+      .eq('follower_id', user.id)
+      .eq('following_id', userId)
+      .single();
+
+    return !!data;
+  };
+
+  // Increment view count
+  const incrementViewCount = async (postId: string) => {
+    await supabase.rpc('increment_view_count', { post_id: postId });
+  };
+
+  return {
+    toggleLike,
+    getLikeInfo,
+    addComment,
+    getComments,
+    toggleFollow,
+    getFollowStatus,
+    incrementViewCount
+  };
+};
