@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Toaster, toast } from "sonner";
 import clsx from "clsx";
+import { useToast } from "@/hooks/use-toast";
 
 const GRAVITY = 0.5;
 const JUMP = -8;
