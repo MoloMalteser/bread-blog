@@ -1,20 +1,20 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Toaster, toast } from "sonner";
-import clsx from "clsx";
-import { useToast } from "@/hooks/use-toast";
 
-const GRAVITY = 0.5;
-const JUMP = -8;
-const PIPE_WIDTH = 50;
-const PIPE_GAP = 150;
+const GRAVITY = 0.4;
+const JUMP = -7;
+const PIPE_WIDTH = 60;
+const PIPE_GAP = 200;
 const BREAD_SIZE = 40;
-const GAME_WIDTH = 400;
-const GAME_HEIGHT = 600;
+const BREAD_X = 80;
 
-const getRandomPipeY = () => Math.floor(Math.random() * (GAME_HEIGHT - PIPE_GAP - 100)) + 50;
+const getRandomPipeY = (screenHeight: number) =>
+  Math.floor(Math.random() * (screenHeight - PIPE_GAP - 100)) + 50;
 
 export default function FlappyBread() {
-  const [breadY, setBreadY] = useState(GAME_HEIGHT / 2);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [screenSize, setScreenSize] = useState({ width: 0, height: 0 });
+  const [breadY, setBreadY] = useState(200);
   const [velocity, setVelocity] = useState(0);
   const [pipes, setPipes] = useState<{ x: number; y: number }[]>([]);
   const [score, setScore] = useState(0);
@@ -22,13 +22,26 @@ export default function FlappyBread() {
 
   const gameLoopRef = useRef<number | null>(null);
 
+  const resize = () => {
+    setScreenSize({
+      width: window.innerWidth,
+      height: window.innerHeight,
+    });
+  };
+
+  useEffect(() => {
+    resize();
+    window.addEventListener("resize", resize);
+    return () => window.removeEventListener("resize", resize);
+  }, []);
+
   const resetGame = () => {
-    setBreadY(GAME_HEIGHT / 2);
+    setBreadY(screenSize.height / 2);
     setVelocity(0);
-    setPipes([{ x: GAME_WIDTH + 100, y: getRandomPipeY() }]);
+    setPipes([{ x: screenSize.width + 200, y: getRandomPipeY(screenSize.height) }]);
     setScore(0);
     setPlaying(true);
-    toast("Los geht's, kleines Brot! 🥖", { duration: 2000 });
+    toast("Los geht's, Brot! 🍞", { duration: 1500 });
   };
 
   const jump = () => {
@@ -36,9 +49,9 @@ export default function FlappyBread() {
     setVelocity(JUMP);
   };
 
-  // Game loop
+  // Game Loop
   useEffect(() => {
-    if (!playing) return;
+    if (!playing || screenSize.height === 0) return;
 
     const loop = () => {
       setBreadY((prev) => Math.max(0, prev + velocity));
@@ -50,38 +63,37 @@ export default function FlappyBread() {
           .filter((pipe) => pipe.x + PIPE_WIDTH > 0)
       );
 
-      if (pipes.length === 0 || pipes[pipes.length - 1].x < GAME_WIDTH - 200) {
-        setPipes((prev) => [...prev, { x: GAME_WIDTH, y: getRandomPipeY() }]);
+      if (pipes.length === 0 || pipes[pipes.length - 1].x < screenSize.width - 300) {
+        setPipes((prev) => [
+          ...prev,
+          { x: screenSize.width + 100, y: getRandomPipeY(screenSize.height) },
+        ]);
       }
 
       // Collision
       const breadTop = breadY;
       const breadBottom = breadY + BREAD_SIZE;
-      const breadX = 60;
 
       for (let pipe of pipes) {
-        const pipeTop = pipe.y;
-        const pipeBottom = pipe.y + PIPE_GAP;
-
-        const collidesX = breadX + BREAD_SIZE > pipe.x && breadX < pipe.x + PIPE_WIDTH;
-        const collidesY = breadTop < pipeTop || breadBottom > pipeBottom;
+        const collidesX =
+          BREAD_X + BREAD_SIZE > pipe.x && BREAD_X < pipe.x + PIPE_WIDTH;
+        const collidesY =
+          breadTop < pipe.y || breadBottom > pipe.y + PIPE_GAP;
 
         if (collidesX && collidesY) {
-          toast.error("Du bist gegen ein Hindernis geflogen! 💥");
+          toast.error("Crash! 🥲");
           setPlaying(false);
           return;
         }
 
-        // Scoring
-        if (pipe.x + PIPE_WIDTH === breadX) {
+        if (pipe.x + PIPE_WIDTH === BREAD_X) {
           setScore((s) => s + 1);
-          toast.success("Punkt! 🥖");
+          toast.success("Punkt! ✨");
         }
       }
 
-      // Game over: ground or top
-      if (breadY > GAME_HEIGHT - BREAD_SIZE || breadY < 0) {
-        toast.error("Runtergefallen! 😵");
+      if (breadY > screenSize.height - BREAD_SIZE || breadY < 0) {
+        toast.error("Du bist runtergefallen! 💀");
         setPlaying(false);
       }
 
@@ -90,71 +102,67 @@ export default function FlappyBread() {
 
     gameLoopRef.current = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(gameLoopRef.current!);
-  }, [playing, breadY, velocity, pipes]);
+  }, [playing, screenSize, velocity, pipes]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-blue-100">
+    <div
+      ref={containerRef}
+      onClick={jump}
+      className="fixed inset-0 bg-gradient-to-b from-sky-300 to-blue-500 overflow-hidden"
+    >
       <Toaster position="top-center" />
-      <h1 className="text-4xl font-bold mb-4">Flappy Bread 🥖</h1>
+      {/* Score */}
+      <div className="absolute top-4 left-4 text-white text-3xl font-bold drop-shadow-lg z-50">
+        🍞 Punkte: {score}
+      </div>
+
+      {/* Brot */}
       <div
-        className="relative overflow-hidden border-4 border-brown-500 rounded bg-blue-300"
-        style={{ width: GAME_WIDTH, height: GAME_HEIGHT }}
-        onClick={jump}
+        className="absolute text-4xl z-40"
+        style={{
+          top: breadY,
+          left: BREAD_X,
+          transform: `rotate(${velocity * 2}deg)`,
+        }}
       >
-        {/* Bread */}
-        <div
-          className="absolute bg-yellow-300 rounded-full border border-yellow-500 shadow-lg transition-transform"
-          style={{
-            top: breadY,
-            left: 60,
-            width: BREAD_SIZE,
-            height: BREAD_SIZE,
-            transform: `rotate(${velocity * 2}deg)`,
-          }}
-        >
-          🥖
+        🍞
+      </div>
+
+      {/* Pipes */}
+      {pipes.map((pipe, i) => (
+        <React.Fragment key={i}>
+          <div
+            className="absolute bg-green-700"
+            style={{
+              left: pipe.x,
+              top: 0,
+              width: PIPE_WIDTH,
+              height: pipe.y,
+            }}
+          />
+          <div
+            className="absolute bg-green-700"
+            style={{
+              left: pipe.x,
+              top: pipe.y + PIPE_GAP,
+              width: PIPE_WIDTH,
+              height: screenSize.height - (pipe.y + PIPE_GAP),
+            }}
+          />
+        </React.Fragment>
+      ))}
+
+      {/* Start-Button */}
+      {!playing && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+          <button
+            onClick={resetGame}
+            className="px-6 py-3 bg-yellow-500 text-white font-bold rounded-xl shadow-lg hover:bg-yellow-600 transition-all text-xl"
+          >
+            {score > 0 ? "Nochmal spielen 🌀" : "Starten ▶️"}
+          </button>
         </div>
-
-        {/* Pipes */}
-        {pipes.map((pipe, idx) => (
-          <React.Fragment key={idx}>
-            <div
-              className="absolute bg-green-600"
-              style={{
-                left: pipe.x,
-                top: 0,
-                width: PIPE_WIDTH,
-                height: pipe.y,
-              }}
-            />
-            <div
-              className="absolute bg-green-600"
-              style={{
-                left: pipe.x,
-                top: pipe.y + PIPE_GAP,
-                width: PIPE_WIDTH,
-                height: GAME_HEIGHT - (pipe.y + PIPE_GAP),
-              }}
-            />
-          </React.Fragment>
-        ))}
-
-        {/* Ground */}
-        <div className="absolute bottom-0 w-full h-6 bg-brown-600" />
-      </div>
-
-      <div className="mt-4">
-        <p className="text-lg">Punkte: {score}</p>
-        <button
-          className={clsx(
-            "mt-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white font-bold rounded",
-            { hidden: playing }
-          )}
-          onClick={resetGame}
-        >
-          {score > 0 ? "Nochmal spielen 🔁" : "Spiel starten ▶️"}
-        </button>
-      </div>
+      )}
     </div>
   );
 }
