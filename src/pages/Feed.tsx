@@ -9,9 +9,10 @@ import Header from '@/components/Header';
 import { useFeed } from '@/hooks/useFeed';
 import { useSocial } from '@/hooks/useSocial';
 import { useAuth } from '@/hooks/useAuth';
+import { useLanguage } from '@/hooks/useLanguage';
 import { Heart, MessageCircle, Eye, Calendar, User, Send } from 'lucide-react';
 import { format } from 'date-fns';
-import { de } from 'date-fns/locale';
+import { de, enUS } from 'date-fns/locale';
 
 const Feed = () => {
   const [currentView, setCurrentView] = useState<'feed' | 'all'>('feed');
@@ -23,8 +24,10 @@ const Feed = () => {
   const { feedPosts, allPosts, loading, fetchFeedPosts, fetchAllPosts } = useFeed();
   const { toggleLike, getLikeInfo, addComment, getComments, incrementViewCount } = useSocial();
   const { user } = useAuth();
+  const { language, t } = useLanguage();
 
   const currentPosts = currentView === 'feed' ? feedPosts : allPosts;
+  const dateLocale = language === 'de' ? de : enUS;
 
   useEffect(() => {
     if (user) {
@@ -93,12 +96,12 @@ const Feed = () => {
         <div className="pt-20 flex items-center justify-center min-h-[80vh]">
           <Card className="p-8 text-center max-w-md">
             <CardContent>
-              <h2 className="text-2xl font-semibold mb-4">Anmeldung erforderlich</h2>
+              <h2 className="text-2xl font-semibold mb-4">{t('loginRequired')}</h2>
               <p className="text-muted-foreground mb-6">
-                Du musst angemeldet sein, um den Feed zu sehen.
+                {t('loginRequiredDescription')}
               </p>
               <Link to="/auth">
-                <Button>Jetzt anmelden</Button>
+                <Button>{t('loginNow')}</Button>
               </Link>
             </CardContent>
           </Card>
@@ -119,15 +122,15 @@ const Feed = () => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="feed">📱 Feed</SelectItem>
-              <SelectItem value="all">🌍 Allgemein</SelectItem>
+              <SelectItem value="feed">📱 {t('feed')}</SelectItem>
+              <SelectItem value="all">🌍 {t('general')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         {loading ? (
           <div className="text-center py-12">
-            <div className="text-lg">Lade Posts...</div>
+            <div className="text-lg">{t('loadingPosts')}</div>
           </div>
         ) : currentPosts.length === 0 ? (
           <Card className="p-12 text-center">
@@ -136,17 +139,14 @@ const Feed = () => {
                 {currentView === 'feed' ? '📱' : '🌍'}
               </div>
               <h3 className="text-xl font-semibold mb-2">
-                {currentView === 'feed' ? 'Dein Feed ist leer' : 'Keine Posts gefunden'}
+                {currentView === 'feed' ? t('feedEmpty') : t('noPostsFound')}
               </h3>
               <p className="text-muted-foreground mb-4">
-                {currentView === 'feed' 
-                  ? 'Folge anderen Nutzern, um ihre Posts hier zu sehen.'
-                  : 'Es wurden noch keine öffentlichen Posts erstellt.'
-                }
+                {currentView === 'feed' ? t('feedEmptyDescription') : t('noPostsFoundDescription')}
               </p>
               {currentView === 'feed' && (
                 <Button onClick={() => setCurrentView('all')} variant="outline">
-                  Alle Posts anzeigen
+                  {t('showAllPosts')}
                 </Button>
               )}
             </CardContent>
@@ -171,11 +171,11 @@ const Feed = () => {
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Calendar className="h-4 w-4" />
                         <span>
-                          {format(new Date(post.created_at), 'PPP', { locale: de })}
+                          {format(new Date(post.created_at), 'PPP', { locale: dateLocale })}
                         </span>
                         <span>•</span>
                         <Eye className="h-4 w-4" />
-                        <span>{post.view_count || 0} Aufrufe</span>
+                        <span>{post.view_count || 0} {t('views')}</span>
                       </div>
                     </div>
                   </div>
@@ -241,7 +241,7 @@ const Feed = () => {
                                 {comment.profiles?.username}
                               </span>
                               <span className="text-xs text-muted-foreground">
-                                {format(new Date(comment.created_at), 'PPp', { locale: de })}
+                                {format(new Date(comment.created_at), 'PPp', { locale: dateLocale })}
                               </span>
                             </div>
                             <p className="text-sm">{comment.content}</p>
@@ -256,7 +256,7 @@ const Feed = () => {
                         </div>
                         <div className="flex-1 flex gap-2">
                           <Textarea
-                            placeholder="Kommentar schreiben..."
+                            placeholder={t('writeComment')}
                             value={newComment[post.id] || ''}
                             onChange={(e) => setNewComment(prev => ({ 
                               ...prev, 

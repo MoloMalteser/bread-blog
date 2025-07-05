@@ -42,27 +42,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signUp = async (email: string, password: string, username?: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: redirectUrl,
         data: username ? { username } : undefined
       }
     });
 
     if (error) {
+      const message = error.message === 'User already registered' ? 
+        'User already registered / Benutzer bereits registriert' : 
+        error.message;
+      
       toast({
-        title: "Registrierung fehlgeschlagen",
-        description: error.message,
+        title: "Registration failed / Registrierung fehlgeschlagen",
+        description: message,
         variant: "destructive"
       });
     } else {
       toast({
-        title: "Registrierung erfolgreich",
-        description: "Bitte überprüfe deine E-Mail zur Bestätigung"
+        title: "Registration successful / Registrierung erfolgreich",
+        description: "Welcome to Bread! / Willkommen bei Bread!"
       });
     }
 
@@ -76,9 +77,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     if (error) {
+      const message = error.message === 'Invalid login credentials' ? 
+        'Invalid login credentials / Ungültige Anmeldedaten' : 
+        error.message;
+      
       toast({
-        title: "Anmeldung fehlgeschlagen",
-        description: error.message,
+        title: "Login failed / Anmeldung fehlgeschlagen",
+        description: message,
         variant: "destructive"
       });
     }
@@ -90,7 +95,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { error } = await supabase.auth.signOut();
     if (error) {
       toast({
-        title: "Abmeldung fehlgeschlagen",
+        title: "Logout failed / Abmeldung fehlgeschlagen",
         description: error.message,
         variant: "destructive"
       });

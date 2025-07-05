@@ -5,18 +5,51 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import BreadLogo from '@/components/BreadLogo';
 import ThemeToggle from '@/components/ThemeToggle';
 import { useAuth } from '@/hooks/useAuth';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Globe } from 'lucide-react';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
+  const [language, setLanguage] = useState('de');
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
+
+  const t = {
+    de: {
+      welcomeTitle: 'Willkommen bei Bread',
+      welcomeSubtitle: 'Teile deine Gedanken mit der Welt',
+      login: 'Anmelden',
+      register: 'Registrieren',
+      email: 'E-Mail',
+      password: 'Passwort',
+      username: 'Benutzername',
+      loginButton: 'Anmelden',
+      registerButton: 'Registrieren',
+      loginLoading: 'Anmelden...',
+      registerLoading: 'Registrieren...',
+      back: 'Zurück'
+    },
+    en: {
+      welcomeTitle: 'Welcome to Bread',
+      welcomeSubtitle: 'Share your thoughts with the world',
+      login: 'Login',
+      register: 'Register',
+      email: 'Email',
+      password: 'Password',
+      username: 'Username',
+      loginButton: 'Login',
+      registerButton: 'Register',
+      loginLoading: 'Logging in...',
+      registerLoading: 'Registering...',
+      back: 'Back'
+    }
+  };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,8 +70,14 @@ const Auth = () => {
     
     const { error } = await signUp(email, password, username);
     
+    if (!error) {
+      navigate('/dashboard');
+    }
+    
     setLoading(false);
   };
+
+  const text = t[language as keyof typeof t];
 
   return (
     <div className="min-h-screen bg-background">
@@ -51,11 +90,21 @@ const Auth = () => {
             </Link>
             
             <div className="flex items-center gap-2">
+              <Select value={language} onValueChange={setLanguage}>
+                <SelectTrigger className="w-32">
+                  <Globe className="h-4 w-4 mr-2" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="de">Deutsch</SelectItem>
+                  <SelectItem value="en">English</SelectItem>
+                </SelectContent>
+              </Select>
               <ThemeToggle />
               <Link to="/">
                 <Button variant="outline" size="sm">
                   <ArrowLeft className="h-4 w-4 mr-1" />
-                  Zurück
+                  {text.back}
                 </Button>
               </Link>
             </div>
@@ -67,17 +116,17 @@ const Auth = () => {
       <div className="flex items-center justify-center py-12 px-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Willkommen bei Bread</CardTitle>
+            <CardTitle className="text-2xl">{text.welcomeTitle}</CardTitle>
             <p className="text-muted-foreground">
-              Teile deine Gedanken mit der Welt
+              {text.welcomeSubtitle}
             </p>
           </CardHeader>
           
           <CardContent>
             <Tabs defaultValue="login" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Anmelden</TabsTrigger>
-                <TabsTrigger value="register">Registrieren</TabsTrigger>
+                <TabsTrigger value="login">{text.login}</TabsTrigger>
+                <TabsTrigger value="register">{text.register}</TabsTrigger>
               </TabsList>
               
               <TabsContent value="login">
@@ -85,7 +134,7 @@ const Auth = () => {
                   <div>
                     <Input
                       type="email"
-                      placeholder="E-Mail"
+                      placeholder={text.email}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
@@ -94,14 +143,14 @@ const Auth = () => {
                   <div>
                     <Input
                       type="password"
-                      placeholder="Passwort"
+                      placeholder={text.password}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
                     />
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? 'Anmelden...' : 'Anmelden'}
+                    {loading ? text.loginLoading : text.loginButton}
                   </Button>
                 </form>
               </TabsContent>
@@ -111,7 +160,7 @@ const Auth = () => {
                   <div>
                     <Input
                       type="text"
-                      placeholder="Benutzername"
+                      placeholder={text.username}
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       required
@@ -120,7 +169,7 @@ const Auth = () => {
                   <div>
                     <Input
                       type="email"
-                      placeholder="E-Mail"
+                      placeholder={text.email}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
@@ -129,14 +178,14 @@ const Auth = () => {
                   <div>
                     <Input
                       type="password"
-                      placeholder="Passwort"
+                      placeholder={text.password}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
                     />
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? 'Registrieren...' : 'Registrieren'}
+                    {loading ? text.registerLoading : text.registerButton}
                   </Button>
                 </form>
               </TabsContent>

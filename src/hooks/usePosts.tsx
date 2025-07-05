@@ -2,16 +2,16 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
 
 export interface Post {
   id: string;
   title: string;
   content: string;
   slug: string;
-  created_at: string;
   is_public: boolean;
+  created_at: string;
   author_id: string;
+  view_count: number | null;
   profiles?: {
     username: string;
     bio?: string;
@@ -22,37 +22,10 @@ export const usePosts = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
-  const { toast } = useToast();
 
-  const fetchPublicPosts = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('posts')
-      .select(`
-        *,
-        profiles (
-          username,
-          bio
-        )
-      `)
-      .eq('is_public', true)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      toast({
-        title: "Fehler beim Laden der Posts",
-        description: error.message,
-        variant: "destructive"
-      });
-    } else {
-      setPosts(data || []);
-    }
-    setLoading(false);
-  };
-
-  const fetchUserPosts = async () => {
+  const fetchPosts = async () => {
     if (!user) return;
-    
+
     setLoading(true);
     const { data, error } = await supabase
       .from('posts')
@@ -67,11 +40,7 @@ export const usePosts = () => {
       .order('created_at', { ascending: false });
 
     if (error) {
-      toast({
-        title: "Fehler beim Laden deiner Posts",
-        description: error.message,
-        variant: "destructive"
-      });
+      console.error('Error fetching posts:', error);
     } else {
       setPosts(data || []);
     }
@@ -81,16 +50,14 @@ export const usePosts = () => {
   const createPost = async (title: string, content: string, isPublic: boolean = true) => {
     if (!user) return null;
 
-    // Generate slug from title
     const { data: slugData } = await supabase.rpc('generate_slug', { title });
-    const slug = slugData || 'untitled';
-
+    
     const { data, error } = await supabase
       .from('posts')
       .insert({
         title,
         content,
-        slug,
+        slug: slugData,
         is_public: isPublic,
         author_id: user.id
       })
@@ -98,47 +65,35 @@ export const usePosts = () => {
       .single();
 
     if (error) {
-      toast({
-        title: "Fehler beim Erstellen des Posts",
-        description: error.message,
-        variant: "destructive"
-      });
+      console.error('Error creating post:', error);
       return null;
     }
 
-    toast({
-      title: "Post erstellt",
-      description: isPublic ? "Dein Post ist jetzt öffentlich sichtbar" : "Post als Entwurf gespeichert"
-    });
-
+    fetchPosts();
     return data;
   };
 
-  const updatePost = async (id: string, updates: Partial<Post>) => {
+  const updatePost = async (id: string, title: string, content: string, isPublic: boolean = true) => {
     if (!user) return null;
 
     const { data, error } = await supabase
       .from('posts')
-      .update(updates)
+      .update({
+        title,
+        content,
+        is_public: isPublic
+      })
       .eq('id', id)
       .eq('author_id', user.id)
       .select()
       .single();
 
     if (error) {
-      toast({
-        title: "Fehler beim Aktualisieren des Posts",
-        description: error.message,
-        variant: "destructive"
-      });
+      console.error('Error updating post:', error);
       return null;
     }
 
-    toast({
-      title: "Post aktualisiert",
-      description: "Änderungen wurden gespeichert"
-    });
-
+    fetchPosts();
     return data;
   };
 
@@ -152,51 +107,24 @@ export const usePosts = () => {
       .eq('author_id', user.id);
 
     if (error) {
-      toast({
-        title: "Fehler beim Löschen des Posts",
-        description: error.message,
-        variant: "destructive"
-      });
+      console.error('Error deleting post:', error);
       return false;
     }
 
-    toast({
-      title: "Post gelöscht",
-      description: "Der Post wurde erfolgreich gelöscht"
-    });
-
+    fetchPosts();
     return true;
   };
 
-  const getPostBySlug = async (slug: string) => {
-    const { data, error } = await supabase
-      .from('posts')
-      .select(`
-        *,
-        profiles (
-          username,
-          bio
-        )
-      `)
-      .eq('slug', slug)
-      .single();
-
-    if (error) {
-      console.error('Error fetching post:', error);
-      return null;
-    }
-
-    return data;
-  };
+  useEffect(() => {
+    fetchPosts();
+  }, [user]);
 
   return {
     posts,
     loading,
-    fetchPublicPosts,
-    fetchUserPosts,
+    fetchPosts,
     createPost,
     updatePost,
-    deletePost,
-    getPostBySlug
+    deletePost
   };
 };
