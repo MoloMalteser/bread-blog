@@ -31,7 +31,7 @@ const Dashboard = () => {
   useEffect(() => {
     const userData = localStorage.getItem('bread-user');
     if (!userData) {
-      navigate('/login');
+      navigate('/auth');
       return;
     }
     const currentUser = JSON.parse(userData);
