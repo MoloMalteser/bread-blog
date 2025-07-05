@@ -36,7 +36,7 @@ const Terms = () => {
         <div className="mb-8">
           <h1 className="text-4xl font-semibold mb-4">Nutzungsbedingungen</h1>
           <p className="text-muted-foreground">
-            Zuletzt aktualisiert: Januar 2024
+            Zuletzt aktualisiert: Juli 2025
           </p>
         </div>
 
