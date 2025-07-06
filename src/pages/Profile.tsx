@@ -5,8 +5,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import BreadLogo from '@/components/BreadLogo';
 import ThemeToggle from '@/components/ThemeToggle';
+import BottomNavigation from '@/components/BottomNavigation';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 import { Calendar, Eye, ArrowLeft, Share2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Post {
   id: string;
@@ -35,6 +38,7 @@ const Profile = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [isOwner, setIsOwner] = useState(false);
   const { toast } = useToast();
+  const { user: authUser } = useAuth();
 
   useEffect(() => {
     // Check if current user is viewing their own profile
@@ -137,7 +141,7 @@ const Profile = () => {
                 <BreadLogo />
               </Link>
               <div className="text-sm text-muted-foreground">
-                bread.blog/{user.username}
+                bread.blog/{user?.username}
               </div>
             </div>
             
@@ -148,7 +152,7 @@ const Profile = () => {
                 Teilen
               </Button>
               {!isOwner && (
-                <Link to="/">
+                <Link to="/feed">
                   <Button variant="outline" size="sm">
                     <ArrowLeft className="h-4 w-4 mr-1" />
                     Zurück
@@ -171,8 +175,8 @@ const Profile = () => {
       <div className="max-w-4xl mx-auto px-4 py-12">
         <div className="text-center space-y-4">
           <div className="text-6xl mb-4">🍞</div>
-          <h1 className="text-3xl font-semibold">{user.displayName}</h1>
-          <p className="text-lg text-muted-foreground">@{user.username}</p>
+          <h1 className="text-3xl font-semibold">{user?.displayName}</h1>
+          <p className="text-lg text-muted-foreground">@{user?.username}</p>
           
           <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
@@ -194,7 +198,7 @@ const Profile = () => {
             Alle Posts ({posts.length})
           </h2>
           <p className="text-muted-foreground">
-            Gedanken und Geschichten von {user.displayName}
+            Gedanken und Geschichten von {user?.displayName}
           </p>
         </div>
 
@@ -206,7 +210,7 @@ const Profile = () => {
               <p className="text-muted-foreground">
                 {isOwner 
                   ? 'Schreibe deinen ersten Post und teile deine Gedanken mit der Welt!'
-                  : `${user.displayName} hat noch keine Posts veröffentlicht.`
+                  : `${user?.displayName} hat noch keine Posts veröffentlicht.`
                 }
               </p>
               {isOwner && (
@@ -227,9 +231,9 @@ const Profile = () => {
                         {post.title}
                       </h3>
                       
-                      <p className="text-muted-foreground leading-relaxed">
-                        {post.excerpt}
-                      </p>
+                      <div className="text-muted-foreground leading-relaxed">
+                        <MarkdownRenderer content={post.excerpt} />
+                      </div>
                       
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -259,6 +263,8 @@ const Profile = () => {
           </div>
         )}
       </div>
+
+      <BottomNavigation />
     </div>
   );
 };

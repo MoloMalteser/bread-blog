@@ -7,10 +7,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Save, Eye, Send, Globe } from 'lucide-react';
 import { usePosts } from '@/hooks/usePosts';
 import { useAuth } from '@/hooks/useAuth';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 
 const Editor = () => {
   const { postId } = useParams();
@@ -66,9 +68,9 @@ const Editor = () => {
     
     try {
       if (postId) {
-        await updatePost(postId, title.trim(), content.trim(), isPublic);
+        await updatePost(postId, title.trim(), content.trim(), false); // Save as draft first
       } else {
-        const newPost = await createPost(title.trim(), content.trim(), isPublic);
+        const newPost = await createPost(title.trim(), content.trim(), false); // Save as draft first
         if (newPost) {
           navigate(`/editor/${newPost.id}`, { replace: true });
         }
@@ -78,14 +80,14 @@ const Editor = () => {
       
       if (showToast) {
         toast({
-          title: isPublic ? "Post veröffentlicht" : "Entwurf gespeichert",
-          description: isPublic ? "Dein Post ist jetzt öffentlich sichtbar" : "Änderungen wurden gespeichert",
+          title: "Entwurf gespeichert",
+          description: "Änderungen wurden als Entwurf gespeichert",
         });
       }
     } catch (error) {
       toast({
         title: "Fehler beim Speichern",
-        description: "Post konnte nicht gespeichert werden",
+        description: "Entwurf konnte nicht gespeichert werden",
         variant: "destructive"
       });
     }
@@ -103,15 +105,39 @@ const Editor = () => {
       return;
     }
 
-    setIsPublic(true);
-    await handleSave();
-    navigate('/dashboard');
+    setIsSaving(true);
+    
+    try {
+      if (postId) {
+        await updatePost(postId, title.trim(), content.trim(), isPublic);
+      } else {
+        const newPost = await createPost(title.trim(), content.trim(), isPublic);
+        if (newPost) {
+          navigate(`/editor/${newPost.id}`, { replace: true });
+        }
+      }
+      
+      toast({
+        title: isPublic ? "Post veröffentlicht" : "Entwurf gespeichert",
+        description: isPublic ? "Dein Post ist jetzt öffentlich sichtbar" : "Post wurde als Entwurf gespeichert",
+      });
+      
+      navigate('/dashboard');
+    } catch (error) {
+      toast({
+        title: "Fehler beim Veröffentlichen",
+        description: "Post konnte nicht veröffentlicht werden",
+        variant: "destructive"
+      });
+    }
+    
+    setIsSaving(false);
   };
 
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
       {/* Editor Header */}
       <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-3">
@@ -147,10 +173,10 @@ const Editor = () => {
               <Button
                 size="sm"
                 onClick={handlePublish}
-                disabled={!title.trim() || !content.trim()}
+                disabled={!title.trim() || !content.trim() || isSaving}
               >
                 <Send className="h-4 w-4 mr-1" />
-                {isPublic ? 'Update' : 'Veröffentlichen'}
+                {isPublic ? 'Veröffentlichen' : 'Als Entwurf speichern'}
               </Button>
             </div>
           </div>
@@ -172,15 +198,38 @@ const Editor = () => {
             />
           </div>
 
-          {/* Content */}
-          <div>
-            <Textarea
-              placeholder="Teile deine Gedanken..."
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="min-h-[400px] border-none px-0 resize-none focus-visible:ring-0 focus-visible:ring-offset-0 text-base leading-relaxed"
-            />
-          </div>
+          {/* Content with Tabs for Editor/Preview */}
+          <Tabs defaultValue="editor" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="editor">Editor</TabsTrigger>
+              <TabsTrigger value="preview">Vorschau</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="editor">
+              <Textarea
+                placeholder="Teile deine Gedanken... 
+
+Du kannst Markdown verwenden:
+**fett**, *kursiv*, `code`, [Link](https://example.com)
+# Überschrift 1
+## Überschrift 2
+### Überschrift 3"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                className="min-h-[400px] border-none px-0 resize-none focus-visible:ring-0 focus-visible:ring-offset-0 text-base leading-relaxed"
+              />
+            </TabsContent>
+            
+            <TabsContent value="preview">
+              <div className="min-h-[400px] p-4 border rounded-lg bg-background">
+                {content ? (
+                  <MarkdownRenderer content={content} />
+                ) : (
+                  <p className="text-muted-foreground">Schreibe etwas im Editor, um die Vorschau zu sehen...</p>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
 
           {/* Publishing Options */}
           <Card className="p-4">
@@ -190,7 +239,7 @@ const Editor = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Globe className="h-4 w-4" />
-                  <Label htmlFor="public">Öffentlich</Label>
+                  <Label htmlFor="public">Öffentlich veröffentlichen</Label>
                 </div>
                 <Switch
                   id="public"
@@ -218,9 +267,10 @@ const Editor = () => {
             <h4 className="font-medium mb-2">✨ Schreibtipps</h4>
             <ul className="text-sm text-muted-foreground space-y-1">
               <li>• Verwende Markdown: **fett**, *kursiv*, `code`</li>
-              <li>• Deine Posts werden automatisch gespeichert</li>
+              <li>• Deine Posts werden automatisch als Entwurf gespeichert</li>
               <li>• Anonyme Posts zeigen deinen Namen nicht an</li>
-              <li>• Einfach schreiben - Bread kümmert sich um den Rest</li>
+              <li>• Nutze die Vorschau um dein Markdown zu prüfen</li>
+              <li>• Klicke "Veröffentlichen" wenn du bereit bist</li>
             </ul>
           </Card>
         </div>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,13 +7,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Header from '@/components/Header';
 import BottomNavigation from '@/components/BottomNavigation';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 import { useFeed } from '@/hooks/useFeed';
 import { useSocial } from '@/hooks/useSocial';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/hooks/useLanguage';
-import { Heart, MessageCircle, Eye, Calendar, User, Send, Plus, Search } from 'lucide-react';
+import { Heart, MessageCircle, Eye, Calendar, User, Send, Plus, Search, Repeat2, UserPlus } from 'lucide-react';
 import { format } from 'date-fns';
 import { de, enUS } from 'date-fns/locale';
+import { useToast } from '@/hooks/use-toast';
 
 const Feed = () => {
   const [currentView, setCurrentView] = useState<'feed' | 'all'>('feed');
@@ -22,11 +23,13 @@ const Feed = () => {
   const [comments, setComments] = useState<Record<string, any[]>>({});
   const [newComment, setNewComment] = useState<Record<string, string>>({});
   const [showComments, setShowComments] = useState<Record<string, boolean>>({});
+  const [reposts, setReposts] = useState<Record<string, { count: number; isReposted: boolean }>>({});
   
   const { feedPosts, allPosts, loading, fetchFeedPosts, fetchAllPosts } = useFeed();
   const { toggleLike, getLikeInfo, addComment, getComments, incrementViewCount } = useSocial();
   const { user } = useAuth();
   const { language, t } = useLanguage();
+  const { toast } = useToast();
 
   const currentPosts = currentView === 'feed' ? feedPosts : allPosts;
   const dateLocale = language === 'de' ? de : enUS;
@@ -91,6 +94,40 @@ const Feed = () => {
     await incrementViewCount(postId);
   };
 
+  const handleRepost = async (postId: string) => {
+    if (!user) return;
+    
+    // Toggle repost status
+    const newRepostState = !reposts[postId]?.isReposted;
+    
+    setReposts(prev => ({
+      ...prev,
+      [postId]: {
+        count: newRepostState ? (prev[postId]?.count || 0) + 1 : Math.max(0, (prev[postId]?.count || 0) - 1),
+        isReposted: newRepostState
+      }
+    }));
+
+    toast({
+      title: newRepostState ? "Post geteilt" : "Geteilter Post entfernt",
+      description: newRepostState ? "Der Post wurde in deinem Feed geteilt" : "Der Post wurde aus deinem Feed entfernt",
+    });
+  };
+
+  const handleAddFriend = () => {
+    toast({
+      title: "Freunde hinzufügen",
+      description: "Diese Funktion wird bald verfügbar sein!",
+    });
+  };
+
+  const handleSearch = () => {
+    toast({
+      title: "Suche",
+      description: "Diese Funktion wird bald verfügbar sein!",
+    });
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen bg-background pb-20">
@@ -133,12 +170,17 @@ const Feed = () => {
           </div>
           
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" className="rounded-full">
-              <Plus className="h-4 w-4" />
+            <Button size="sm" variant="outline" className="rounded-full" onClick={handleAddFriend}>
+              <UserPlus className="h-4 w-4" />
             </Button>
-            <Button size="sm" variant="outline" className="rounded-full">
+            <Button size="sm" variant="outline" className="rounded-full" onClick={handleSearch}>
               <Search className="h-4 w-4" />
             </Button>
+            <Link to="/editor">
+              <Button size="sm" variant="outline" className="rounded-full">
+                <Plus className="h-4 w-4" />
+              </Button>
+            </Link>
           </div>
         </div>
 
@@ -203,9 +245,9 @@ const Feed = () => {
                     <h3 className="text-xl font-semibold mb-2 hover:text-primary transition-colors">
                       {post.title}
                     </h3>
-                    <p className="text-muted-foreground line-clamp-3">
-                      {post.content.substring(0, 200)}...
-                    </p>
+                    <div className="text-muted-foreground">
+                      <MarkdownRenderer content={post.content.substring(0, 200) + '...'} />
+                    </div>
                   </Link>
 
                   {/* Post Actions */}
@@ -238,6 +280,22 @@ const Feed = () => {
                       <MessageCircle className="h-4 w-4" />
                       <span>{comments[post.id]?.length || 0}</span>
                     </Button>
+
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRepost(post.id)}
+                      className="flex items-center gap-2"
+                    >
+                      <Repeat2 
+                        className={`h-4 w-4 ${
+                          reposts[post.id]?.isReposted 
+                            ? 'text-green-500' 
+                            : 'text-muted-foreground'
+                        }`} 
+                      />
+                      <span>{reposts[post.id]?.count || 0}</span>
+                    </Button>
                   </div>
 
                   {/* Comments Section */}
@@ -258,7 +316,7 @@ const Feed = () => {
                                 {format(new Date(comment.created_at), 'PPp', { locale: dateLocale })}
                               </span>
                             </div>
-                            <p className="text-sm">{comment.content}</p>
+                            <MarkdownRenderer content={comment.content} className="text-sm" />
                           </div>
                         </div>
                       ))}
