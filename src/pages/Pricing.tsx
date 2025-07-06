@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import BreadLogo from '@/components/BreadLogo';
 import ThemeToggle from '@/components/ThemeToggle';
-import { Check, ArrowLeft } from 'lucide-react';
+import { Check, ArrowLeft, X } from 'lucide-react';
 
 const Pricing = () => {
   return (
@@ -33,20 +32,21 @@ const Pricing = () => {
       </header>
 
       {/* Content */}
-      <main className="max-w-4xl mx-auto px-4 py-16">
+      <main className="max-w-6xl mx-auto px-4 py-16">
         <div className="text-center mb-16">
           <Badge variant="secondary" className="mb-4">Preise</Badge>
           <h1 className="text-4xl md:text-5xl font-semibold mb-4">
-            Einfach. Transparent. Kostenlos.
+            Einfach. Transparent. Für jeden.
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Bread ist und bleibt für alle kostenlos. Keine versteckten Gebühren, 
-            keine Limits, keine Premium-Features.
+            Bread bietet für jeden das richtige Paket - von kostenlosen persönlichen Blogs 
+            bis hin zu professionellen Unternehmenslösungen.
           </p>
         </div>
 
-        {/* Pricing Card */}
-        <div className="max-w-md mx-auto">
+        {/* Pricing Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          {/* Free Plan */}
           <Card className="border-2 border-primary">
             <CardHeader className="text-center">
               <div className="text-4xl mb-4">🍞</div>
@@ -73,23 +73,19 @@ const Pricing = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-primary" />
-                  <span>Responsive Design</span>
+                  <span>Likes & Kommentare</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-primary" />
-                  <span>Automatisches Speichern</span>
+                  <span>Follow-System</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-primary" />
-                  <span>Tags & Kategorien</span>
+                  <span>Push-Benachrichtigungen</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-primary" />
-                  <span>Öffentliche Profile</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-primary" />
-                  <span>Sharing-Features</span>
+                  <span>Anonyme Posts</span>
                 </div>
               </div>
               
@@ -98,6 +94,97 @@ const Pricing = () => {
                   Kostenlos starten
                 </Button>
               </Link>
+            </CardContent>
+          </Card>
+
+          {/* Anonymous Plan */}
+          <Card>
+            <CardHeader className="text-center">
+              <div className="text-4xl mb-4">🎭</div>
+              <CardTitle className="text-2xl">Bread Anonymous</CardTitle>
+              <CardDescription>
+                Nur lesen, anonym
+              </CardDescription>
+              <div className="text-4xl font-bold">0€</div>
+              <p className="text-muted-foreground">kostenlos</p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-primary" />
+                  <span>Alle Posts lesen</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-primary" />
+                  <span>Dark & Light Mode</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <X className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">Keine Posts erstellen</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <X className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">Keine Interaktionen</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <X className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">Kein Profil</span>
+                </div>
+              </div>
+              
+              <Link to="/" className="block">
+                <Button variant="outline" className="w-full">
+                  Anonym durchstöbern
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          {/* Pro Plan */}
+          <Card className="border-2 border-orange-500 relative">
+            <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+              <Badge className="bg-orange-500 text-white">Bald verfügbar</Badge>
+            </div>
+            <CardHeader className="text-center">
+              <div className="text-4xl mb-4">🏢</div>
+              <CardTitle className="text-2xl">Bread Pro</CardTitle>
+              <CardDescription>
+                Für Unternehmen
+              </CardDescription>
+              <div className="text-4xl font-bold">0€</div>
+              <p className="text-muted-foreground">kostenlos (Beta)</p>
+            </CardHeader>
+            <CardContent className="space-y-4 opacity-75">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-primary" />
+                  <span>Alle Free Features</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-primary" />
+                  <span>Google SSO</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-primary" />
+                  <span>Team-Management</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-primary" />
+                  <span>Analytics Dashboard</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-primary" />
+                  <span>Custom Branding</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-primary" />
+                  <span>Priority Support</span>
+                </div>
+              </div>
+              
+              <Button className="w-full" disabled>
+                Bald verfügbar
+              </Button>
             </CardContent>
           </Card>
         </div>

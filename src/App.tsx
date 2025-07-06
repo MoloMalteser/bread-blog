@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -21,40 +20,55 @@ import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
 import SecretAdminMenu from "./pages/secret-admin-menu"
 import Flappybread from "./pages/secret"
+import BottomNavigation from "@/components/BottomNavigation";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <LanguageProvider>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/editor" element={<Editor />} />
-              <Route path="/editor/:postId" element={<Editor />} />
-              <Route path="/profile/:username" element={<Profile />} />
-              <Route path="/post/:slug" element={<Post />} />
-              <Route path="/feed" element={<Feed />} />
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/terms" element={<Terms />} />
-              <Route path="*" element={<NotFound />} />
-              <Route path="/adminmenu" element={<SecretAdminMenu/>} />
-              <Route path="/game" element={<Flappybread/>} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
-    </LanguageProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  // Initialize notifications
+  const { user } = useAuth();
+  
+  useEffect(() => {
+    if (user && 'serviceWorker' in navigator) {
+      // Register service worker for notifications
+      navigator.serviceWorker.register('/sw.js').catch(console.error);
+    }
+  }, [user]);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <LanguageProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/editor" element={<Editor />} />
+                <Route path="/editor/:postId" element={<Editor />} />
+                <Route path="/profile/:username" element={<Profile />} />
+                <Route path="/post/:slug" element={<Post />} />
+                <Route path="/feed" element={<Feed />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/pricing" element={<Pricing />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="*" element={<NotFound />} />
+                <Route path="/adminmenu" element={<SecretAdminMenu/>} />
+                <Route path="/game" element={<Flappybread/>} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </AuthProvider>
+      </LanguageProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

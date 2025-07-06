@@ -5,89 +5,28 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Header from '@/components/Header';
+import BottomNavigation from '@/components/BottomNavigation';
 import { PlusCircle, Edit3, Eye, Calendar, Trash2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-
-interface Post {
-  id: string;
-  title: string;
-  content: string;
-  excerpt: string;
-  published: boolean;
-  createdAt: string;
-  tags: string[];
-  views: number;
-  authorId: string;
-  authorUsername: string;
-  authorDisplayName: string;
-}
+import { usePosts } from '@/hooks/usePosts';
+import { useAuth } from '@/hooks/useAuth';
 
 const Dashboard = () => {
-  const [user, setUser] = useState<any>(null);
-  const [posts, setPosts] = useState<Post[]>([]);
+  const { user } = useAuth();
+  const { posts, loading, deletePost } = usePosts();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    const userData = localStorage.getItem('bread-user');
-    if (!userData) {
+    if (!user) {
       navigate('/auth');
       return;
     }
-    const currentUser = JSON.parse(userData);
-    setUser(currentUser);
+  }, [user, navigate]);
 
-    // Load user's posts only
-    const savedPosts = localStorage.getItem('bread-posts');
-    if (savedPosts) {
-      const allPosts: Post[] = JSON.parse(savedPosts);
-      const userPosts = allPosts.filter(post => post.authorId === currentUser.id);
-      setPosts(userPosts);
-    } else {
-      // Create demo posts for new user
-      const demoPosts: Post[] = [
-        {
-          id: '1',
-          title: 'Mein erster Gedanke',
-          content: 'Heute hatte ich einen wunderbaren Gedanken über die Schönheit des Einfachen. Es ist faszinierend, wie die kleinen Dinge im Leben oft die größte Wirkung haben...',
-          excerpt: 'Heute hatte ich einen wunderbaren Gedanken über die Schönheit des Einfachen...',
-          published: true,
-          createdAt: new Date().toLocaleDateString('de-DE'),
-          tags: ['gedanken', 'einfachheit'],
-          views: 42,
-          authorId: currentUser.id,
-          authorUsername: currentUser.username,
-          authorDisplayName: currentUser.displayName
-        },
-        {
-          id: '2',
-          title: 'Entwurf: Über das Schreiben',
-          content: 'Schreiben ist wie Brot backen - es braucht Zeit, Geduld und die richtigen Zutaten. Manchmal entstehen die besten Texte dann, wenn man sie am wenigsten erwartet...',
-          excerpt: 'Schreiben ist wie Brot backen - es braucht Zeit, Geduld...',
-          published: false,
-          createdAt: new Date().toLocaleDateString('de-DE'),
-          tags: ['schreiben', 'kreativität'],
-          views: 0,
-          authorId: currentUser.id,
-          authorUsername: currentUser.username,
-          authorDisplayName: currentUser.displayName
-        }
-      ];
-      setPosts(demoPosts);
-      localStorage.setItem('bread-posts', JSON.stringify(demoPosts));
-    }
-  }, [navigate]);
-
-  const deletePost = (postId: string) => {
-    const savedPosts = localStorage.getItem('bread-posts');
-    if (savedPosts) {
-      const allPosts: Post[] = JSON.parse(savedPosts);
-      const updatedPosts = allPosts.filter(post => post.id !== postId);
-      localStorage.setItem('bread-posts', JSON.stringify(updatedPosts));
-      
-      const userPosts = updatedPosts.filter(post => post.authorId === user.id);
-      setPosts(userPosts);
-      
+  const handleDeletePost = async (postId: string) => {
+    const success = await deletePost(postId);
+    if (success) {
       toast({
         title: "Post gelöscht",
         description: "Der Post wurde erfolgreich gelöscht",
@@ -95,19 +34,19 @@ const Dashboard = () => {
     }
   };
 
-  const publishedPosts = posts.filter(post => post.published);
-  const draftPosts = posts.filter(post => !post.published);
+  const publishedPosts = posts.filter(post => post.is_public);
+  const draftPosts = posts.filter(post => !post.is_public);
 
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
       <Header />
       
-      <main className="max-w-6xl mx-auto px-4 py-8 mt-16">
+      <main className="pt-20 max-w-6xl mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-semibold mb-2">
-            Willkommen zurück, {user.displayName}!
+            Willkommen zurück, {user.user_metadata?.username || user.email?.split('@')[0]}!
           </h1>
           <p className="text-muted-foreground">
             Dein persönlicher Schreibbereich bei Bread
@@ -124,11 +63,13 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/profile/${user.username}`)}>
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/profile/${user.user_metadata?.username || user.email?.split('@')[0]}`)}>
             <CardContent className="p-6 text-center">
               <Eye className="h-8 w-8 mx-auto mb-3 text-primary" />
               <h3 className="font-semibold mb-1">Mein Profil</h3>
-              <p className="text-sm text-muted-foreground">bread.blog/{user.username}</p>
+              <p className="text-sm text-muted-foreground">
+                bread.blog/{user.user_metadata?.username || user.email?.split('@')[0]}
+              </p>
             </CardContent>
           </Card>
 
@@ -137,7 +78,7 @@ const Dashboard = () => {
               <Calendar className="h-8 w-8 mx-auto mb-3 text-primary" />
               <h3 className="font-semibold mb-1">Statistiken</h3>
               <p className="text-sm text-muted-foreground">
-                {publishedPosts.reduce((sum, post) => sum + post.views, 0)} Aufrufe gesamt
+                {publishedPosts.reduce((sum, post) => sum + (post.view_count || 0), 0)} Aufrufe gesamt
               </p>
             </CardContent>
           </Card>
@@ -169,26 +110,19 @@ const Dashboard = () => {
                         <div className="flex-1">
                           <h3 className="font-semibold mb-1">{post.title}</h3>
                           <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-                            {post.excerpt}
+                            {post.content.substring(0, 120)}...
                           </p>
                           <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                            <span>{post.views} Aufrufe</span>
+                            <span>{post.view_count || 0} Aufrufe</span>
                             <span>•</span>
-                            <span>{post.createdAt}</span>
-                          </div>
-                          <div className="flex flex-wrap gap-1">
-                            {post.tags.map(tag => (
-                              <Badge key={tag} variant="secondary" className="text-xs">
-                                #{tag}
-                              </Badge>
-                            ))}
+                            <span>{new Date(post.created_at).toLocaleDateString('de-DE')}</span>
                           </div>
                         </div>
                         <div className="flex gap-1">
                           <Button variant="ghost" size="sm" onClick={() => navigate(`/editor/${post.id}`)}>
                             <Edit3 className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={() => deletePost(post.id)}>
+                          <Button variant="ghost" size="sm" onClick={() => handleDeletePost(post.id)}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -221,26 +155,19 @@ const Dashboard = () => {
                         <div className="flex-1">
                           <h3 className="font-semibold mb-1">{post.title}</h3>
                           <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-                            {post.excerpt}
+                            {post.content.substring(0, 120)}...
                           </p>
                           <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                             <Badge variant="outline" className="text-xs">Entwurf</Badge>
                             <span>•</span>
-                            <span>{post.createdAt}</span>
-                          </div>
-                          <div className="flex flex-wrap gap-1">
-                            {post.tags.map(tag => (
-                              <Badge key={tag} variant="secondary" className="text-xs">
-                                #{tag}
-                              </Badge>
-                            ))}
+                            <span>{new Date(post.created_at).toLocaleDateString('de-DE')}</span>
                           </div>
                         </div>
                         <div className="flex gap-1">
                           <Button variant="ghost" size="sm" onClick={() => navigate(`/editor/${post.id}`)}>
                             <Edit3 className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={() => deletePost(post.id)}>
+                          <Button variant="ghost" size="sm" onClick={() => handleDeletePost(post.id)}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -253,6 +180,8 @@ const Dashboard = () => {
           </div>
         </div>
       </main>
+
+      <BottomNavigation />
     </div>
   );
 };

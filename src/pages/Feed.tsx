@@ -10,7 +10,7 @@ import { useFeed } from '@/hooks/useFeed';
 import { useSocial } from '@/hooks/useSocial';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/hooks/useLanguage';
-import { Heart, MessageCircle, Eye, Calendar, User, Send } from 'lucide-react';
+import { Heart, MessageCircle, Eye, Calendar, User, Send, Plus, Search } from 'lucide-react';
 import { format } from 'date-fns';
 import { de, enUS } from 'date-fns/locale';
 
@@ -91,7 +91,7 @@ const Feed = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pb-20">
         <Header />
         <div className="pt-20 flex items-center justify-center min-h-[80vh]">
           <Card className="p-8 text-center max-w-md">
@@ -106,26 +106,38 @@ const Feed = () => {
             </CardContent>
           </Card>
         </div>
+        <BottomNavigation />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
       <Header />
       
       <main className="pt-20 max-w-4xl mx-auto px-4 py-8">
-        {/* Navigation Pills */}
-        <div className="mb-8">
-          <Select value={currentView} onValueChange={(value: 'feed' | 'all') => setCurrentView(value)}>
-            <SelectTrigger className="w-48 rounded-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="feed">📱 {t('feed')}</SelectItem>
-              <SelectItem value="all">🌍 {t('general')}</SelectItem>
-            </SelectContent>
-          </Select>
+        {/* Navigation Pills with additional buttons */}
+        <div className="mb-8 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Select value={currentView} onValueChange={(value: 'feed' | 'all') => setCurrentView(value)}>
+              <SelectTrigger className="w-48 rounded-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="feed">📱 {t('feed')}</SelectItem>
+                <SelectItem value="all">🌍 {t('general')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" className="rounded-full">
+              <Plus className="h-4 w-4" />
+            </Button>
+            <Button size="sm" variant="outline" className="rounded-full">
+              <Search className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         {loading ? (
@@ -281,6 +293,8 @@ const Feed = () => {
           </div>
         )}
       </main>
+
+      <BottomNavigation />
     </div>
   );
 };

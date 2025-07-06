@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
@@ -6,7 +5,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import BreadLogo from '@/components/BreadLogo';
 import ThemeToggle from '@/components/ThemeToggle';
-import { Calendar, Eye, ArrowLeft } from 'lucide-react';
+import { Calendar, Eye, ArrowLeft, Share2 } from 'lucide-react';
+import { useToast } from '@/components/ui/toast';
 
 interface Post {
   id: string;
@@ -34,6 +34,7 @@ const Profile = () => {
   const [user, setUser] = useState<User | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [isOwner, setIsOwner] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     // Check if current user is viewing their own profile
@@ -83,6 +84,32 @@ const Profile = () => {
     }
   }, [username, isOwner]);
 
+  const handleShare = async () => {
+    const url = `https://bread-blog.lovable.app/profile/${username}`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${user?.displayName} auf Bread`,
+          text: `Schau dir das Profil von ${user?.displayName} an`,
+          url: url,
+        });
+      } catch (err) {
+        await navigator.clipboard.writeText(url);
+        toast({
+          title: "Link kopiert",
+          description: "Der Profil-Link wurde in die Zwischenablage kopiert",
+        });
+      }
+    } else {
+      await navigator.clipboard.writeText(url);
+      toast({
+        title: "Link kopiert",
+        description: "Der Profil-Link wurde in die Zwischenablage kopiert",
+      });
+    }
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -100,7 +127,7 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
       {/* Header */}
       <header className="border-b">
         <div className="max-w-4xl mx-auto px-4 py-4">
@@ -116,6 +143,10 @@ const Profile = () => {
             
             <div className="flex items-center gap-2">
               <ThemeToggle />
+              <Button variant="outline" size="sm" onClick={handleShare}>
+                <Share2 className="h-4 w-4 mr-1" />
+                Teilen
+              </Button>
               {!isOwner && (
                 <Link to="/">
                   <Button variant="outline" size="sm">
