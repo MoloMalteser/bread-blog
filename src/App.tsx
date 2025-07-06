@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import {
   BrowserRouter as Router,
@@ -23,6 +22,8 @@ import Pricing from '@/pages/Pricing';
 import Privacy from '@/pages/Privacy';
 import Terms from '@/pages/Terms';
 import NotFound from '@/pages/NotFound';
+import Secret from '@/pages/Secret';
+import SecretAdminMenu from '@/pages/SecretAdminMenu';
 import { useAuth } from '@/hooks/useAuth';
 import { Toaster } from '@/components/ui/toaster';
 
@@ -88,6 +89,8 @@ function App() {
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
+            <Route path="/secret" element={<Secret />} />
+            <Route path="/secret-admin-menu" element={<SecretAdminMenu />} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>

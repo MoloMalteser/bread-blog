@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
@@ -8,99 +7,95 @@ import BreadLogo from '@/components/BreadLogo';
 import ThemeToggle from '@/components/ThemeToggle';
 import BottomNavigation from '@/components/BottomNavigation';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
-import { Calendar, Eye, ArrowLeft, Share2, Users } from 'lucide-react';
+import { Calendar, Eye, ArrowLeft, Share2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
 
 interface Post {
   id: string;
   title: string;
   content: string;
-  slug: string;
-  is_public: boolean;
-  created_at: string;
-  view_count: number;
+  excerpt: string;
+  published: boolean;
+  createdAt: string;
+  tags: string[];
+  views: number;
+  authorId: string;
+  authorUsername: string;
+  authorDisplayName: string;
 }
 
-interface UserProfile {
+interface User {
   id: string;
   username: string;
-  bio: string | null;
-  created_at: string;
+  displayName: string;
+  email: string;
 }
 
 const Profile = () => {
   const { username } = useParams();
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
-  const [friendsCount, setFriendsCount] = useState(0);
   const [isOwner, setIsOwner] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [userNotFound, setUserNotFound] = useState(false);
   const { toast } = useToast();
   const { user: authUser } = useAuth();
 
   useEffect(() => {
-    if (username) {
-      loadUserProfile();
-    }
-  }, [username, authUser]);
-
-  const loadUserProfile = async () => {
-    if (!username) return;
-
-    try {
-      // Check if user exists
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('username', username)
-        .single();
-
-      if (error || !profile) {
-        setUserNotFound(true);
-        setLoading(false);
-        return;
+    // Check if current user is viewing their own profile
+    const userData = localStorage.getItem('bread-user');
+    if (userData) {
+      const currentUser = JSON.parse(userData);
+      setIsOwner(currentUser.username === username);
+      
+      if (currentUser.username === username) {
+        setUser(currentUser);
       }
-
-      setUserProfile(profile);
-      setIsOwner(authUser?.id === profile.id);
-
-      // Load user's posts
-      const { data: userPosts } = await supabase
-        .from('posts')
-        .select('*')
-        .eq('author_id', profile.id)
-        .eq('is_public', true)
-        .order('created_at', { ascending: false });
-
-      setPosts(userPosts || []);
-
-      // Load friends count
-      const { data: follows } = await supabase
-        .from('follows')
-        .select('id')
-        .eq('follower_id', profile.id);
-
-      setFriendsCount(follows?.length || 0);
-
-    } catch (error) {
-      console.error('Error loading profile:', error);
-      setUserNotFound(true);
-    } finally {
-      setLoading(false);
     }
-  };
+
+    // If not owner, create demo user
+    if (!isOwner) {
+      setUser({
+        id: 'demo',
+        username: username || 'demo',
+        displayName: username || 'Demo User',
+        email: 'demo@bread.blog'
+      });
+    }
+
+    // Load posts for this user
+    const savedPosts = localStorage.getItem('bread-posts');
+    if (savedPosts) {
+      const allPosts: Post[] = JSON.parse(savedPosts);
+      let userPosts: Post[] = [];
+      
+      if (isOwner) {
+        // Show all posts (including drafts) for owner
+        const userData = localStorage.getItem('bread-user');
+        if (userData) {
+          const currentUser = JSON.parse(userData);
+          userPosts = allPosts.filter(post => 
+            post.authorId === currentUser.id && post.published
+          );
+        }
+      } else {
+        // Show only published posts for public viewing
+        userPosts = allPosts.filter(post => 
+          post.authorUsername === username && post.published
+        );
+      }
+      
+      setPosts(userPosts);
+    }
+  }, [username, isOwner]);
 
   const handleShare = async () => {
-    const url = `${window.location.origin}/profile/${username}`;
+    const url = `https://bread-blog.lovable.app/profile/${username}`;
     
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `${userProfile?.username} auf Bread`,
-          text: `Schau dir das Profil von ${userProfile?.username} an`,
+          title: `${user?.displayName} auf Bread`,
+          text: `Schau dir das Profil von ${user?.displayName} an`,
           url: url,
         });
       } catch (err) {
@@ -119,28 +114,16 @@ const Profile = () => {
     }
   };
 
-  if (loading) {
+  if (!user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="text-4xl mb-4">🍞</div>
-          <div className="text-xl">Lädt...</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (userNotFound) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4">😕</div>
-          <h2 className="text-2xl font-semibold mb-2">Nutzer nicht vorhanden :(</h2>
+          <h2 className="text-2xl font-semibold mb-2">Benutzer nicht gefunden</h2>
           <p className="text-muted-foreground mb-4">
             Der Benutzer @{username} existiert nicht.
           </p>
-          <Link to="/feed">
-            <Button>Zurück zum Feed</Button>
+          <Link to="/">
+            <Button>Zur Startseite</Button>
           </Link>
         </div>
       </div>
@@ -158,7 +141,7 @@ const Profile = () => {
                 <BreadLogo />
               </Link>
               <div className="text-sm text-muted-foreground">
-                bread.blog/{userProfile?.username}
+                bread.blog/{user?.username}
               </div>
             </div>
             
@@ -192,27 +175,17 @@ const Profile = () => {
       <div className="max-w-4xl mx-auto px-4 py-12">
         <div className="text-center space-y-4">
           <div className="text-6xl mb-4">🍞</div>
-          <h1 className="text-3xl font-semibold">{userProfile?.username}</h1>
-          <p className="text-lg text-muted-foreground">@{userProfile?.username}</p>
-          
-          {userProfile?.bio && (
-            <p className="text-muted-foreground max-w-md mx-auto">
-              {userProfile.bio}
-            </p>
-          )}
+          <h1 className="text-3xl font-semibold">{user?.displayName}</h1>
+          <p className="text-lg text-muted-foreground">@{user?.username}</p>
           
           <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
               <Calendar className="h-4 w-4" />
-              <span>Dabei seit {new Date(userProfile?.created_at || '').toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })}</span>
+              <span>Dabei seit Januar 2024</span>
             </div>
             <div className="flex items-center gap-1">
               <Eye className="h-4 w-4" />
-              <span>{posts.reduce((sum, post) => sum + (post.view_count || 0), 0)} Aufrufe</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Users className="h-4 w-4" />
-              <span>{friendsCount} Freunde</span>
+              <span>{posts.reduce((sum, post) => sum + post.views, 0)} Aufrufe</span>
             </div>
           </div>
         </div>
@@ -225,7 +198,7 @@ const Profile = () => {
             Alle Posts ({posts.length})
           </h2>
           <p className="text-muted-foreground">
-            Gedanken und Geschichten von {userProfile?.username}
+            Gedanken und Geschichten von {user?.displayName}
           </p>
         </div>
 
@@ -237,7 +210,7 @@ const Profile = () => {
               <p className="text-muted-foreground">
                 {isOwner 
                   ? 'Schreibe deinen ersten Post und teile deine Gedanken mit der Welt!'
-                  : `${userProfile?.username} hat noch keine Posts veröffentlicht.`
+                  : `${user?.displayName} hat noch keine Posts veröffentlicht.`
                 }
               </p>
               {isOwner && (
@@ -259,14 +232,27 @@ const Profile = () => {
                       </h3>
                       
                       <div className="text-muted-foreground leading-relaxed">
-                        <MarkdownRenderer content={post.content.substring(0, 200) + '...'} />
+                        <MarkdownRenderer content={post.excerpt} />
                       </div>
                       
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span>{new Date(post.created_at).toLocaleDateString('de-DE')}</span>
+                          <span>{post.createdAt}</span>
                           <span>•</span>
-                          <span>{post.view_count || 0} Aufrufe</span>
+                          <span>{post.views} Aufrufe</span>
+                        </div>
+                        
+                        <div className="flex flex-wrap gap-2">
+                          {post.tags.slice(0, 3).map(tag => (
+                            <Badge key={tag} variant="secondary" className="text-xs">
+                              #{tag}
+                            </Badge>
+                          ))}
+                          {post.tags.length > 3 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{post.tags.length - 3}
+                            </Badge>
+                          )}
                         </div>
                       </div>
                     </div>
