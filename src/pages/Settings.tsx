@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -8,28 +8,35 @@ import Header from '@/components/Header';
 import BottomNavigation from '@/components/BottomNavigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/hooks/useLanguage';
+import { useNotifications } from '@/hooks/useNotifications';
 import { Bell, Globe, Moon, Sun, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const Settings = () => {
   const { user, signOut } = useAuth();
   const { language, setLanguage, t } = useLanguage();
+  const { requestNotificationPermission } = useNotifications();
   const { toast } = useToast();
   const [notifications, setNotifications] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
 
+  useEffect(() => {
+    // Check current notification permission
+    if ('Notification' in window) {
+      setNotifications(Notification.permission === 'granted');
+    }
+  }, []);
+
   const handleNotificationToggle = async () => {
-    if (!notifications && 'Notification' in window) {
-      const permission = await Notification.requestPermission();
-      if (permission === 'granted') {
-        setNotifications(true);
-        toast({
-          title: "Benachrichtigungen aktiviert",
-          description: "Du erhältst jetzt Benachrichtigungen für neue Posts"
-        });
-      }
+    if (!notifications) {
+      const granted = await requestNotificationPermission();
+      setNotifications(granted);
     } else {
-      setNotifications(!notifications);
+      setNotifications(false);
+      toast({
+        title: "Benachrichtigungen deaktiviert",
+        description: "Du erhältst keine Benachrichtigungen mehr. Du kannst sie in den Browser-Einstellungen wieder aktivieren.",
+      });
     }
   };
 
@@ -80,7 +87,7 @@ const Settings = () => {
                 <div>
                   <Label>Push-Benachrichtigungen</Label>
                   <p className="text-sm text-muted-foreground">
-                    Erhalte Benachrichtigungen für neue Posts
+                    Erhalte Benachrichtigungen für neue Posts von Freunden
                   </p>
                 </div>
                 <Switch

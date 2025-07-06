@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save, Eye, Send, Globe } from 'lucide-react';
+import { ArrowLeft, Save, Eye, Send, Globe, Theater } from 'lucide-react';
 import { usePosts } from '@/hooks/usePosts';
 import { useAuth } from '@/hooks/useAuth';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
@@ -48,18 +48,42 @@ const Editor = () => {
     }
   }, [postId, posts, user, navigate]);
 
-  // Auto-save functionality
+  // Auto-save functionality - FIX: Don't navigate away after auto-save
   useEffect(() => {
     if (title || content) {
       const timer = setTimeout(() => {
         if (title.trim()) {
-          handleSave(false);
+          handleAutoSave();
         }
-      }, 2000);
+      }, 3000); // Increased to 3 seconds to reduce frequency
 
       return () => clearTimeout(timer);
     }
   }, [title, content]);
+
+  const handleAutoSave = async () => {
+    if (!title.trim() || !user) return;
+
+    setIsSaving(true);
+    
+    try {
+      if (postId) {
+        await updatePost(postId, title.trim(), content.trim(), false); // Save as draft
+      } else {
+        const newPost = await createPost(title.trim(), content.trim(), false); // Save as draft
+        if (newPost) {
+          // Replace current URL without navigation to set postId for future saves
+          window.history.replaceState(null, '', `/editor/${newPost.id}`);
+        }
+      }
+      
+      setLastSaved(new Date());
+    } catch (error) {
+      console.error('Auto-save failed:', error);
+    }
+    
+    setIsSaving(false);
+  };
 
   const handleSave = async (showToast = true) => {
     if (!title.trim() || !user) return;
@@ -68,9 +92,9 @@ const Editor = () => {
     
     try {
       if (postId) {
-        await updatePost(postId, title.trim(), content.trim(), false); // Save as draft first
+        await updatePost(postId, title.trim(), content.trim(), false); // Save as draft
       } else {
-        const newPost = await createPost(title.trim(), content.trim(), false); // Save as draft first
+        const newPost = await createPost(title.trim(), content.trim(), false); // Save as draft
         if (newPost) {
           navigate(`/editor/${newPost.id}`, { replace: true });
         }
@@ -156,6 +180,10 @@ const Editor = () => {
                 <span className="text-xs text-muted-foreground">
                   Zuletzt gespeichert: {lastSaved.toLocaleTimeString()}
                 </span>
+              )}
+              
+              {isSaving && (
+                <span className="text-xs text-muted-foreground">Speichert...</span>
               )}
             </div>
 
@@ -250,7 +278,7 @@ Du kannst Markdown verwenden:
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-lg">🎭</span>
+                  <Theater className="h-4 w-4" />
                   <Label htmlFor="anonymous">Anonym veröffentlichen</Label>
                 </div>
                 <Switch

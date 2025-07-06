@@ -53,11 +53,7 @@ export const useSocial = () => {
         .eq('id', existingLike.id);
 
       if (error) {
-        toast({
-          title: "Fehler",
-          description: error.message,
-          variant: "destructive"
-        });
+        console.error('Error unliking post:', error);
         return false;
       }
       return false; // unliked
@@ -71,11 +67,7 @@ export const useSocial = () => {
         });
 
       if (error) {
-        toast({
-          title: "Fehler",
-          description: error.message,
-          variant: "destructive"
-        });
+        console.error('Error liking post:', error);
         return false;
       }
       return true; // liked
@@ -89,7 +81,10 @@ export const useSocial = () => {
       .select('user_id')
       .eq('post_id', postId);
 
-    if (error) return { count: 0, isLiked: false };
+    if (error) {
+      console.error('Error fetching likes:', error);
+      return { count: 0, isLiked: false };
+    }
 
     const count = likes?.length || 0;
     const isLiked = user ? likes?.some(like => like.user_id === user.id) || false : false;
@@ -117,6 +112,7 @@ export const useSocial = () => {
       .single();
 
     if (error) {
+      console.error('Error adding comment:', error);
       toast({
         title: "Fehler beim Kommentieren",
         description: error.message,
@@ -169,6 +165,7 @@ export const useSocial = () => {
         .eq('id', existingFollow.id);
 
       if (error) {
+        console.error('Error unfollowing user:', error);
         toast({
           title: "Fehler",
           description: error.message,
@@ -192,6 +189,7 @@ export const useSocial = () => {
         });
 
       if (error) {
+        console.error('Error following user:', error);
         toast({
           title: "Fehler",
           description: error.message,
