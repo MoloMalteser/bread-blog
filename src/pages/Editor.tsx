@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save, Eye, Send, Globe, Mask } from 'lucide-react';
+import { ArrowLeft, Save, Eye, Send, Globe } from 'lucide-react';
 import { usePosts } from '@/hooks/usePosts';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -201,7 +201,7 @@ const Editor = () => {
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Mask className="h-4 w-4" />
+                  <span className="text-lg">🎭</span>
                   <Label htmlFor="anonymous">Anonym veröffentlichen</Label>
                 </div>
                 <Switch

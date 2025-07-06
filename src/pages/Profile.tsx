@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import BreadLogo from '@/components/BreadLogo';
 import ThemeToggle from '@/components/ThemeToggle';
 import { Calendar, Eye, ArrowLeft, Share2 } from 'lucide-react';
-import { useToast } from '@/components/ui/toast';
+import { useToast } from '@/hooks/use-toast';
 
 interface Post {
   id: string;

@@ -1,9 +1,11 @@
+
+import React, { useEffect } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/hooks/useAuth";
+import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { LanguageProvider } from "@/hooks/useLanguage";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -25,8 +27,7 @@ import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
-const App = () => {
-  // Initialize notifications
+const AppContent = () => {
   const { user } = useAuth();
   
   useEffect(() => {
@@ -37,6 +38,33 @@ const App = () => {
   }, [user]);
 
   return (
+    <div>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/editor" element={<Editor />} />
+        <Route path="/editor/:postId" element={<Editor />} />
+        <Route path="/profile/:username" element={<Profile />} />
+        <Route path="/post/:slug" element={<Post />} />
+        <Route path="/feed" element={<Feed />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/pricing" element={<Pricing />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="*" element={<NotFound />} />
+        <Route path="/adminmenu" element={<SecretAdminMenu/>} />
+        <Route path="/game" element={<Flappybread/>} />
+      </Routes>
+      <BottomNavigation />
+    </div>
+  );
+};
+
+const App = () => {
+  return (
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
         <AuthProvider>
@@ -44,25 +72,7 @@ const App = () => {
             <Toaster />
             <Sonner />
             <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/editor" element={<Editor />} />
-                <Route path="/editor/:postId" element={<Editor />} />
-                <Route path="/profile/:username" element={<Profile />} />
-                <Route path="/post/:slug" element={<Post />} />
-                <Route path="/feed" element={<Feed />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/pricing" element={<Pricing />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/privacy" element={<Privacy />} />
-                <Route path="/terms" element={<Terms />} />
-                <Route path="*" element={<NotFound />} />
-                <Route path="/adminmenu" element={<SecretAdminMenu/>} />
-                <Route path="/game" element={<Flappybread/>} />
-              </Routes>
+              <AppContent />
             </BrowserRouter>
           </TooltipProvider>
         </AuthProvider>

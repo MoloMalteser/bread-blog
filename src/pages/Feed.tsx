@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -6,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Header from '@/components/Header';
+import BottomNavigation from '@/components/BottomNavigation';
 import { useFeed } from '@/hooks/useFeed';
 import { useSocial } from '@/hooks/useSocial';
 import { useAuth } from '@/hooks/useAuth';
