@@ -29,9 +29,65 @@ export interface Follow {
   created_at: string;
 }
 
+export interface UserProfile {
+  id: string;
+  username: string;
+  bio?: string;
+}
+
 export const useSocial = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [friends, setFriends] = useState<UserProfile[]>([]);
+  const [following, setFollowing] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch friends and following on component mount
+  useEffect(() => {
+    if (user) {
+      fetchFriendsAndFollowing();
+    }
+  }, [user]);
+
+  const fetchFriendsAndFollowing = async () => {
+    if (!user) return;
+
+    setLoading(true);
+    try {
+      // Fetch following relationships
+      const { data: followsData, error: followsError } = await supabase
+        .from('follows')
+        .select(`
+          following_id,
+          profiles!follows_following_id_fkey (
+            id,
+            username,
+            bio
+          )
+        `)
+        .eq('follower_id', user.id);
+
+      if (followsError) {
+        console.error('Error fetching follows:', followsError);
+        return;
+      }
+
+      if (followsData) {
+        const friendProfiles = followsData
+          .map(follow => follow.profiles)
+          .filter(profile => profile !== null) as UserProfile[];
+        
+        const followingIds = followsData.map(follow => follow.following_id);
+        
+        setFriends(friendProfiles);
+        setFollowing(followingIds);
+      }
+    } catch (error) {
+      console.error('Error in fetchFriendsAndFollowing:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Like functionality
   const toggleLike = async (postId: string) => {
@@ -149,60 +205,61 @@ export const useSocial = () => {
   const toggleFollow = async (userId: string) => {
     if (!user || user.id === userId) return false;
 
-    // Check if already following
-    const { data: existingFollow } = await supabase
-      .from('follows')
-      .select('id')
-      .eq('follower_id', user.id)
-      .eq('following_id', userId)
-      .single();
-
-    if (existingFollow) {
-      // Unfollow
-      const { error } = await supabase
+    setLoading(true);
+    try {
+      // Check if already following
+      const { data: existingFollow } = await supabase
         .from('follows')
-        .delete()
-        .eq('id', existingFollow.id);
+        .select('id')
+        .eq('follower_id', user.id)
+        .eq('following_id', userId)
+        .single();
 
-      if (error) {
-        console.error('Error unfollowing user:', error);
-        toast({
-          title: "Fehler",
-          description: error.message,
-          variant: "destructive"
-        });
-        return false;
+      if (existingFollow) {
+        // Unfollow
+        const { error } = await supabase
+          .from('follows')
+          .delete()
+          .eq('id', existingFollow.id);
+
+        if (error) {
+          console.error('Error unfollowing user:', error);
+          toast({
+            title: "Fehler",
+            description: error.message,
+            variant: "destructive"
+          });
+          return false;
+        }
+        
+        // Update local state
+        await fetchFriendsAndFollowing();
+        return false; // unfollowed
+      } else {
+        // Follow
+        const { error } = await supabase
+          .from('follows')
+          .insert({
+            follower_id: user.id,
+            following_id: userId
+          });
+
+        if (error) {
+          console.error('Error following user:', error);
+          toast({
+            title: "Fehler",
+            description: error.message,
+            variant: "destructive"
+          });
+          return false;
+        }
+
+        // Update local state
+        await fetchFriendsAndFollowing();
+        return true; // followed
       }
-      
-      toast({
-        title: "Nicht mehr gefolgt",
-        description: "Du folgst diesem Nutzer nicht mehr"
-      });
-      return false; // unfollowed
-    } else {
-      // Follow
-      const { error } = await supabase
-        .from('follows')
-        .insert({
-          follower_id: user.id,
-          following_id: userId
-        });
-
-      if (error) {
-        console.error('Error following user:', error);
-        toast({
-          title: "Fehler",
-          description: error.message,
-          variant: "destructive"
-        });
-        return false;
-      }
-
-      toast({
-        title: "Gefolgt",
-        description: "Du folgst diesem Nutzer jetzt"
-      });
-      return true; // followed
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -226,6 +283,9 @@ export const useSocial = () => {
   };
 
   return {
+    friends,
+    following,
+    loading,
     toggleLike,
     getLikeInfo,
     addComment,
