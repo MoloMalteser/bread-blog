@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      breadgpt_answers: {
+        Row: {
+          created_at: string
+          id: string
+          is_easter_egg: boolean | null
+          keywords: string[] | null
+          text: string
+          trigger_word: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_easter_egg?: boolean | null
+          keywords?: string[] | null
+          text: string
+          trigger_word?: string | null
+          type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_easter_egg?: boolean | null
+          keywords?: string[] | null
+          text?: string
+          trigger_word?: string | null
+          type?: string
+        }
+        Relationships: []
+      }
+      breadgpt_cooldowns: {
+        Row: {
+          id: string
+          last_question_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          last_question_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          last_question_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       comments: {
         Row: {
           content: string
@@ -52,6 +100,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      daily_missions: {
+        Row: {
+          description: string
+          id: string
+          is_active: boolean | null
+          mission_type: string
+          reward_points: number | null
+          target_count: number | null
+          title: string
+        }
+        Insert: {
+          description: string
+          id?: string
+          is_active?: boolean | null
+          mission_type: string
+          reward_points?: number | null
+          target_count?: number | null
+          title: string
+        }
+        Update: {
+          description?: string
+          id?: string
+          is_active?: boolean | null
+          mission_type?: string
+          reward_points?: number | null
+          target_count?: number | null
+          title?: string
+        }
+        Relationships: []
+      }
+      drawings: {
+        Row: {
+          canvas_data: string
+          created_at: string
+          id: string
+          is_public: boolean | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          canvas_data: string
+          created_at?: string
+          id?: string
+          is_public?: boolean | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          canvas_data?: string
+          created_at?: string
+          id?: string
+          is_public?: boolean | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       follows: {
         Row: {
@@ -166,6 +271,33 @@ export type Database = {
           },
         ]
       }
+      private_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_read: boolean | null
+          receiver_id: string
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          receiver_id: string
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          receiver_id?: string
+          sender_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           bio: string | null
@@ -184,6 +316,139 @@ export type Database = {
           created_at?: string
           id?: string
           username?: string
+        }
+        Relationships: []
+      }
+      user_mission_progress: {
+        Row: {
+          completed_at: string | null
+          current_count: number | null
+          date: string
+          id: string
+          mission_id: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          current_count?: number | null
+          date?: string
+          id?: string
+          mission_id?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          current_count?: number | null
+          date?: string
+          id?: string
+          mission_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_mission_progress_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "daily_missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_stats: {
+        Row: {
+          breadgpt_questions: number | null
+          created_at: string
+          daily_streak: number | null
+          drawings_created: number | null
+          id: string
+          last_activity: string | null
+          total_points: number | null
+          user_id: string
+          wiki_contributions: number | null
+        }
+        Insert: {
+          breadgpt_questions?: number | null
+          created_at?: string
+          daily_streak?: number | null
+          drawings_created?: number | null
+          id?: string
+          last_activity?: string | null
+          total_points?: number | null
+          user_id: string
+          wiki_contributions?: number | null
+        }
+        Update: {
+          breadgpt_questions?: number | null
+          created_at?: string
+          daily_streak?: number | null
+          drawings_created?: number | null
+          id?: string
+          last_activity?: string | null
+          total_points?: number | null
+          user_id?: string
+          wiki_contributions?: number | null
+        }
+        Relationships: []
+      }
+      wiki_edits: {
+        Row: {
+          created_at: string
+          id: string
+          new_word: string
+          old_word: string | null
+          page_id: string | null
+          user_id: string
+          word_position: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          new_word: string
+          old_word?: string | null
+          page_id?: string | null
+          user_id: string
+          word_position: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          new_word?: string
+          old_word?: string | null
+          page_id?: string | null
+          user_id?: string
+          word_position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wiki_edits_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "wiki_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wiki_pages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }

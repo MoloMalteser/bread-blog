@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Home, User, Settings, LayoutDashboard, PlusCircle, Users } from 'lucide-react';
+import { Home, User, Settings, LayoutDashboard, PlusCircle, Users, MessageSquare, Zap, Palette, HelpCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 const BottomNavigation = () => {
@@ -40,19 +40,28 @@ const BottomNavigation = () => {
             <span className="text-xs">Schreiben</span>
           </Button>
         </Link>
-        
-        {user && (
-          <Link to="/friends">
-            <Button 
-              variant={isActive('/friends') ? 'default' : 'ghost'} 
-              size="sm" 
-              className="flex flex-col items-center gap-1 h-auto py-2 rounded-full min-w-[50px]"
-            >
-              <Users className="h-4 w-4" />
-              <span className="text-xs">Freunde</span>
-            </Button>
-          </Link>
-        )}
+
+        <Link to="/breadgpt">
+          <Button 
+            variant={isActive('/breadgpt') ? 'default' : 'ghost'} 
+            size="sm" 
+            className="flex flex-col items-center gap-1 h-auto py-2 rounded-full min-w-[50px]"
+          >
+            <HelpCircle className="h-4 w-4" />
+            <span className="text-xs">BreadGPT</span>
+          </Button>
+        </Link>
+
+        <Link to="/draw">
+          <Button 
+            variant={isActive('/draw') ? 'default' : 'ghost'} 
+            size="sm" 
+            className="flex flex-col items-center gap-1 h-auto py-2 rounded-full min-w-[50px]"
+          >
+            <Palette className="h-4 w-4" />
+            <span className="text-xs">Zeichnen</span>
+          </Button>
+        </Link>
         
         {user && (
           <Link to="/dashboard">
@@ -63,19 +72,6 @@ const BottomNavigation = () => {
             >
               <LayoutDashboard className="h-4 w-4" />
               <span className="text-xs">Dashboard</span>
-            </Button>
-          </Link>
-        )}
-        
-        {user && (
-          <Link to="/settings">
-            <Button 
-              variant={isActive('/settings') ? 'default' : 'ghost'} 
-              size="sm" 
-              className="flex flex-col items-center gap-1 h-auto py-2 rounded-full min-w-[50px]"
-            >
-              <Settings className="h-4 w-4" />
-              <span className="text-xs">Settings</span>
             </Button>
           </Link>
         )}
