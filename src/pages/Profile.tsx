@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
@@ -7,95 +8,90 @@ import BreadLogo from '@/components/BreadLogo';
 import ThemeToggle from '@/components/ThemeToggle';
 import BottomNavigation from '@/components/BottomNavigation';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
-import { Calendar, Eye, ArrowLeft, Share2 } from 'lucide-react';
+import { Calendar, Eye, ArrowLeft, Share2, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { useSocial } from '@/hooks/useSocial';
 
 interface Post {
   id: string;
   title: string;
   content: string;
-  excerpt: string;
-  published: boolean;
-  createdAt: string;
-  tags: string[];
-  views: number;
-  authorId: string;
-  authorUsername: string;
-  authorDisplayName: string;
+  slug: string;
+  is_public: boolean;
+  created_at: string;
+  view_count: number;
 }
 
-interface User {
+interface UserProfile {
   id: string;
   username: string;
-  displayName: string;
-  email: string;
+  bio?: string;
+  created_at: string;
 }
 
 const Profile = () => {
   const { username } = useParams();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
   const { toast } = useToast();
   const { user: authUser } = useAuth();
+  const { friends, following } = useSocial();
 
   useEffect(() => {
-    // Check if current user is viewing their own profile
-    const userData = localStorage.getItem('bread-user');
-    if (userData) {
-      const currentUser = JSON.parse(userData);
-      setIsOwner(currentUser.username === username);
-      
-      if (currentUser.username === username) {
-        setUser(currentUser);
-      }
-    }
+    const fetchUserProfile = async () => {
+      if (!username) return;
 
-    // If not owner, create demo user
-    if (!isOwner) {
-      setUser({
-        id: 'demo',
-        username: username || 'demo',
-        displayName: username || 'Demo User',
-        email: 'demo@bread.blog'
-      });
-    }
+      try {
+        // Fetch user profile
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('username', username)
+          .single();
 
-    // Load posts for this user
-    const savedPosts = localStorage.getItem('bread-posts');
-    if (savedPosts) {
-      const allPosts: Post[] = JSON.parse(savedPosts);
-      let userPosts: Post[] = [];
-      
-      if (isOwner) {
-        // Show all posts (including drafts) for owner
-        const userData = localStorage.getItem('bread-user');
-        if (userData) {
-          const currentUser = JSON.parse(userData);
-          userPosts = allPosts.filter(post => 
-            post.authorId === currentUser.id && post.published
-          );
+        if (profileError || !profileData) {
+          setUser(null);
+          setLoading(false);
+          return;
         }
-      } else {
-        // Show only published posts for public viewing
-        userPosts = allPosts.filter(post => 
-          post.authorUsername === username && post.published
-        );
+
+        setUser(profileData);
+        setIsOwner(authUser?.id === profileData.id);
+
+        // Fetch posts
+        const { data: postsData, error: postsError } = await supabase
+          .from('posts')
+          .select('*')
+          .eq('author_id', profileData.id)
+          .eq('is_public', true)
+          .order('created_at', { ascending: false });
+
+        if (postsData) {
+          setPosts(postsData);
+        }
+
+      } catch (error) {
+        console.error('Error fetching profile:', error);
       }
-      
-      setPosts(userPosts);
-    }
-  }, [username, isOwner]);
+
+      setLoading(false);
+    };
+
+    fetchUserProfile();
+  }, [username, authUser]);
 
   const handleShare = async () => {
-    const url = `https://bread-blog.lovable.app/profile/${username}`;
+    const url = `${window.location.origin}/profile/${username}`;
     
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `${user?.displayName} auf Bread`,
-          text: `Schau dir das Profil von ${user?.displayName} an`,
+          title: `${user?.username} auf Bread`,
+          text: `Schau dir das Profil von ${user?.username} an`,
           url: url,
         });
       } catch (err) {
@@ -114,16 +110,29 @@ const Profile = () => {
     }
   };
 
+  const friendsCount = friends.filter(friend => friend.id === user?.id).length + 
+                     friends.filter(friend => following.includes(friend.id)).length;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground">Lade Profil...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-semibold mb-2">Benutzer nicht gefunden</h2>
+          <h2 className="text-2xl font-semibold mb-2">Nutzer nicht vorhanden :(</h2>
           <p className="text-muted-foreground mb-4">
             Der Benutzer @{username} existiert nicht.
           </p>
-          <Link to="/">
-            <Button>Zur Startseite</Button>
+          <Link to="/feed">
+            <Button>Zurück zum Feed</Button>
           </Link>
         </div>
       </div>
@@ -137,7 +146,7 @@ const Profile = () => {
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link to="/">
+              <Link to="/feed">
                 <BreadLogo />
               </Link>
               <div className="text-sm text-muted-foreground">
@@ -175,17 +184,25 @@ const Profile = () => {
       <div className="max-w-4xl mx-auto px-4 py-12">
         <div className="text-center space-y-4">
           <div className="text-6xl mb-4">🍞</div>
-          <h1 className="text-3xl font-semibold">{user?.displayName}</h1>
+          <h1 className="text-3xl font-semibold">{user?.username}</h1>
           <p className="text-lg text-muted-foreground">@{user?.username}</p>
+          
+          {user?.bio && (
+            <p className="text-muted-foreground max-w-md mx-auto">{user.bio}</p>
+          )}
           
           <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
               <Calendar className="h-4 w-4" />
-              <span>Dabei seit Januar 2024</span>
+              <span>Dabei seit {new Date(user.created_at).toLocaleDateString('de-DE')}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Users className="h-4 w-4" />
+              <span>{friendsCount} Freunde</span>
             </div>
             <div className="flex items-center gap-1">
               <Eye className="h-4 w-4" />
-              <span>{posts.reduce((sum, post) => sum + post.views, 0)} Aufrufe</span>
+              <span>{posts.reduce((sum, post) => sum + (post.view_count || 0), 0)} Aufrufe</span>
             </div>
           </div>
         </div>
@@ -198,7 +215,7 @@ const Profile = () => {
             Alle Posts ({posts.length})
           </h2>
           <p className="text-muted-foreground">
-            Gedanken und Geschichten von {user?.displayName}
+            Gedanken und Geschichten von {user?.username}
           </p>
         </div>
 
@@ -210,7 +227,7 @@ const Profile = () => {
               <p className="text-muted-foreground">
                 {isOwner 
                   ? 'Schreibe deinen ersten Post und teile deine Gedanken mit der Welt!'
-                  : `${user?.displayName} hat noch keine Posts veröffentlicht.`
+                  : `${user?.username} hat noch keine Posts veröffentlicht.`
                 }
               </p>
               {isOwner && (
@@ -223,7 +240,7 @@ const Profile = () => {
         ) : (
           <div className="space-y-6">
             {posts.map(post => (
-              <Link key={post.id} to={`/post/${post.id}`}>
+              <Link key={post.id} to={`/post/${post.slug}`}>
                 <Card className="hover:shadow-lg transition-all duration-200 hover:-translate-y-1">
                   <CardContent className="p-6">
                     <div className="space-y-3">
@@ -232,27 +249,14 @@ const Profile = () => {
                       </h3>
                       
                       <div className="text-muted-foreground leading-relaxed">
-                        <MarkdownRenderer content={post.excerpt} />
+                        <MarkdownRenderer content={post.content.substring(0, 200) + '...'} />
                       </div>
                       
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span>{post.createdAt}</span>
+                          <span>{new Date(post.created_at).toLocaleDateString('de-DE')}</span>
                           <span>•</span>
-                          <span>{post.views} Aufrufe</span>
-                        </div>
-                        
-                        <div className="flex flex-wrap gap-2">
-                          {post.tags.slice(0, 3).map(tag => (
-                            <Badge key={tag} variant="secondary" className="text-xs">
-                              #{tag}
-                            </Badge>
-                          ))}
-                          {post.tags.length > 3 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{post.tags.length - 3}
-                            </Badge>
-                          )}
+                          <span>{post.view_count || 0} Aufrufe</span>
                         </div>
                       </div>
                     </div>

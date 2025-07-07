@@ -92,13 +92,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast({
-        title: "Logout failed / Abmeldung fehlgeschlagen",
-        description: error.message,
-        variant: "destructive"
-      });
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Logout error:', error);
+        // Don't show error for "Auth session missing" as it's not a real error
+        if (!error.message.includes('Auth session missing')) {
+          toast({
+            title: "Logout failed / Abmeldung fehlgeschlagen",
+            description: error.message,
+            variant: "destructive"
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Unexpected logout error:', error);
     }
   };
 

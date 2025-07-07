@@ -14,6 +14,7 @@ import Editor from "./pages/Editor";
 import Profile from "./pages/Profile";
 import Post from "./pages/Post";
 import Feed from "./pages/Feed";
+import Friends from "./pages/Friends";
 import Pricing from "./pages/Pricing";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
@@ -48,6 +49,7 @@ const AppContent = () => {
         <Route path="/profile/:username" element={<Profile />} />
         <Route path="/post/:slug" element={<Post />} />
         <Route path="/feed" element={<Feed />} />
+        <Route path="/friends" element={<Friends />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/about" element={<About />} />

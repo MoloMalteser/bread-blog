@@ -34,6 +34,10 @@ const Dashboard = () => {
     }
   };
 
+  const handleEditPost = (postId: string) => {
+    navigate(`/editor/${postId}`);
+  };
+
   const publishedPosts = posts.filter(post => post.is_public);
   const draftPosts = posts.filter(post => !post.is_public);
 
@@ -119,7 +123,7 @@ const Dashboard = () => {
                           </div>
                         </div>
                         <div className="flex gap-1">
-                          <Button variant="ghost" size="sm" onClick={() => navigate(`/editor/${post.id}`)}>
+                          <Button variant="ghost" size="sm" onClick={() => handleEditPost(post.id)}>
                             <Edit3 className="h-4 w-4" />
                           </Button>
                           <Button variant="ghost" size="sm" onClick={() => handleDeletePost(post.id)}>
@@ -164,7 +168,7 @@ const Dashboard = () => {
                           </div>
                         </div>
                         <div className="flex gap-1">
-                          <Button variant="ghost" size="sm" onClick={() => navigate(`/editor/${post.id}`)}>
+                          <Button variant="ghost" size="sm" onClick={() => handleEditPost(post.id)}>
                             <Edit3 className="h-4 w-4" />
                           </Button>
                           <Button variant="ghost" size="sm" onClick={() => handleDeletePost(post.id)}>
