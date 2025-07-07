@@ -28,38 +28,40 @@ const Editor = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
+  // Check if user is anonymous
+  const isAnonymousUser = !user && localStorage.getItem('anonymous-session') === 'true';
+
   useEffect(() => {
-    if (!user) {
+    if (!user && !isAnonymousUser) {
       navigate('/auth');
       return;
     }
 
     // Load existing post if editing
-    if (postId) {
+    if (postId && user) {
       const post = posts.find(p => p.id === postId);
       if (post) {
         setTitle(post.title);
         setContent(post.content);
         setIsPublic(post.is_public);
-        // Check if post is anonymous (could be stored in metadata or separate field)
       } else {
         navigate('/dashboard');
       }
     }
-  }, [postId, posts, user, navigate]);
+  }, [postId, posts, user, isAnonymousUser, navigate]);
 
-  // Auto-save functionality - FIX: Don't navigate away after auto-save
+  // Auto-save functionality
   useEffect(() => {
     if (title || content) {
       const timer = setTimeout(() => {
-        if (title.trim()) {
+        if (title.trim() && user) {
           handleAutoSave();
         }
-      }, 3000); // Increased to 3 seconds to reduce frequency
+      }, 3000);
 
       return () => clearTimeout(timer);
     }
-  }, [title, content]);
+  }, [title, content, user]);
 
   const handleAutoSave = async () => {
     if (!title.trim() || !user) return;
@@ -68,11 +70,10 @@ const Editor = () => {
     
     try {
       if (postId) {
-        await updatePost(postId, title.trim(), content.trim(), false); // Save as draft
+        await updatePost(postId, title.trim(), content.trim(), false);
       } else {
-        const newPost = await createPost(title.trim(), content.trim(), false); // Save as draft
+        const newPost = await createPost(title.trim(), content.trim(), false);
         if (newPost) {
-          // Replace current URL without navigation to set postId for future saves
           window.history.replaceState(null, '', `/editor/${newPost.id}`);
         }
       }
@@ -92,9 +93,9 @@ const Editor = () => {
     
     try {
       if (postId) {
-        await updatePost(postId, title.trim(), content.trim(), false); // Save as draft
+        await updatePost(postId, title.trim(), content.trim(), false);
       } else {
-        const newPost = await createPost(title.trim(), content.trim(), false); // Save as draft
+        const newPost = await createPost(title.trim(), content.trim(), false);
         if (newPost) {
           navigate(`/editor/${newPost.id}`, { replace: true });
         }
@@ -129,6 +130,19 @@ const Editor = () => {
       return;
     }
 
+    // Handle anonymous publishing
+    if (isAnonymousUser) {
+      toast({
+        title: "Anmeldung erforderlich",
+        description: "Du musst angemeldet sein, um Posts zu veröffentlichen",
+        variant: "destructive"
+      });
+      navigate('/auth');
+      return;
+    }
+
+    if (!user) return;
+
     setIsSaving(true);
     
     try {
@@ -158,7 +172,7 @@ const Editor = () => {
     setIsSaving(false);
   };
 
-  if (!user) return null;
+  if (!user && !isAnonymousUser) return null;
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -170,7 +184,7 @@ const Editor = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate(user ? '/dashboard' : '/feed')}
               >
                 <ArrowLeft className="h-4 w-4 mr-1" />
                 Zurück
@@ -185,18 +199,24 @@ const Editor = () => {
               {isSaving && (
                 <span className="text-xs text-muted-foreground">Speichert...</span>
               )}
+
+              {isAnonymousUser && (
+                <span className="text-xs text-orange-600">Anonym-Modus: Nur lesen möglich</span>
+              )}
             </div>
 
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleSave()}
-                disabled={isSaving}
-              >
-                <Save className="h-4 w-4 mr-1" />
-                {isSaving ? 'Speichern...' : 'Speichern'}
-              </Button>
+              {user && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleSave()}
+                  disabled={isSaving}
+                >
+                  <Save className="h-4 w-4 mr-1" />
+                  {isSaving ? 'Speichern...' : 'Speichern'}
+                </Button>
+              )}
 
               <Button
                 size="sm"
@@ -223,6 +243,7 @@ const Editor = () => {
               onChange={(e) => setTitle(e.target.value)}
               className="text-3xl font-semibold border-none px-0 focus-visible:ring-0 focus-visible:ring-offset-0"
               style={{ fontSize: '2rem', lineHeight: '2.5rem' }}
+              disabled={isAnonymousUser}
             />
           </div>
 
@@ -235,16 +256,11 @@ const Editor = () => {
             
             <TabsContent value="editor">
               <Textarea
-                placeholder="Teile deine Gedanken... 
-
-Du kannst Markdown verwenden:
-**fett**, *kursiv*, `code`, [Link](https://example.com)
-# Überschrift 1
-## Überschrift 2
-### Überschrift 3"
+                placeholder={isAnonymousUser ? "Anmelden um zu schreiben..." : "Teile deine Gedanken... \n\nDu kannst Markdown verwenden:\n**fett**, *kursiv*, `code`, [Link](https://example.com)\n# Überschrift 1\n## Überschrift 2\n### Überschrift 3"}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 className="min-h-[400px] border-none px-0 resize-none focus-visible:ring-0 focus-visible:ring-offset-0 text-base leading-relaxed"
+                disabled={isAnonymousUser}
               />
             </TabsContent>
             
@@ -260,45 +276,48 @@ Du kannst Markdown verwenden:
           </Tabs>
 
           {/* Publishing Options */}
-          <Card className="p-4">
-            <div className="space-y-4">
-              <h3 className="font-medium">Veröffentlichungs-Optionen</h3>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Globe className="h-4 w-4" />
-                  <Label htmlFor="public">Öffentlich veröffentlichen</Label>
+          {user && (
+            <Card className="p-4">
+              <div className="space-y-4">
+                <h3 className="font-medium">Veröffentlichungs-Optionen</h3>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Globe className="h-4 w-4" />
+                    <Label htmlFor="public">Öffentlich veröffentlichen</Label>
+                  </div>
+                  <Switch
+                    id="public"
+                    checked={isPublic}
+                    onCheckedChange={setIsPublic}
+                  />
                 </div>
-                <Switch
-                  id="public"
-                  checked={isPublic}
-                  onCheckedChange={setIsPublic}
-                />
-              </div>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Theater className="h-4 w-4" />
-                  <Label htmlFor="anonymous">Anonym veröffentlichen</Label>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Theater className="h-4 w-4" />
+                    <Label htmlFor="anonymous">Anonym veröffentlichen</Label>
+                  </div>
+                  <Switch
+                    id="anonymous"
+                    checked={isAnonymous}
+                    onCheckedChange={setIsAnonymous}
+                  />
                 </div>
-                <Switch
-                  id="anonymous"
-                  checked={isAnonymous}
-                  onCheckedChange={setIsAnonymous}
-                />
               </div>
-            </div>
-          </Card>
+            </Card>
+          )}
 
           {/* Tips */}
           <Card className="p-4 bg-muted/30">
             <h4 className="font-medium mb-2">✨ Schreibtipps</h4>
             <ul className="text-sm text-muted-foreground space-y-1">
               <li>• Verwende Markdown: **fett**, *kursiv*, `code`</li>
-              <li>• Deine Posts werden automatisch als Entwurf gespeichert</li>
+              {user && <li>• Deine Posts werden automatisch als Entwurf gespeichert</li>}
               <li>• Anonyme Posts zeigen deinen Namen nicht an</li>
               <li>• Nutze die Vorschau um dein Markdown zu prüfen</li>
-              <li>• Klicke "Veröffentlichen" wenn du bereit bist</li>
+              {user && <li>• Klicke "Veröffentlichen" wenn du bereit bist</li>}
+              {isAnonymousUser && <li>• Melde dich an, um Posts zu schreiben und zu veröffentlichen</li>}
             </ul>
           </Card>
         </div>

@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import BreadLogo from '@/components/BreadLogo';
 import ThemeToggle from '@/components/ThemeToggle';
 import { useAuth } from '@/hooks/useAuth';
-import { ArrowLeft, Globe } from 'lucide-react';
+import { ArrowLeft, Globe, UserX } from 'lucide-react';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -26,28 +26,36 @@ const Auth = () => {
       welcomeSubtitle: 'Teile deine Gedanken mit der Welt',
       login: 'Anmelden',
       register: 'Registrieren',
+      anonymous: 'Anonym',
       email: 'E-Mail',
       password: 'Passwort',
       username: 'Benutzername',
       loginButton: 'Anmelden',
       registerButton: 'Registrieren',
+      anonymousButton: 'Anonym weitermachen',
       loginLoading: 'Anmelden...',
       registerLoading: 'Registrieren...',
-      back: 'Zurück'
+      anonymousLoading: 'Anonym anmelden...',
+      back: 'Zurück',
+      anonymousDesc: 'Lese Posts ohne Anmeldung (nur lesen möglich)'
     },
     en: {
       welcomeTitle: 'Welcome to Bread',
       welcomeSubtitle: 'Share your thoughts with the world',
       login: 'Login',
       register: 'Register',
+      anonymous: 'Anonymous',
       email: 'Email',
       password: 'Password',
       username: 'Username',
       loginButton: 'Login',
       registerButton: 'Register',
+      anonymousButton: 'Continue anonymously',
       loginLoading: 'Logging in...',
       registerLoading: 'Registering...',
-      back: 'Back'
+      anonymousLoading: 'Logging in anonymously...',
+      back: 'Back',
+      anonymousDesc: 'Read posts without registration (read-only)'
     }
   };
 
@@ -75,6 +83,16 @@ const Auth = () => {
     }
     
     setLoading(false);
+  };
+
+  const handleAnonymousLogin = () => {
+    setLoading(true);
+    // Store anonymous session
+    localStorage.setItem('anonymous-session', 'true');
+    setTimeout(() => {
+      navigate('/feed');
+      setLoading(false);
+    }, 1000);
   };
 
   const text = t[language as keyof typeof t];
@@ -124,9 +142,10 @@ const Auth = () => {
           
           <CardContent>
             <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="login">{text.login}</TabsTrigger>
                 <TabsTrigger value="register">{text.register}</TabsTrigger>
+                <TabsTrigger value="anonymous">{text.anonymous}</TabsTrigger>
               </TabsList>
               
               <TabsContent value="login">
@@ -188,6 +207,25 @@ const Auth = () => {
                     {loading ? text.registerLoading : text.registerButton}
                   </Button>
                 </form>
+              </TabsContent>
+
+              <TabsContent value="anonymous">
+                <div className="space-y-4">
+                  <div className="text-center py-4">
+                    <UserX className="h-12 w-12 mx-auto mb-2 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">
+                      {text.anonymousDesc}
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={handleAnonymousLogin} 
+                    className="w-full" 
+                    disabled={loading}
+                    variant="outline"
+                  >
+                    {loading ? text.anonymousLoading : text.anonymousButton}
+                  </Button>
+                </div>
               </TabsContent>
             </Tabs>
           </CardContent>

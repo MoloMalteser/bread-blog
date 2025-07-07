@@ -9,7 +9,10 @@ const BottomNavigation = () => {
   const location = useLocation();
   const { user } = useAuth();
   
-  if (!user) return null;
+  // Show navigation for both authenticated users and anonymous users
+  const isAnonymousUser = !user && localStorage.getItem('anonymous-session') === 'true';
+  
+  if (!user && !isAnonymousUser) return null;
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -38,38 +41,44 @@ const BottomNavigation = () => {
           </Button>
         </Link>
         
-        <Link to="/friends">
-          <Button 
-            variant={isActive('/friends') ? 'default' : 'ghost'} 
-            size="sm" 
-            className="flex flex-col items-center gap-1 h-auto py-2 rounded-full min-w-[50px]"
-          >
-            <Users className="h-4 w-4" />
-            <span className="text-xs">Freunde</span>
-          </Button>
-        </Link>
+        {user && (
+          <Link to="/friends">
+            <Button 
+              variant={isActive('/friends') ? 'default' : 'ghost'} 
+              size="sm" 
+              className="flex flex-col items-center gap-1 h-auto py-2 rounded-full min-w-[50px]"
+            >
+              <Users className="h-4 w-4" />
+              <span className="text-xs">Freunde</span>
+            </Button>
+          </Link>
+        )}
         
-        <Link to="/dashboard">
-          <Button 
-            variant={isActive('/dashboard') ? 'default' : 'ghost'} 
-            size="sm" 
-            className="flex flex-col items-center gap-1 h-auto py-2 rounded-full min-w-[50px]"
-          >
-            <LayoutDashboard className="h-4 w-4" />
-            <span className="text-xs">Dashboard</span>
-          </Button>
-        </Link>
+        {user && (
+          <Link to="/dashboard">
+            <Button 
+              variant={isActive('/dashboard') ? 'default' : 'ghost'} 
+              size="sm" 
+              className="flex flex-col items-center gap-1 h-auto py-2 rounded-full min-w-[50px]"
+            >
+              <LayoutDashboard className="h-4 w-4" />
+              <span className="text-xs">Dashboard</span>
+            </Button>
+          </Link>
+        )}
         
-        <Link to="/settings">
-          <Button 
-            variant={isActive('/settings') ? 'default' : 'ghost'} 
-            size="sm" 
-            className="flex flex-col items-center gap-1 h-auto py-2 rounded-full min-w-[50px]"
-          >
-            <Settings className="h-4 w-4" />
-            <span className="text-xs">Settings</span>
-          </Button>
-        </Link>
+        {user && (
+          <Link to="/settings">
+            <Button 
+              variant={isActive('/settings') ? 'default' : 'ghost'} 
+              size="sm" 
+              className="flex flex-col items-center gap-1 h-auto py-2 rounded-full min-w-[50px]"
+            >
+              <Settings className="h-4 w-4" />
+              <span className="text-xs">Settings</span>
+            </Button>
+          </Link>
+        )}
       </div>
     </div>
   );

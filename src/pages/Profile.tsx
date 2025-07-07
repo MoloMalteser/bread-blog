@@ -4,11 +4,13 @@ import { useParams, Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import BreadLogo from '@/components/BreadLogo';
 import ThemeToggle from '@/components/ThemeToggle';
 import BottomNavigation from '@/components/BottomNavigation';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
-import { Calendar, Eye, ArrowLeft, Share2, Users } from 'lucide-react';
+import { Calendar, Eye, ArrowLeft, Share2, Users, Edit2, Save, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,6 +24,7 @@ interface Post {
   is_public: boolean;
   created_at: string;
   view_count: number;
+  author_id: string;
 }
 
 interface UserProfile {
@@ -37,6 +40,8 @@ const Profile = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editBio, setEditBio] = useState('');
   const { toast } = useToast();
   const { user: authUser } = useAuth();
   const { friends, following } = useSocial();
@@ -61,8 +66,9 @@ const Profile = () => {
 
         setUser(profileData);
         setIsOwner(authUser?.id === profileData.id);
+        setEditBio(profileData.bio || '');
 
-        // Fetch posts
+        // Fetch user's posts
         const { data: postsData, error: postsError } = await supabase
           .from('posts')
           .select('*')
@@ -83,6 +89,40 @@ const Profile = () => {
 
     fetchUserProfile();
   }, [username, authUser]);
+
+  const handleSaveBio = async () => {
+    if (!user || !authUser || !isOwner) return;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ bio: editBio.trim() || null })
+        .eq('id', user.id);
+
+      if (error) {
+        toast({
+          title: "Fehler beim Speichern",
+          description: error.message,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      setUser({ ...user, bio: editBio.trim() || undefined });
+      setIsEditing(false);
+      toast({
+        title: "Profil aktualisiert",
+        description: "Deine Bio wurde erfolgreich gespeichert"
+      });
+    } catch (error) {
+      console.error('Error updating bio:', error);
+      toast({
+        title: "Fehler",
+        description: "Bio konnte nicht gespeichert werden",
+        variant: "destructive"
+      });
+    }
+  };
 
   const handleShare = async () => {
     const url = `${window.location.origin}/profile/${username}`;
@@ -110,8 +150,7 @@ const Profile = () => {
     }
   };
 
-  const friendsCount = friends.filter(friend => friend.id === user?.id).length + 
-                     friends.filter(friend => following.includes(friend.id)).length;
+  const friendsCount = friends.length;
 
   if (loading) {
     return (
@@ -187,9 +226,47 @@ const Profile = () => {
           <h1 className="text-3xl font-semibold">{user?.username}</h1>
           <p className="text-lg text-muted-foreground">@{user?.username}</p>
           
-          {user?.bio && (
-            <p className="text-muted-foreground max-w-md mx-auto">{user.bio}</p>
-          )}
+          {/* Bio Section */}
+          <div className="max-w-md mx-auto">
+            {isEditing ? (
+              <div className="space-y-2">
+                <Textarea
+                  value={editBio}
+                  onChange={(e) => setEditBio(e.target.value)}
+                  placeholder="Erzähle etwas über dich..."
+                  className="resize-none"
+                  rows={3}
+                />
+                <div className="flex gap-2 justify-center">
+                  <Button size="sm" onClick={handleSaveBio}>
+                    <Save className="h-4 w-4 mr-1" />
+                    Speichern
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => {
+                    setIsEditing(false);
+                    setEditBio(user?.bio || '');
+                  }}>
+                    <X className="h-4 w-4 mr-1" />
+                    Abbrechen
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {user?.bio ? (
+                  <p className="text-muted-foreground">{user.bio}</p>
+                ) : isOwner ? (
+                  <p className="text-muted-foreground italic">Keine Bio hinzugefügt</p>
+                ) : null}
+                {isOwner && (
+                  <Button size="sm" variant="outline" onClick={() => setIsEditing(true)}>
+                    <Edit2 className="h-4 w-4 mr-1" />
+                    Bio bearbeiten
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
           
           <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
