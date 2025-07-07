@@ -9,6 +9,7 @@ export interface Post {
   content: string;
   slug: string;
   is_public: boolean;
+  is_anonymous?: boolean;
   created_at: string;
   author_id: string;
   view_count: number | null;
@@ -47,7 +48,7 @@ export const usePosts = () => {
     setLoading(false);
   };
 
-  const createPost = async (title: string, content: string, isPublic: boolean = true) => {
+  const createPost = async (title: string, content: string, isPublic: boolean = true, isAnonymous: boolean = false) => {
     if (!user) return null;
 
     const { data: slugData } = await supabase.rpc('generate_slug', { title });
@@ -59,6 +60,7 @@ export const usePosts = () => {
         content,
         slug: slugData,
         is_public: isPublic,
+        is_anonymous: isAnonymous,
         author_id: user.id
       })
       .select()
@@ -73,7 +75,7 @@ export const usePosts = () => {
     return data;
   };
 
-  const updatePost = async (id: string, title: string, content: string, isPublic: boolean = true) => {
+  const updatePost = async (id: string, title: string, content: string, isPublic: boolean = true, isAnonymous: boolean = false) => {
     if (!user) return null;
 
     const { data, error } = await supabase
@@ -81,7 +83,8 @@ export const usePosts = () => {
       .update({
         title,
         content,
-        is_public: isPublic
+        is_public: isPublic,
+        is_anonymous: isAnonymous
       })
       .eq('id', id)
       .eq('author_id', user.id)

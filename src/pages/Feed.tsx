@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Header from '@/components/Header';
 import BottomNavigation from '@/components/BottomNavigation';
@@ -18,12 +20,14 @@ import { de, enUS } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 
 const Feed = () => {
-  const [currentView, setCurrentView] = useState<'feed' | 'all'>('feed');
+  const [currentView, setCurrentView] = useState<'feed' | 'all'>('all'); // Default to 'all' for anonymous users
   const [likeInfo, setLikeInfo] = useState<Record<string, { count: number; isLiked: boolean }>>({});
   const [comments, setComments] = useState<Record<string, any[]>>({});
   const [newComment, setNewComment] = useState<Record<string, string>>({});
   const [showComments, setShowComments] = useState<Record<string, boolean>>({});
   const [reposts, setReposts] = useState<Record<string, { count: number; isReposted: boolean }>>({});
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
   
   const { feedPosts, allPosts, loading, fetchFeedPosts, fetchAllPosts } = useFeed();
   const { toggleLike, getLikeInfo, addComment, getComments, incrementViewCount } = useSocial();
@@ -31,39 +35,65 @@ const Feed = () => {
   const { language, t } = useLanguage();
   const { toast } = useToast();
 
+  // Check if user is anonymous
+  const isAnonymousUser = !user && localStorage.getItem('anonymous-session') === 'true';
+
   const currentPosts = currentView === 'feed' ? feedPosts : allPosts;
   const dateLocale = language === 'de' ? de : enUS;
 
+  // Filter posts based on search query
+  const filteredPosts = currentPosts.filter(post => 
+    searchQuery === '' || 
+    post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    post.profiles?.username?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   useEffect(() => {
-    if (user) {
+    // For anonymous users, always show 'all' posts and hide 'feed' option
+    if (isAnonymousUser) {
+      setCurrentView('all');
+      fetchAllPosts();
+    } else if (user) {
       if (currentView === 'feed') {
         fetchFeedPosts();
       } else {
         fetchAllPosts();
       }
     }
-  }, [currentView, user]);
+  }, [currentView, user, isAnonymousUser]);
 
   // Load like info and comments for visible posts
   useEffect(() => {
     const loadPostData = async () => {
-      for (const post of currentPosts) {
-        // Load like info
-        const info = await getLikeInfo(post.id);
-        setLikeInfo(prev => ({ ...prev, [post.id]: info }));
+      for (const post of filteredPosts) {
+        // Load like info only for authenticated users
+        if (user) {
+          const info = await getLikeInfo(post.id);
+          setLikeInfo(prev => ({ ...prev, [post.id]: info }));
+        }
 
-        // Load comments
+        // Load comments for everyone
         const postComments = await getComments(post.id);
         setComments(prev => ({ ...prev, [post.id]: postComments }));
       }
     };
 
-    if (currentPosts.length > 0) {
+    if (filteredPosts.length > 0) {
       loadPostData();
     }
-  }, [currentPosts]);
+  }, [filteredPosts, user]);
 
   const handleLike = async (postId: string) => {
+    if (!user) {
+      toast({
+        title: "Anmeldung erforderlich",
+        description: "Du musst angemeldet sein, um Posts zu liken",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const newLikedState = await toggleLike(postId);
     
     // Update like info locally
@@ -77,6 +107,15 @@ const Feed = () => {
   };
 
   const handleAddComment = async (postId: string) => {
+    if (!user) {
+      toast({
+        title: "Anmeldung erforderlich",
+        description: "Du musst angemeldet sein, um zu kommentieren",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const content = newComment[postId];
     if (!content?.trim()) return;
 
@@ -95,7 +134,14 @@ const Feed = () => {
   };
 
   const handleRepost = async (postId: string) => {
-    if (!user) return;
+    if (!user) {
+      toast({
+        title: "Anmeldung erforderlich",
+        description: "Du musst angemeldet sein, um Posts zu teilen",
+        variant: "destructive"
+      });
+      return;
+    }
     
     // Toggle repost status
     const newRepostState = !reposts[postId]?.isReposted;
@@ -115,6 +161,15 @@ const Feed = () => {
   };
 
   const handleAddFriend = () => {
+    if (!user) {
+      toast({
+        title: "Anmeldung erforderlich",
+        description: "Du musst angemeldet sein, um Freunde hinzuzufügen",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     toast({
       title: "Freunde hinzufügen",
       description: "Diese Funktion wird bald verfügbar sein!",
@@ -122,25 +177,23 @@ const Feed = () => {
   };
 
   const handleSearch = () => {
-    toast({
-      title: "Suche",
-      description: "Diese Funktion wird bald verfügbar sein!",
-    });
+    setShowSearch(!showSearch);
   };
 
-  if (!user) {
+  // Show content for both authenticated and anonymous users
+  if (!user && !isAnonymousUser) {
     return (
       <div className="min-h-screen bg-background pb-20">
         <Header />
         <div className="pt-20 flex items-center justify-center min-h-[80vh]">
           <Card className="p-8 text-center max-w-md">
             <CardContent>
-              <h2 className="text-2xl font-semibold mb-4">{t('loginRequired')}</h2>
+              <h2 className="text-2xl font-semibold mb-4">Anmeldung erforderlich</h2>
               <p className="text-muted-foreground mb-6">
-                {t('loginRequiredDescription')}
+                Melde dich an oder nutze den anonymen Modus um Posts zu lesen
               </p>
               <Link to="/auth">
-                <Button>{t('loginNow')}</Button>
+                <Button>Jetzt anmelden</Button>
               </Link>
             </CardContent>
           </Card>
@@ -158,21 +211,29 @@ const Feed = () => {
         {/* Navigation Pills with additional buttons */}
         <div className="mb-8 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Select value={currentView} onValueChange={(value: 'feed' | 'all') => setCurrentView(value)}>
-              <SelectTrigger className="w-48 rounded-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="feed">📱 {t('feed')}</SelectItem>
-                <SelectItem value="all">🌍 {t('general')}</SelectItem>
-              </SelectContent>
-            </Select>
+            {user ? (
+              <Select value={currentView} onValueChange={(value: 'feed' | 'all') => setCurrentView(value)}>
+                <SelectTrigger className="w-48 rounded-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="feed">📱 Mein Feed</SelectItem>
+                  <SelectItem value="all">🌍 Allgemein</SelectItem>
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted">
+                <span className="text-sm">🌍 Allgemein (Anonym)</span>
+              </div>
+            )}
           </div>
           
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" className="rounded-full" onClick={handleAddFriend}>
-              <UserPlus className="h-4 w-4" />
-            </Button>
+            {user && (
+              <Button size="sm" variant="outline" className="rounded-full" onClick={handleAddFriend}>
+                <UserPlus className="h-4 w-4" />
+              </Button>
+            )}
             <Button size="sm" variant="outline" className="rounded-full" onClick={handleSearch}>
               <Search className="h-4 w-4" />
             </Button>
@@ -184,46 +245,67 @@ const Feed = () => {
           </div>
         </div>
 
+        {/* Search Bar */}
+        {showSearch && (
+          <div className="mb-6">
+            <Input
+              type="text"
+              placeholder="Posts durchsuchen..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="max-w-md"
+            />
+          </div>
+        )}
+
         {loading ? (
           <div className="text-center py-12">
-            <div className="text-lg">{t('loadingPosts')}</div>
+            <div className="text-lg">Posts werden geladen...</div>
           </div>
-        ) : currentPosts.length === 0 ? (
+        ) : filteredPosts.length === 0 ? (
           <Card className="p-12 text-center">
             <CardContent>
               <div className="text-6xl mb-4">
-                {currentView === 'feed' ? '📱' : '🌍'}
+                {searchQuery ? '🔍' : (currentView === 'feed' ? '📱' : '🌍')}
               </div>
               <h3 className="text-xl font-semibold mb-2">
-                {currentView === 'feed' ? t('feedEmpty') : t('noPostsFound')}
+                {searchQuery ? 'Keine Posts gefunden' : (currentView === 'feed' ? 'Dein Feed ist leer' : 'Keine Posts gefunden')}
               </h3>
               <p className="text-muted-foreground mb-4">
-                {currentView === 'feed' ? t('feedEmptyDescription') : t('noPostsFoundDescription')}
+                {searchQuery ? 'Versuche einen anderen Suchbegriff' : (currentView === 'feed' ? 'Folge anderen Nutzern um Posts in deinem Feed zu sehen' : 'Noch keine Posts vorhanden')}
               </p>
-              {currentView === 'feed' && (
+              {currentView === 'feed' && !searchQuery && (
                 <Button onClick={() => setCurrentView('all')} variant="outline">
-                  {t('showAllPosts')}
+                  Alle Posts anzeigen
                 </Button>
               )}
             </CardContent>
           </Card>
         ) : (
           <div className="space-y-6">
-            {currentPosts.map(post => (
+            {filteredPosts.map(post => (
               <Card key={post.id} className="overflow-hidden">
                 <CardContent className="p-6">
                   {/* Post Header */}
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                      <User className="h-5 w-5 text-primary" />
+                      {post.is_anonymous ? (
+                        <span className="text-lg">🥖</span>
+                      ) : (
+                        <User className="h-5 w-5 text-primary" />
+                      )}
                     </div>
                     <div className="flex-1">
-                      <Link 
-                        to={`/profile/${post.profiles?.username}`}
-                        className="font-semibold hover:text-primary transition-colors"
-                      >
-                        {post.profiles?.username}
-                      </Link>
+                      {post.is_anonymous ? (
+                        <span className="font-semibold text-muted-foreground">Anonym</span>
+                      ) : (
+                        <Link 
+                          to={`/profile/${post.profiles?.username}`}
+                          className="font-semibold hover:text-primary transition-colors"
+                        >
+                          {post.profiles?.username}
+                        </Link>
+                      )}
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Calendar className="h-4 w-4" />
                         <span>
@@ -231,7 +313,7 @@ const Feed = () => {
                         </span>
                         <span>•</span>
                         <Eye className="h-4 w-4" />
-                        <span>{post.view_count || 0} {t('views')}</span>
+                        <span>{post.view_count || 0} Aufrufe</span>
                       </div>
                     </div>
                   </div>
@@ -257,6 +339,7 @@ const Feed = () => {
                       size="sm"
                       onClick={() => handleLike(post.id)}
                       className="flex items-center gap-2"
+                      disabled={!user}
                     >
                       <Heart 
                         className={`h-4 w-4 ${
@@ -286,6 +369,7 @@ const Feed = () => {
                       size="sm"
                       onClick={() => handleRepost(post.id)}
                       className="flex items-center gap-2"
+                      disabled={!user}
                     >
                       <Repeat2 
                         className={`h-4 w-4 ${
@@ -321,30 +405,32 @@ const Feed = () => {
                         </div>
                       ))}
 
-                      {/* Add Comment */}
-                      <div className="flex gap-3">
-                        <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                          <User className="h-4 w-4 text-primary" />
+                      {/* Add Comment - only for authenticated users */}
+                      {user && (
+                        <div className="flex gap-3">
+                          <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                            <User className="h-4 w-4 text-primary" />
+                          </div>
+                          <div className="flex-1 flex gap-2">
+                            <Textarea
+                              placeholder="Kommentar schreiben..."
+                              value={newComment[post.id] || ''}
+                              onChange={(e) => setNewComment(prev => ({ 
+                                ...prev, 
+                                [post.id]: e.target.value 
+                              }))}
+                              className="min-h-[60px] resize-none"
+                            />
+                            <Button
+                              size="sm"
+                              onClick={() => handleAddComment(post.id)}
+                              disabled={!newComment[post.id]?.trim()}
+                            >
+                              <Send className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
-                        <div className="flex-1 flex gap-2">
-                          <Textarea
-                            placeholder={t('writeComment')}
-                            value={newComment[post.id] || ''}
-                            onChange={(e) => setNewComment(prev => ({ 
-                              ...prev, 
-                              [post.id]: e.target.value 
-                            }))}
-                            className="min-h-[60px] resize-none"
-                          />
-                          <Button
-                            size="sm"
-                            onClick={() => handleAddComment(post.id)}
-                            disabled={!newComment[post.id]?.trim()}
-                          >
-                            <Send className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
+                      )}
                     </div>
                   )}
                 </CardContent>

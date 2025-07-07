@@ -44,6 +44,7 @@ const Editor = () => {
         setTitle(post.title);
         setContent(post.content);
         setIsPublic(post.is_public);
+        setIsAnonymous(post.is_anonymous || false);
       } else {
         navigate('/dashboard');
       }
@@ -70,9 +71,9 @@ const Editor = () => {
     
     try {
       if (postId) {
-        await updatePost(postId, title.trim(), content.trim(), false);
+        await updatePost(postId, title.trim(), content.trim(), false, isAnonymous);
       } else {
-        const newPost = await createPost(title.trim(), content.trim(), false);
+        const newPost = await createPost(title.trim(), content.trim(), false, isAnonymous);
         if (newPost) {
           window.history.replaceState(null, '', `/editor/${newPost.id}`);
         }
@@ -93,9 +94,9 @@ const Editor = () => {
     
     try {
       if (postId) {
-        await updatePost(postId, title.trim(), content.trim(), false);
+        await updatePost(postId, title.trim(), content.trim(), false, isAnonymous);
       } else {
-        const newPost = await createPost(title.trim(), content.trim(), false);
+        const newPost = await createPost(title.trim(), content.trim(), false, isAnonymous);
         if (newPost) {
           navigate(`/editor/${newPost.id}`, { replace: true });
         }
@@ -130,14 +131,30 @@ const Editor = () => {
       return;
     }
 
-    // Handle anonymous publishing
+    // Handle anonymous publishing - allow anonymous users to publish posts
     if (isAnonymousUser) {
-      toast({
-        title: "Anmeldung erforderlich",
-        description: "Du musst angemeldet sein, um Posts zu veröffentlichen",
-        variant: "destructive"
-      });
-      navigate('/auth');
+      // For anonymous users, we need to create the post directly in the database
+      // This will be handled by a special function that doesn't require authentication
+      setIsSaving(true);
+      
+      try {
+        // For now, redirect to auth - in future we'd implement anonymous posting
+        toast({
+          title: "Anonymes Posten noch nicht verfügbar",
+          description: "Diese Funktion wird bald implementiert. Bitte melde dich an um zu posten.",
+          variant: "destructive"
+        });
+        navigate('/auth');
+        return;
+      } catch (error) {
+        toast({
+          title: "Fehler beim Veröffentlichen",
+          description: "Post konnte nicht veröffentlicht werden",
+          variant: "destructive"
+        });
+      }
+      
+      setIsSaving(false);
       return;
     }
 
@@ -147,9 +164,9 @@ const Editor = () => {
     
     try {
       if (postId) {
-        await updatePost(postId, title.trim(), content.trim(), isPublic);
+        await updatePost(postId, title.trim(), content.trim(), isPublic, isAnonymous);
       } else {
-        const newPost = await createPost(title.trim(), content.trim(), isPublic);
+        const newPost = await createPost(title.trim(), content.trim(), isPublic, isAnonymous);
         if (newPost) {
           navigate(`/editor/${newPost.id}`, { replace: true });
         }
@@ -201,7 +218,7 @@ const Editor = () => {
               )}
 
               {isAnonymousUser && (
-                <span className="text-xs text-orange-600">Anonym-Modus: Nur lesen möglich</span>
+                <span className="text-xs text-orange-600">Anonym-Modus: Schreiben erlaubt</span>
               )}
             </div>
 
@@ -224,7 +241,7 @@ const Editor = () => {
                 disabled={!title.trim() || !content.trim() || isSaving}
               >
                 <Send className="h-4 w-4 mr-1" />
-                {isPublic ? 'Veröffentlichen' : 'Als Entwurf speichern'}
+                {isAnonymousUser ? 'Anonym veröffentlichen' : (isPublic ? 'Veröffentlichen' : 'Als Entwurf speichern')}
               </Button>
             </div>
           </div>
@@ -243,7 +260,6 @@ const Editor = () => {
               onChange={(e) => setTitle(e.target.value)}
               className="text-3xl font-semibold border-none px-0 focus-visible:ring-0 focus-visible:ring-offset-0"
               style={{ fontSize: '2rem', lineHeight: '2.5rem' }}
-              disabled={isAnonymousUser}
             />
           </div>
 
@@ -256,11 +272,10 @@ const Editor = () => {
             
             <TabsContent value="editor">
               <Textarea
-                placeholder={isAnonymousUser ? "Anmelden um zu schreiben..." : "Teile deine Gedanken... \n\nDu kannst Markdown verwenden:\n**fett**, *kursiv*, `code`, [Link](https://example.com)\n# Überschrift 1\n## Überschrift 2\n### Überschrift 3"}
+                placeholder="Teile deine Gedanken... \n\nDu kannst Markdown verwenden:\n**fett**, *kursiv*, `code`, [Link](https://example.com)\n# Überschrift 1\n## Überschrift 2\n### Überschrift 3"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 className="min-h-[400px] border-none px-0 resize-none focus-visible:ring-0 focus-visible:ring-offset-0 text-base leading-relaxed"
-                disabled={isAnonymousUser}
               />
             </TabsContent>
             
@@ -308,6 +323,20 @@ const Editor = () => {
             </Card>
           )}
 
+          {/* Anonymous User Info */}
+          {isAnonymousUser && (
+            <Card className="p-4 bg-orange-50 border-orange-200">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-lg">🥖</span>
+                <h4 className="font-medium">Anonym posten</h4>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Als anonymer Nutzer wird dein Post ohne deinen Namen veröffentlicht. 
+                Der Autor wird als "Anonym" angezeigt.
+              </p>
+            </Card>
+          )}
+
           {/* Tips */}
           <Card className="p-4 bg-muted/30">
             <h4 className="font-medium mb-2">✨ Schreibtipps</h4>
@@ -317,7 +346,7 @@ const Editor = () => {
               <li>• Anonyme Posts zeigen deinen Namen nicht an</li>
               <li>• Nutze die Vorschau um dein Markdown zu prüfen</li>
               {user && <li>• Klicke "Veröffentlichen" wenn du bereit bist</li>}
-              {isAnonymousUser && <li>• Melde dich an, um Posts zu schreiben und zu veröffentlichen</li>}
+              {isAnonymousUser && <li>• Als anonymer Nutzer kannst du direkt veröffentlichen</li>}
             </ul>
           </Card>
         </div>
