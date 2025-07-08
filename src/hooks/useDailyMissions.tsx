@@ -95,7 +95,7 @@ export const useDailyMissions = () => {
       const existingProgress = progress.find(p => p.mission_id === mission.id);
 
       if (existingProgress) {
-        const newCount = existingProgress.current_count + count;
+        const newCount = Math.min(existingProgress.current_count + count, mission.target_count);
         const isCompleted = newCount >= mission.target_count;
 
         const { error } = await supabase
@@ -110,25 +110,31 @@ export const useDailyMissions = () => {
 
         // Award points if just completed
         if (isCompleted && !existingProgress.completed_at) {
+          const { data: statsData } = await supabase
+            .from('user_stats')
+            .select('total_points')
+            .eq('user_id', user.id)
+            .single();
+
+          const currentPoints = statsData?.total_points || 0;
+          
           await supabase
             .from('user_stats')
             .upsert({
               user_id: user.id,
-              total_points: mission.reward_points
-            }, {
-              onConflict: 'user_id',
-              ignoreDuplicates: false
+              total_points: currentPoints + mission.reward_points
             });
         }
       } else {
-        const isCompleted = count >= mission.target_count;
+        const newCount = Math.min(count, mission.target_count);
+        const isCompleted = newCount >= mission.target_count;
         
         const { error } = await supabase
           .from('user_mission_progress')
           .insert({
             user_id: user.id,
             mission_id: mission.id,
-            current_count: count,
+            current_count: newCount,
             completed_at: isCompleted ? new Date().toISOString() : null,
             date: today
           });
@@ -137,14 +143,19 @@ export const useDailyMissions = () => {
 
         // Award points if completed
         if (isCompleted) {
+          const { data: statsData } = await supabase
+            .from('user_stats')
+            .select('total_points')
+            .eq('user_id', user.id)
+            .single();
+
+          const currentPoints = statsData?.total_points || 0;
+          
           await supabase
             .from('user_stats')
             .upsert({
               user_id: user.id,
-              total_points: mission.reward_points
-            }, {
-              onConflict: 'user_id',
-              ignoreDuplicates: false
+              total_points: currentPoints + mission.reward_points
             });
         }
       }

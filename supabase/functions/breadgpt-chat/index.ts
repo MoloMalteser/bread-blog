@@ -16,9 +16,17 @@ serve(async (req) => {
 
   try {
     const { question } = await req.json();
+    console.log('BreadGPT question received:', question);
+
+    if (!huggingFaceToken) {
+      console.error('HUGGINGFACE_TOKEN not found');
+      throw new Error('API token not configured');
+    }
 
     // Create a bread-themed prompt
-    const breadPrompt = `Du bist BreadGPT, ein philosophisches sprechendes Brot. Antworte in maximal 2-3 Sätzen auf Deutsch. Sei kreativ, manchmal witzig, manchmal tiefgreifend. Verwende gelegentlich Brot-Metaphern. Frage: ${question}`;
+    const breadPrompt = `Du bist BreadGPT, ein philosophisches sprechendes Brot. Antworte in maximal 2-3 Sätzen auf Deutsch. Sei kreativ, manchmal witzig, manchmal tiefgreifend. Verwende gelegentlich Brot-Metaphern und Brot-Emojis. Frage: ${question}`;
+
+    console.log('Sending request to Hugging Face API...');
 
     const response = await fetch("https://api-inference.huggingface.co/models/Qwen/Qwen1.5-4B-Chat", {
       method: "POST",
@@ -31,26 +39,37 @@ serve(async (req) => {
         parameters: { 
           max_new_tokens: 150,
           temperature: 0.8,
-          top_p: 0.9
+          top_p: 0.9,
+          return_full_text: false
         }
       })
     });
 
+    console.log('Hugging Face response status:', response.status);
+
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Hugging Face API error:', response.status, errorText);
       throw new Error(`Hugging Face API error: ${response.status}`);
     }
 
     const data = await response.json();
+    console.log('Hugging Face response data:', data);
+    
     let generatedText = '';
     
     if (Array.isArray(data) && data[0]?.generated_text) {
       generatedText = data[0].generated_text.replace(breadPrompt, '').trim();
     } else if (data.generated_text) {
       generatedText = data.generated_text.replace(breadPrompt, '').trim();
-    } else {
-      generatedText = 'Hmm... *Brotkrümel fallen* ... Ich verstehe nicht ganz. Probiere eine andere Frage! 🥖';
     }
 
+    console.log('Generated text before cleanup:', generatedText);
+
+    // Clean up the response
+    generatedText = generatedText.replace(/^[\s\n]*/, ''); // Remove leading whitespace
+    generatedText = generatedText.replace(/^\w+:\s*/, ''); // Remove "Assistant:" or similar prefixes
+    
     // Fallback if response is empty or too short
     if (!generatedText || generatedText.length < 10) {
       const fallbacks = [
@@ -61,6 +80,8 @@ serve(async (req) => {
       ];
       generatedText = fallbacks[Math.floor(Math.random() * fallbacks.length)];
     }
+
+    console.log('Final generated text:', generatedText);
 
     return new Response(JSON.stringify({ 
       text: generatedText,

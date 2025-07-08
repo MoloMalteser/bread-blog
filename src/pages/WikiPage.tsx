@@ -6,10 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import Header from '@/components/Header';
-import { BookOpen, Edit2, History, Plus, Clock, User } from 'lucide-react';
+import { BookOpen, Edit2, History, Plus, Clock, User, Search, Shuffle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useDailyMissions } from '@/hooks/useDailyMissions';
 
 interface WikiPage {
   id: string;
@@ -31,13 +32,16 @@ interface WikiEdit {
 const WikiPage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { updateMissionProgress } = useDailyMissions();
   const [pages, setPages] = useState<WikiPage[]>([]);
+  const [filteredPages, setFilteredPages] = useState<WikiPage[]>([]);
   const [selectedPage, setSelectedPage] = useState<WikiPage | null>(null);
   const [editingWord, setEditingWord] = useState<number | null>(null);
   const [newWord, setNewWord] = useState('');
   const [lastEdit, setLastEdit] = useState<Date | null>(null);
   const [edits, setEdits] = useState<WikiEdit[]>([]);
   const [newPageTitle, setNewPageTitle] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -50,6 +54,19 @@ const WikiPage = () => {
     }
   }, [selectedPage]);
 
+  useEffect(() => {
+    // Filter pages based on search query
+    if (searchQuery.trim() === '') {
+      setFilteredPages(pages);
+    } else {
+      const filtered = pages.filter(page => 
+        page.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        page.content.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredPages(filtered);
+    }
+  }, [searchQuery, pages]);
+
   const fetchPages = async () => {
     try {
       const { data, error } = await supabase
@@ -59,6 +76,7 @@ const WikiPage = () => {
 
       if (error) throw error;
       setPages(data || []);
+      setFilteredPages(data || []);
       if (data && data.length > 0 && !selectedPage) {
         setSelectedPage(data[0]);
       }
@@ -158,16 +176,8 @@ const WikiPage = () => {
       setEditingWord(null);
       fetchEdits(selectedPage.id);
 
-      // Update user stats
-      await supabase
-        .from('user_stats')
-        .upsert({
-          user_id: user.id,
-          wiki_contributions: 1
-        }, {
-          onConflict: 'user_id',
-          ignoreDuplicates: false
-        });
+      // Update mission progress
+      await updateMissionProgress('wiki_edit', 1);
 
       toast({
         title: "Wort geändert!",
@@ -182,6 +192,26 @@ const WikiPage = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const addWordAfter = (wordIndex: number) => {
+    if (!canEdit()) {
+      const timeLeft = 30 - Math.floor((new Date().getTime() - (lastEdit?.getTime() || 0)) / 1000);
+      toast({
+        title: "Cooldown aktiv",
+        description: `Du kannst in ${timeLeft} Sekunden ein Wort hinzufügen.`,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const words = selectedPage?.content.split(/(\s+)/) || [];
+    const insertIndex = wordIndex + 1;
+    
+    // Insert a space and then allow editing of a new word
+    words.splice(insertIndex, 0, ' ', '');
+    setEditingWord(insertIndex + 1);
+    setNewWord('');
   };
 
   const createNewPage = async () => {
@@ -213,6 +243,12 @@ const WikiPage = () => {
     }
   };
 
+  const getRandomPage = () => {
+    if (filteredPages.length === 0) return;
+    const randomIndex = Math.floor(Math.random() * filteredPages.length);
+    setSelectedPage(filteredPages[randomIndex]);
+  };
+
   const renderEditableContent = (content: string) => {
     const words = content.split(/(\s+)/);
     return words.map((word, index) => {
@@ -235,15 +271,27 @@ const WikiPage = () => {
       }
 
       return (
-        <span
-          key={index}
-          onClick={() => handleWordClick(index, word)}
-          className={`cursor-pointer hover:bg-primary/10 px-1 rounded transition-colors ${
-            user ? 'hover:shadow-sm' : 'cursor-default'
-          }`}
-          title={user ? 'Klicken zum Bearbeiten' : 'Anmeldung erforderlich'}
-        >
-          {word}
+        <span key={index} className="relative group">
+          <span
+            onClick={() => handleWordClick(index, word)}
+            className={`cursor-pointer hover:bg-primary/10 px-1 rounded transition-colors ${
+              user ? 'hover:shadow-sm' : 'cursor-default'
+            }`}
+            title={user ? 'Klicken zum Bearbeiten' : 'Anmeldung erforderlich'}
+          >
+            {word}
+          </span>
+          {user && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="opacity-0 group-hover:opacity-100 absolute -top-6 left-0 h-5 w-5 p-0 text-xs"
+              onClick={() => addWordAfter(index)}
+              title="Wort nach diesem hinzufügen"
+            >
+              <Plus className="h-3 w-3" />
+            </Button>
+          )}
         </span>
       );
     });
@@ -265,22 +313,47 @@ const WikiPage = () => {
       <Header />
       
       <main className="pt-20 max-w-6xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-semibold mb-2 flex items-center gap-2">
-            <BookOpen className="h-8 w-8" />
-            Community Wiki
-          </h1>
-          <p className="text-muted-foreground">
-            Gemeinsam erstelltes Wissen. Jeder kann alle 30 Sekunden ein Wort bearbeiten.
-          </p>
+        {/* Logo und Titel */}
+        <div className="text-center mb-8">
+          <div className="text-6xl mb-4">🥖</div>
+          <h1 className="text-4xl font-bold mb-4">Breadipedia</h1>
+          
+          {/* Suchleiste */}
+          <div className="max-w-md mx-auto mb-6">
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Artikel suchen..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Button variant="outline" onClick={getRandomPage} title="Zufälliger Artikel">
+                <Shuffle className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          
+          {/* Erklärung */}
+          <Card className="max-w-2xl mx-auto mb-8">
+            <CardContent className="p-4">
+              <p className="text-sm text-muted-foreground">
+                <strong>So funktioniert's:</strong> Klicke auf ein Wort um es zu bearbeiten. 
+                Nutze die <Plus className="inline h-3 w-3" />-Buttons um neue Wörter hinzuzufügen. 
+                Nur ein Edit alle 30 Sekunden möglich. Hilf mit, das Wissen der Community zu erweitern!
+              </p>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Sidebar with pages */}
+          {/* Sidebar mit Seiten */}
           <div className="lg:col-span-1">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="font-semibold">Wiki-Seiten</h2>
+                <h2 className="font-semibold">Artikel ({filteredPages.length})</h2>
                 {user && (
                   <Dialog>
                     <DialogTrigger asChild>
@@ -290,16 +363,16 @@ const WikiPage = () => {
                     </DialogTrigger>
                     <DialogContent>
                       <DialogHeader>
-                        <DialogTitle>Neue Wiki-Seite</DialogTitle>
+                        <DialogTitle>Neuer Artikel</DialogTitle>
                       </DialogHeader>
                       <div className="space-y-4">
                         <Input
-                          placeholder="Seitentitel..."
+                          placeholder="Titel des Artikels..."
                           value={newPageTitle}
                           onChange={(e) => setNewPageTitle(e.target.value)}
                         />
                         <Button onClick={createNewPage} className="w-full">
-                          Seite erstellen
+                          Artikel erstellen
                         </Button>
                       </div>
                     </DialogContent>
@@ -307,8 +380,8 @@ const WikiPage = () => {
                 )}
               </div>
               
-              <div className="space-y-2">
-                {pages.map((page) => (
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {filteredPages.map((page) => (
                   <Button
                     key={page.id}
                     variant={selectedPage?.id === page.id ? 'default' : 'ghost'}
@@ -327,7 +400,7 @@ const WikiPage = () => {
             </div>
           </div>
 
-          {/* Main content */}
+          {/* Hauptinhalt */}
           <div className="lg:col-span-3">
             {selectedPage ? (
               <div className="space-y-6">
@@ -367,7 +440,7 @@ const WikiPage = () => {
                   </CardContent>
                 </Card>
 
-                {/* Recent edits */}
+                {/* Letzte Änderungen */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg">Letzte Änderungen</CardTitle>
@@ -398,7 +471,7 @@ const WikiPage = () => {
                       </div>
                     ) : (
                       <p className="text-muted-foreground text-center py-4">
-                        Noch keine Änderungen an dieser Seite.
+                        Noch keine Änderungen an diesem Artikel.
                       </p>
                     )}
                   </CardContent>
@@ -408,9 +481,9 @@ const WikiPage = () => {
               <Card>
                 <CardContent className="p-12 text-center">
                   <BookOpen className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-lg font-semibold mb-2">Wähle eine Wiki-Seite</h3>
+                  <h3 className="text-lg font-semibold mb-2">Wähle einen Artikel</h3>
                   <p className="text-muted-foreground">
-                    Wähle eine Seite aus der Seitenleiste aus, um sie zu lesen und zu bearbeiten.
+                    Wähle einen Artikel aus der Seitenleiste aus, um ihn zu lesen und zu bearbeiten.
                   </p>
                 </CardContent>
               </Card>
