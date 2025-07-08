@@ -31,6 +31,8 @@ export const useDailyMissions = () => {
     if (user) {
       fetchMissions();
       fetchProgress();
+    } else {
+      setLoading(false);
     }
   }, [user]);
 
@@ -42,15 +44,23 @@ export const useDailyMissions = () => {
         .eq('is_active', true)
         .order('reward_points', { ascending: false });
 
-      if (error) throw error;
-      setMissions(data || []);
+      if (error) {
+        console.error('Error fetching missions:', error);
+        setMissions([]);
+      } else {
+        setMissions(data || []);
+      }
     } catch (error) {
       console.error('Error fetching missions:', error);
+      setMissions([]);
     }
   };
 
   const fetchProgress = async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     try {
       const today = new Date().toISOString().split('T')[0];
@@ -60,10 +70,15 @@ export const useDailyMissions = () => {
         .eq('user_id', user.id)
         .eq('date', today);
 
-      if (error) throw error;
-      setProgress(data || []);
+      if (error) {
+        console.error('Error fetching progress:', error);
+        setProgress([]);
+      } else {
+        setProgress(data || []);
+      }
     } catch (error) {
       console.error('Error fetching progress:', error);
+      setProgress([]);
     } finally {
       setLoading(false);
     }
@@ -158,7 +173,10 @@ export const useDailyMissions = () => {
         .eq('user_id', user.id)
         .single();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching total points:', error);
+        return 0;
+      }
       return data?.total_points || 0;
     } catch (error) {
       console.error('Error fetching total points:', error);

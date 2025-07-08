@@ -19,7 +19,7 @@ const BreadGPT = () => {
     checkCooldown();
   }, []);
 
-  // Typing effect
+  // Typing effect - FIXED: Start from index 0 instead of 1
   useEffect(() => {
     if (answer && !isTyping) {
       setIsTyping(true);

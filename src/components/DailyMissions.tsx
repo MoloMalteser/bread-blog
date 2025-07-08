@@ -15,8 +15,13 @@ const DailyMissions = () => {
 
   useEffect(() => {
     const fetchPoints = async () => {
-      const points = await getTotalPoints();
-      setTotalPoints(points);
+      try {
+        const points = await getTotalPoints();
+        setTotalPoints(points);
+      } catch (error) {
+        console.error('Error fetching points:', error);
+        setTotalPoints(0);
+      }
     };
     fetchPoints();
   }, [getTotalPoints, progress]);
@@ -32,7 +37,7 @@ const DailyMissions = () => {
   }
 
   const completedCount = getCompletedMissions();
-  const totalMissions = missions.length;
+  const totalMissions = missions.length || 0;
 
   return (
     <div className="space-y-6">
@@ -57,7 +62,9 @@ const DailyMissions = () => {
         <Card>
           <CardContent className="p-4 text-center">
             <Zap className="h-8 w-8 mx-auto mb-2 text-green-500" />
-            <div className="text-2xl font-bold">{Math.round((completedCount / totalMissions) * 100)}%</div>
+            <div className="text-2xl font-bold">
+              {totalMissions > 0 ? Math.round((completedCount / totalMissions) * 100) : 0}%
+            </div>
             <p className="text-sm text-muted-foreground">Tagesfortschritt</p>
           </CardContent>
         </Card>
@@ -72,11 +79,11 @@ const DailyMissions = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {missions.map((mission) => {
+          {missions && missions.length > 0 ? missions.map((mission) => {
             const missionProgress = getMissionProgress(mission.id);
             const currentCount = missionProgress?.current_count || 0;
             const isCompleted = missionProgress?.completed_at !== null;
-            const progressPercentage = Math.min((currentCount / mission.target_count) * 100, 100);
+            const progressPercentage = Math.min((currentCount / (mission.target_count || 1)) * 100, 100);
 
             return (
               <div
@@ -98,14 +105,14 @@ const DailyMissions = () => {
                     </p>
                   </div>
                   <Badge variant={isCompleted ? 'default' : 'secondary'}>
-                    +{mission.reward_points} Punkte
+                    +{mission.reward_points || 0} Punkte
                   </Badge>
                 </div>
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">
-                      Fortschritt: {currentCount}/{mission.target_count}
+                      Fortschritt: {currentCount}/{mission.target_count || 1}
                     </span>
                     <span className={`font-medium ${isCompleted ? 'text-green-600' : ''}`}>
                       {Math.round(progressPercentage)}%
@@ -117,17 +124,15 @@ const DailyMissions = () => {
                   />
                 </div>
 
-                {isCompleted && (
+                {isCompleted && missionProgress?.completed_at && (
                   <div className="mt-3 flex items-center gap-2 text-sm text-green-600">
                     <CheckCircle className="h-4 w-4" />
-                    <span>Abgeschlossen um {new Date(missionProgress.completed_at!).toLocaleTimeString('de-DE')}</span>
+                    <span>Abgeschlossen um {new Date(missionProgress.completed_at).toLocaleTimeString('de-DE')}</span>
                   </div>
                 )}
               </div>
             );
-          })}
-
-          {missions.length === 0 && (
+          }) : (
             <div className="text-center py-8">
               <Clock className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
               <h3 className="font-medium mb-1">Keine Missionen verfügbar</h3>
