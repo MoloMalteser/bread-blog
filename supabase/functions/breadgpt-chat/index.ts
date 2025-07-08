@@ -28,7 +28,7 @@ serve(async (req) => {
 
     console.log('Sending request to Hugging Face API...');
 
-    const response = await fetch("https://api-inference.huggingface.co/models/Qwen/Qwen3-235B-A22B", {
+    const response = await fetch("https://api-inference.huggingface.co/models/openai-community/gpt2", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${huggingFaceToken}`,
