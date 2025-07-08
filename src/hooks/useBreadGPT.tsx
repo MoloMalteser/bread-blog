@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -29,7 +28,7 @@ export const useBreadGPT = () => {
         const lastQuestion = new Date(data.last_question_at);
         const now = new Date();
         const diffSeconds = (now.getTime() - lastQuestion.getTime()) / 1000;
-        
+
         if (diffSeconds < 30) {
           const cooldownEnd = new Date(lastQuestion.getTime() + 30000);
           setCooldownUntil(cooldownEnd);
@@ -76,12 +75,19 @@ export const useBreadGPT = () => {
 
       if (error) {
         console.error('Edge function error:', error);
+        setLoading(false);
         return 'Mein Ofen ist gerade kaputt... Versuche es später nochmal! 🥖';
+      }
+
+      // Sicherstellen, dass data.text gültig ist
+      if (!data || typeof data.text !== 'string' || data.text.trim() === '') {
+        setLoading(false);
+        return 'Meine Krümel sind durcheinander geraten... *schüttel* 🍞';
       }
 
       // Update user stats and mission progress
       await updateMissionProgress('breadgpt_question', 1);
-      
+
       const { data: statsData } = await supabase
         .from('user_stats')
         .select('breadgpt_questions')
@@ -89,7 +95,7 @@ export const useBreadGPT = () => {
         .single();
 
       const currentQuestions = statsData?.breadgpt_questions || 0;
-      
+
       await supabase
         .from('user_stats')
         .upsert({
@@ -98,7 +104,8 @@ export const useBreadGPT = () => {
         });
 
       setLoading(false);
-      return data?.text || 'Hmm... *Brotkrümel fallen* ... Ich verstehe nicht ganz. Probiere eine andere Frage! 🥖';
+      return data.text;
+
     } catch (error) {
       console.error('Error asking BreadGPT:', error);
       setLoading(false);
