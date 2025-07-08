@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Home, User, Settings, LayoutDashboard, PlusCircle, Users, MessageSquare, Zap, Palette, HelpCircle } from 'lucide-react';
+import { Home, User, Settings, LayoutDashboard, PlusCircle, Users, MessageSquare, Zap, HelpCircle, BookOpen } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 const BottomNavigation = () => {
@@ -41,6 +41,17 @@ const BottomNavigation = () => {
           </Button>
         </Link>
 
+        <Link to="/wiki">
+          <Button 
+            variant={isActive('/wiki') ? 'default' : 'ghost'} 
+            size="sm" 
+            className="flex flex-col items-center gap-1 h-auto py-2 rounded-full min-w-[50px]"
+          >
+            <BookOpen className="h-4 w-4" />
+            <span className="text-xs">Wiki</span>
+          </Button>
+        </Link>
+
         <Link to="/breadgpt">
           <Button 
             variant={isActive('/breadgpt') ? 'default' : 'ghost'} 
@@ -52,14 +63,14 @@ const BottomNavigation = () => {
           </Button>
         </Link>
 
-        <Link to="/draw">
+        <Link to="/friends">
           <Button 
-            variant={isActive('/draw') ? 'default' : 'ghost'} 
+            variant={isActive('/friends') ? 'default' : 'ghost'} 
             size="sm" 
             className="flex flex-col items-center gap-1 h-auto py-2 rounded-full min-w-[50px]"
           >
-            <Palette className="h-4 w-4" />
-            <span className="text-xs">Zeichnen</span>
+            <Users className="h-4 w-4" />
+            <span className="text-xs">Freunde</span>
           </Button>
         </Link>
         

@@ -50,6 +50,9 @@ const Header = () => {
                 <Link to="/editor" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                   Neuer Post
                 </Link>
+                <Link to="/settings" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  Einstellungen
+                </Link>
               </>
             )}
           </nav>

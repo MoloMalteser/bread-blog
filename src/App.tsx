@@ -24,7 +24,7 @@ import NotFound from "./pages/NotFound";
 import SecretAdminMenu from "./pages/secret-admin-menu"
 import Flappybread from "./pages/secret"
 import BreadGPTPage from "./pages/BreadGPTPage";
-import DrawPage from "./pages/DrawPage";
+import WikiPage from "./pages/WikiPage";
 import BottomNavigation from "@/components/BottomNavigation";
 import Settings from "./pages/Settings";
 
@@ -53,7 +53,7 @@ const AppContent = () => {
         <Route path="/feed" element={<Feed />} />
         <Route path="/friends" element={<Friends />} />
         <Route path="/breadgpt" element={<BreadGPTPage />} />
-        <Route path="/draw" element={<DrawPage />} />
+        <Route path="/wiki" element={<WikiPage />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/about" element={<About />} />
