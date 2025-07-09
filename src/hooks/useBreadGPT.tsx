@@ -4,11 +4,30 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useDailyMissions } from '@/hooks/useDailyMissions';
 
+// Global cooldown state
+let globalCooldownUntil: Date | null = null;
+let globalCooldownCallbacks: Set<(cooldown: Date | null) => void> = new Set();
+
+const updateGlobalCooldown = (cooldown: Date | null) => {
+  globalCooldownUntil = cooldown;
+  globalCooldownCallbacks.forEach(callback => callback(cooldown));
+};
+
 export const useBreadGPT = () => {
   const [loading, setLoading] = useState(false);
-  const [cooldownUntil, setCooldownUntil] = useState<Date | null>(null);
+  const [cooldownUntil, setCooldownUntil] = useState<Date | null>(globalCooldownUntil);
   const { user } = useAuth();
   const { updateMissionProgress } = useDailyMissions();
+
+  // Subscribe to global cooldown updates
+  useEffect(() => {
+    const callback = (cooldown: Date | null) => setCooldownUntil(cooldown);
+    globalCooldownCallbacks.add(callback);
+    
+    return () => {
+      globalCooldownCallbacks.delete(callback);
+    };
+  }, []);
 
   const checkCooldown = async () => {
     if (!user) return true;
@@ -32,12 +51,12 @@ export const useBreadGPT = () => {
         
         if (diffSeconds < 30) {
           const cooldownEnd = new Date(lastQuestion.getTime() + 30000);
-          setCooldownUntil(cooldownEnd);
+          updateGlobalCooldown(cooldownEnd);
           return false;
         }
       }
 
-      setCooldownUntil(null);
+      updateGlobalCooldown(null);
       return true;
     } catch (error) {
       console.error('Error checking cooldown:', error);
@@ -59,7 +78,7 @@ export const useBreadGPT = () => {
     const interval = setInterval(() => {
       const now = new Date();
       if (now >= cooldownUntil) {
-        setCooldownUntil(null);
+        updateGlobalCooldown(null);
         clearInterval(interval);
       }
     }, 1000);
@@ -88,8 +107,8 @@ export const useBreadGPT = () => {
           last_question_at: new Date().toISOString()
         });
 
-      // Set local cooldown
-      setCooldownUntil(new Date(Date.now() + 30000));
+      // Set global cooldown
+      updateGlobalCooldown(new Date(Date.now() + 30000));
 
       // Call the Edge Function
       const { data, error } = await supabase.functions.invoke('breadgpt-chat', {

@@ -13,6 +13,7 @@ import { ArrowLeft, Save, Eye, Send, Globe, Theater } from 'lucide-react';
 import { usePosts } from '@/hooks/usePosts';
 import { useAuth } from '@/hooks/useAuth';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
+import EditorBreadGPT from '@/components/EditorBreadGPT';
 
 const Editor = () => {
   const { postId } = useParams();
@@ -133,28 +134,12 @@ const Editor = () => {
 
     // Handle anonymous publishing - allow anonymous users to publish posts
     if (isAnonymousUser) {
-      // For anonymous users, we need to create the post directly in the database
-      // This will be handled by a special function that doesn't require authentication
-      setIsSaving(true);
-      
-      try {
-        // For now, redirect to auth - in future we'd implement anonymous posting
-        toast({
-          title: "Anonymes Posten noch nicht verfügbar",
-          description: "Diese Funktion wird bald implementiert. Bitte melde dich an um zu posten.",
-          variant: "destructive"
-        });
-        navigate('/auth');
-        return;
-      } catch (error) {
-        toast({
-          title: "Fehler beim Veröffentlichen",
-          description: "Post konnte nicht veröffentlicht werden",
-          variant: "destructive"
-        });
-      }
-      
-      setIsSaving(false);
+      toast({
+        title: "Anonymes Posten noch nicht verfügbar",
+        description: "Diese Funktion wird bald implementiert. Bitte melde dich an um zu posten.",
+        variant: "destructive"
+      });
+      navigate('/auth');
       return;
     }
 
@@ -187,6 +172,10 @@ const Editor = () => {
     }
     
     setIsSaving(false);
+  };
+
+  const handleInsertText = (text: string) => {
+    setContent(prev => prev + (prev ? '\n\n' : '') + text);
   };
 
   if (!user && !isAnonymousUser) return null;
@@ -263,6 +252,11 @@ const Editor = () => {
             />
           </div>
 
+          {/* BreadGPT Integration - only for authenticated users */}
+          {user && (
+            <EditorBreadGPT onInsertText={handleInsertText} />
+          )}
+
           {/* Content with Tabs for Editor/Preview */}
           <Tabs defaultValue="editor" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-4">
@@ -319,6 +313,12 @@ const Editor = () => {
                     onCheckedChange={setIsAnonymous}
                   />
                 </div>
+                
+                {isAnonymous && (
+                  <p className="text-sm text-muted-foreground bg-orange-50 p-2 rounded">
+                    Wenn aktiviert, wird dein Post ohne deinen Namen veröffentlicht.
+                  </p>
+                )}
               </div>
             </Card>
           )}
@@ -343,6 +343,7 @@ const Editor = () => {
             <ul className="text-sm text-muted-foreground space-y-1">
               <li>• Verwende Markdown: **fett**, *kursiv*, `code`</li>
               {user && <li>• Deine Posts werden automatisch als Entwurf gespeichert</li>}
+              {user && <li>• Nutze "Write with BreadGPT" für Schreibhilfe</li>}
               <li>• Anonyme Posts zeigen deinen Namen nicht an</li>
               <li>• Nutze die Vorschau um dein Markdown zu prüfen</li>
               {user && <li>• Klicke "Veröffentlichen" wenn du bereit bist</li>}
