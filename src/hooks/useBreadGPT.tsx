@@ -11,7 +11,7 @@ export const useBreadGPT = () => {
   const { updateMissionProgress } = useDailyMissions();
 
   const checkCooldown = async () => {
-    if (!user) return false;
+    if (!user) return true;
 
     try {
       const { data, error } = await supabase
@@ -41,7 +41,7 @@ export const useBreadGPT = () => {
       return true;
     } catch (error) {
       console.error('Error checking cooldown:', error);
-      return false;
+      return true;
     }
   };
 
@@ -50,14 +50,14 @@ export const useBreadGPT = () => {
 
     setLoading(true);
 
-    // Check cooldown first
-    const canAsk = await checkCooldown();
-    if (!canAsk) {
-      setLoading(false);
-      return null;
-    }
-
     try {
+      // Check cooldown first
+      const canAsk = await checkCooldown();
+      if (!canAsk) {
+        setLoading(false);
+        return null;
+      }
+
       // Update cooldown immediately
       await supabase
         .from('breadgpt_cooldowns')
@@ -79,14 +79,15 @@ export const useBreadGPT = () => {
         return 'Mein Ofen ist gerade kaputt... Versuche es später nochmal! 🥖';
       }
 
-      // Update user stats and mission progress
+      // Update mission progress and user stats
       await updateMissionProgress('breadgpt_question', 1);
       
+      // Update user stats
       const { data: statsData } = await supabase
         .from('user_stats')
         .select('breadgpt_questions')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       const currentQuestions = statsData?.breadgpt_questions || 0;
       
@@ -98,7 +99,7 @@ export const useBreadGPT = () => {
         });
 
       setLoading(false);
-      return data?.text || 'Hmm... *Brotkrümel fallen* ... Ich verstehe nicht ganz. Probiere eine andere Frage! 🥖';
+      return data?.text || 'Hmm... *Brotkrümel fallen* ... Probiere eine andere Frage! 🥖';
     } catch (error) {
       console.error('Error asking BreadGPT:', error);
       setLoading(false);

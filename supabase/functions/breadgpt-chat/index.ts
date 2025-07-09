@@ -1,7 +1,8 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const huggingFaceToken = Deno.env.get('COHERE_TOKEN'); // COHERE_TOKEN statt HUGGINGFACE_TOKEN
+const cohereToken = Deno.env.get('COHERE_TOKEN');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -17,32 +18,31 @@ serve(async (req) => {
     const { question } = await req.json();
     console.log('BreadGPT question received:', question);
 
-    if (!huggingFaceToken) {
+    if (!cohereToken) {
       console.error('COHERE_TOKEN not found');
       throw new Error('API token not configured');
     }
 
-    // Beispiel-Prompt (passt du ggf. an)
     const breadPrompt = `Du bist BreadGPT, ein philosophisches sprechendes Brot. Antworte in maximal 2-3 Sätzen auf Deutsch. Sei kreativ, manchmal witzig, manchmal tiefgreifend. Verwende gelegentlich Brot-Metaphern und Brot-Emojis. Frage: ${question}`;
 
     console.log('Sending request to Cohere API...');
 
-    const response = await fetch("https://api.cohere.ai/generate", {
+    const response = await fetch("https://api.cohere.ai/v2/chat", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${huggingFaceToken}`,
+        Authorization: `Bearer ${cohereToken}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "command-xlarge-nightly",
-        prompt: breadPrompt,
-        max_tokens: 150,
+        model: "command-r7b-12-2024",
+        messages: [
+          {
+            role: "user",
+            content: breadPrompt
+          }
+        ],
         temperature: 0.8,
-        k: 0,
-        p: 0.75,
-        frequency_penalty: 0,
-        presence_penalty: 0,
-        stop_sequences: ["--"]
+        max_tokens: 150
       })
     });
 
@@ -57,14 +57,13 @@ serve(async (req) => {
     const data = await response.json();
     console.log('Cohere API response data:', data);
 
-    let generatedText = data?.generations?.[0]?.text || '';
+    let generatedText = data?.message?.content?.[0]?.text || '';
 
     // Clean up the response
-    generatedText = generatedText.replace(breadPrompt, '').trim();
-    generatedText = generatedText.replace(/^[\s\n]*/, ''); // führende Leerzeichen entfernen
-    generatedText = generatedText.replace(/^\w+:\s*/, ''); // Assistant: etc. entfernen
+    generatedText = generatedText.replace(/^[\s\n]*/, '');
+    generatedText = generatedText.replace(/^\w+:\s*/, '');
 
-    // Fallback falls Antwort leer oder zu kurz ist
+    // Fallback if response is empty or too short
     if (!generatedText || generatedText.length < 10) {
       const fallbacks = [
         'Das Leben ist wie Brot backen – es braucht Zeit, Geduld und die richtige Temperatur! 🥖',
@@ -93,12 +92,10 @@ serve(async (req) => {
       'Meine Krümel sind durcheinander geraten... *schüttel* 🍞'
     ];
 
-    const errorText = error?.message || String(error) || 'Unbekannter Fehler';
-
     return new Response(JSON.stringify({
       text: errorResponses[Math.floor(Math.random() * errorResponses.length)],
       success: false,
-      error: errorText
+      error: error?.message || 'Unknown error'
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

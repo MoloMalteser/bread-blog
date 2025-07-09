@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import Header from '@/components/Header';
-import { BookOpen, Edit2, History, Plus, Clock, User, Search, Shuffle } from 'lucide-react';
+import { Edit2, Plus, Clock, User, Search, Shuffle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -59,10 +59,22 @@ const WikiPage = () => {
     if (searchQuery.trim() === '') {
       setFilteredPages(pages);
     } else {
-      const filtered = pages.filter(page => 
-        page.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        page.content.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      const query = searchQuery.toLowerCase();
+      const filtered = pages.filter(page => {
+        const titleMatch = page.title.toLowerCase().includes(query);
+        const contentMatch = page.content.toLowerCase().includes(query);
+        return titleMatch || contentMatch;
+      });
+      
+      // Sort by title matches first, then content matches
+      filtered.sort((a, b) => {
+        const aTitleMatch = a.title.toLowerCase().includes(query);
+        const bTitleMatch = b.title.toLowerCase().includes(query);
+        if (aTitleMatch && !bTitleMatch) return -1;
+        if (!aTitleMatch && bTitleMatch) return 1;
+        return 0;
+      });
+      
       setFilteredPages(filtered);
     }
   }, [searchQuery, pages]);
@@ -214,35 +226,6 @@ const WikiPage = () => {
     setNewWord('');
   };
 
-  const createNewPage = async () => {
-    if (!user || !newPageTitle.trim()) return;
-
-    try {
-      const { error } = await supabase
-        .from('wiki_pages')
-        .insert({
-          title: newPageTitle.trim(),
-          content: 'Diese Seite wartet darauf, von der Community bearbeitet zu werden. Klicke auf ein Wort, um es zu ändern!'
-        });
-
-      if (error) throw error;
-
-      setNewPageTitle('');
-      await fetchPages();
-      toast({
-        title: "Seite erstellt!",
-        description: `Die Wiki-Seite "${newPageTitle.trim()}" wurde erstellt.`
-      });
-    } catch (error) {
-      console.error('Error creating page:', error);
-      toast({
-        title: "Fehler",
-        description: "Die Seite konnte nicht erstellt werden.",
-        variant: "destructive"
-      });
-    }
-  };
-
   const getRandomPage = () => {
     if (filteredPages.length === 0) return;
     const randomIndex = Math.floor(Math.random() * filteredPages.length);
@@ -312,7 +295,7 @@ const WikiPage = () => {
     <div className="min-h-screen bg-background pb-20">
       <Header />
       
-      <main className="pt-20 max-w-6xl mx-auto px-4 py-8">
+      <main className="pt-20 max-w-4xl mx-auto px-4 py-8">
         {/* Logo und Titel */}
         <div className="text-center mb-8">
           <div className="text-6xl mb-4">🥖</div>
@@ -348,148 +331,93 @@ const WikiPage = () => {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Sidebar mit Seiten */}
-          <div className="lg:col-span-1">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="font-semibold">Artikel ({filteredPages.length})</h2>
-                {user && (
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button size="sm" variant="outline">
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Neuer Artikel</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <Input
-                          placeholder="Titel des Artikels..."
-                          value={newPageTitle}
-                          onChange={(e) => setNewPageTitle(e.target.value)}
-                        />
-                        <Button onClick={createNewPage} className="w-full">
-                          Artikel erstellen
-                        </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+        {/* Hauptinhalt */}
+        {selectedPage ? (
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  {selectedPage.title}
+                  <Badge variant="outline" className="flex items-center gap-1">
+                    <Edit2 className="h-3 w-3" />
+                    {edits.length} Änderungen
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="prose max-w-none">
+                  <div className="text-base leading-relaxed">
+                    {renderEditableContent(selectedPage.content)}
+                  </div>
+                </div>
+                
+                {!user && (
+                  <div className="mt-4 p-4 bg-muted rounded-lg">
+                    <p className="text-sm text-muted-foreground">
+                      Melde dich an, um Wörter zu bearbeiten und zur Community beizutragen!
+                    </p>
+                  </div>
                 )}
-              </div>
-              
-              <div className="space-y-2 max-h-96 overflow-y-auto">
-                {filteredPages.map((page) => (
-                  <Button
-                    key={page.id}
-                    variant={selectedPage?.id === page.id ? 'default' : 'ghost'}
-                    className="w-full justify-start text-left h-auto p-3"
-                    onClick={() => setSelectedPage(page)}
-                  >
-                    <div>
-                      <div className="font-medium">{page.title}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {new Date(page.updated_at).toLocaleDateString('de-DE')}
-                      </div>
-                    </div>
-                  </Button>
-                ))}
-              </div>
-            </div>
-          </div>
+                
+                {user && !canEdit() && (
+                  <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p className="text-sm text-yellow-800">
+                      <Clock className="h-4 w-4 inline mr-1" />
+                      Cooldown aktiv. Du kannst in {30 - Math.floor((new Date().getTime() - (lastEdit?.getTime() || 0)) / 1000)} Sekunden das nächste Wort bearbeiten.
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-          {/* Hauptinhalt */}
-          <div className="lg:col-span-3">
-            {selectedPage ? (
-              <div className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center justify-between">
-                      {selectedPage.title}
-                      <Badge variant="outline" className="flex items-center gap-1">
-                        <History className="h-3 w-3" />
-                        {edits.length} Änderungen
-                      </Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="prose max-w-none">
-                      <div className="text-base leading-relaxed">
-                        {renderEditableContent(selectedPage.content)}
+            {/* Letzte Änderungen */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Letzte Änderungen</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {edits.length > 0 ? (
+                  <div className="space-y-3">
+                    {edits.slice(0, 5).map((edit) => (
+                      <div key={edit.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">
+                            {edit.old_word ? (
+                              <>
+                                "<span className="line-through text-muted-foreground">{edit.old_word}</span>" → 
+                                "<span className="font-medium">{edit.new_word}</span>"
+                              </>
+                            ) : (
+                              <>Neues Wort: "<span className="font-medium">{edit.new_word}</span>"</>
+                            )}
+                          </span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(edit.created_at).toLocaleString('de-DE')}
+                        </span>
                       </div>
-                    </div>
-                    
-                    {!user && (
-                      <div className="mt-4 p-4 bg-muted rounded-lg">
-                        <p className="text-sm text-muted-foreground">
-                          Melde dich an, um Wörter zu bearbeiten und zur Community beizutragen!
-                        </p>
-                      </div>
-                    )}
-                    
-                    {user && !canEdit() && (
-                      <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <p className="text-sm text-yellow-800">
-                          <Clock className="h-4 w-4 inline mr-1" />
-                          Cooldown aktiv. Du kannst in {30 - Math.floor((new Date().getTime() - (lastEdit?.getTime() || 0)) / 1000)} Sekunden das nächste Wort bearbeiten.
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                {/* Letzte Änderungen */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Letzte Änderungen</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {edits.length > 0 ? (
-                      <div className="space-y-3">
-                        {edits.slice(0, 10).map((edit) => (
-                          <div key={edit.id} className="flex items-center justify-between p-3 border rounded-lg">
-                            <div className="flex items-center gap-2">
-                              <User className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-sm">
-                                {edit.old_word ? (
-                                  <>
-                                    "<span className="line-through text-muted-foreground">{edit.old_word}</span>" → 
-                                    "<span className="font-medium">{edit.new_word}</span>"
-                                  </>
-                                ) : (
-                                  <>Neues Wort: "<span className="font-medium">{edit.new_word}</span>"</>
-                                )}
-                              </span>
-                            </div>
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(edit.created_at).toLocaleString('de-DE')}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-muted-foreground text-center py-4">
-                        Noch keine Änderungen an diesem Artikel.
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-            ) : (
-              <Card>
-                <CardContent className="p-12 text-center">
-                  <BookOpen className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-lg font-semibold mb-2">Wähle einen Artikel</h3>
-                  <p className="text-muted-foreground">
-                    Wähle einen Artikel aus der Seitenleiste aus, um ihn zu lesen und zu bearbeiten.
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-center py-4">
+                    Noch keine Änderungen an diesem Artikel.
                   </p>
-                </CardContent>
-              </Card>
-            )}
+                )}
+              </CardContent>
+            </Card>
           </div>
-        </div>
+        ) : (
+          <Card>
+            <CardContent className="p-12 text-center">
+              <div className="text-6xl mb-4">🔍</div>
+              <h3 className="text-lg font-semibold mb-2">Kein Artikel gefunden</h3>
+              <p className="text-muted-foreground">
+                Versuche einen anderen Suchbegriff oder nutze den Zufalls-Button.
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </main>
     </div>
   );

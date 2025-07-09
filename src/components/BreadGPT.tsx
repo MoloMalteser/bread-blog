@@ -19,7 +19,7 @@ const BreadGPT = () => {
     checkCooldown();
   }, []);
 
-  // Typing effect - FIXED: Start from index 0 instead of 1
+  // Typing effect
   useEffect(() => {
     if (answer && !isTyping) {
       setIsTyping(true);
@@ -129,7 +129,7 @@ const BreadGPT = () => {
 
       <div className="text-center text-sm text-muted-foreground">
         <p>🕒 Eine Frage alle 30 Sekunden • 🎭 Verschiedene Stimmungen je nach Frage</p>
-        <p>✨ Probiere Wörter wie "toast", "baguette" oder "lovable" aus!</p>
+        <p>✨ Probiere verschiedene Fragen aus!</p>
       </div>
     </div>
   );
