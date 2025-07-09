@@ -1,10 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from "@/hooks/use-toast";
@@ -12,7 +12,6 @@ import { ArrowLeft, Save, Eye, Send, Globe, Theater } from 'lucide-react';
 import { usePosts } from '@/hooks/usePosts';
 import { useAuth } from '@/hooks/useAuth';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
-import EditorBreadGPT from '@/components/EditorBreadGPT';
 import EditorToolbar from '@/components/EditorToolbar';
 
 const Editor = () => {
@@ -148,18 +147,24 @@ const Editor = () => {
     setIsSaving(true);
     
     try {
+      // Determine if we're publishing publicly or as draft
+      const shouldPublishPublic = isPublic && !isAnonymous;
+      const shouldPublishAnonymous = isAnonymous;
+      
       if (postId) {
-        await updatePost(postId, title.trim(), content.trim(), isPublic, isAnonymous);
+        await updatePost(postId, title.trim(), content.trim(), shouldPublishPublic || shouldPublishAnonymous, isAnonymous);
       } else {
-        const newPost = await createPost(title.trim(), content.trim(), isPublic, isAnonymous);
+        const newPost = await createPost(title.trim(), content.trim(), shouldPublishPublic || shouldPublishAnonymous, isAnonymous);
         if (newPost) {
           navigate(`/editor/${newPost.id}`, { replace: true });
         }
       }
       
+      const publishType = shouldPublishAnonymous ? "anonym" : shouldPublishPublic ? "öffentlich" : "als Entwurf";
+      
       toast({
-        title: isPublic ? "Post veröffentlicht" : "Entwurf gespeichert",
-        description: isPublic ? "Dein Post ist jetzt öffentlich sichtbar" : "Post wurde als Entwurf gespeichert",
+        title: `Post ${publishType} veröffentlicht`,
+        description: shouldPublishPublic || shouldPublishAnonymous ? `Dein Post ist jetzt ${publishType} sichtbar` : "Post wurde als Entwurf gespeichert",
       });
       
       navigate('/dashboard');
@@ -251,7 +256,10 @@ const Editor = () => {
                 disabled={!title.trim() || !content.trim() || isSaving}
               >
                 <Send className="h-4 w-4 mr-1" />
-                {isAnonymousUser ? 'Anonym veröffentlichen' : (isPublic ? 'Veröffentlichen' : 'Als Entwurf speichern')}
+                {isSaving ? 'Veröffentlichen...' : 
+                 isAnonymousUser ? 'Anonym veröffentlichen' : 
+                 isAnonymous ? 'Anonym veröffentlichen' : 
+                 isPublic ? 'Veröffentlichen' : 'Als Entwurf speichern'}
               </Button>
             </div>
           </div>
@@ -308,43 +316,60 @@ const Editor = () => {
             </TabsContent>
           </Tabs>
 
-          {/* Publishing Options */}
+          {/* Publishing Options - New Island Design */}
           {user && (
-            <Card className="p-4">
-              <div className="space-y-4">
-                <h3 className="font-medium">Veröffentlichungs-Optionen</h3>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+            <div className="bg-muted/30 rounded-2xl p-6">
+              <h3 className="font-medium mb-4 text-center">Veröffentlichungs-Optionen</h3>
+              
+              {/* Toggle Island */}
+              <div className="relative bg-background rounded-xl p-1 shadow-sm border">
+                <div className="grid grid-cols-2 relative">
+                  {/* Sliding Selection Indicator */}
+                  <div 
+                    className={`absolute top-1 bottom-1 bg-primary rounded-lg transition-transform duration-200 ease-in-out ${
+                      isAnonymous ? 'translate-x-full' : 'translate-x-0'
+                    }`}
+                    style={{ width: 'calc(50% - 4px)', left: '4px' }}
+                  />
+                  
+                  {/* Options */}
+                  <button
+                    onClick={() => {
+                      setIsAnonymous(false);
+                      setIsPublic(true);
+                    }}
+                    className={`relative z-10 flex items-center justify-center gap-2 py-3 px-4 rounded-lg transition-colors duration-200 ${
+                      !isAnonymous ? 'text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
                     <Globe className="h-4 w-4" />
-                    <Label htmlFor="public">Öffentlich veröffentlichen</Label>
-                  </div>
-                  <Switch
-                    id="public"
-                    checked={isPublic}
-                    onCheckedChange={setIsPublic}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+                    <span className="font-medium">Öffentlich</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      setIsAnonymous(true);
+                      setIsPublic(true);
+                    }}
+                    className={`relative z-10 flex items-center justify-center gap-2 py-3 px-4 rounded-lg transition-colors duration-200 ${
+                      isAnonymous ? 'text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
                     <Theater className="h-4 w-4" />
-                    <Label htmlFor="anonymous">Anonym veröffentlichen</Label>
-                  </div>
-                  <Switch
-                    id="anonymous"
-                    checked={isAnonymous}
-                    onCheckedChange={setIsAnonymous}
-                  />
+                    <span className="font-medium">Anonym</span>
+                  </button>
                 </div>
-                
-                {isAnonymous && (
-                  <p className="text-sm text-muted-foreground bg-orange-50 p-2 rounded">
+              </div>
+              
+              {isAnonymous && (
+                <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                  <p className="text-sm text-orange-800">
+                    <span className="text-lg mr-1">🎭</span>
                     Wenn aktiviert, wird dein Post ohne deinen Namen veröffentlicht.
                   </p>
-                )}
-              </div>
-            </Card>
+                </div>
+              )}
+            </div>
           )}
 
           {/* Anonymous User Info */}
