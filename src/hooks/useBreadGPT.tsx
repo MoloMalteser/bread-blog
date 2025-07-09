@@ -20,7 +20,7 @@ export const useBreadGPT = () => {
         .eq('user_id', user.id)
         .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         console.error('Error checking cooldown:', error);
         return true;
       }
@@ -45,20 +45,42 @@ export const useBreadGPT = () => {
     }
   };
 
+  // Check cooldown on mount and when user changes
+  useEffect(() => {
+    if (user) {
+      checkCooldown();
+    }
+  }, [user]);
+
+  // Auto-update cooldown timer
+  useEffect(() => {
+    if (!cooldownUntil) return;
+
+    const interval = setInterval(() => {
+      const now = new Date();
+      if (now >= cooldownUntil) {
+        setCooldownUntil(null);
+        clearInterval(interval);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [cooldownUntil]);
+
   const askBreadGPT = async (question: string): Promise<string | null> => {
     if (!user) return null;
+    if (loading) return null;
+
+    // Check cooldown before proceeding
+    const canAsk = await checkCooldown();
+    if (!canAsk) {
+      return null;
+    }
 
     setLoading(true);
 
     try {
-      // Check cooldown first
-      const canAsk = await checkCooldown();
-      if (!canAsk) {
-        setLoading(false);
-        return null;
-      }
-
-      // Update cooldown immediately
+      // Update cooldown in database
       await supabase
         .from('breadgpt_cooldowns')
         .upsert({
@@ -66,7 +88,7 @@ export const useBreadGPT = () => {
           last_question_at: new Date().toISOString()
         });
 
-      // Set cooldown for UI
+      // Set local cooldown
       setCooldownUntil(new Date(Date.now() + 30000));
 
       // Call the Edge Function
@@ -79,7 +101,7 @@ export const useBreadGPT = () => {
         return 'Mein Ofen ist gerade kaputt... Versuche es später nochmal! 🥖';
       }
 
-      // Update mission progress and user stats
+      // Update mission progress
       await updateMissionProgress('breadgpt_question', 1);
       
       // Update user stats
@@ -98,28 +120,14 @@ export const useBreadGPT = () => {
           breadgpt_questions: currentQuestions + 1
         });
 
-      setLoading(false);
       return data?.text || 'Hmm... *Brotkrümel fallen* ... Probiere eine andere Frage! 🥖';
     } catch (error) {
       console.error('Error asking BreadGPT:', error);
-      setLoading(false);
       return 'Meine Krümel sind heute besonders störrisch... 🍞';
+    } finally {
+      setLoading(false);
     }
   };
-
-  // Auto-update cooldown timer
-  useEffect(() => {
-    if (!cooldownUntil) return;
-
-    const interval = setInterval(() => {
-      if (new Date() >= cooldownUntil) {
-        setCooldownUntil(null);
-        clearInterval(interval);
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [cooldownUntil]);
 
   return {
     askBreadGPT,

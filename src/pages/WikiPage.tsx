@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import Header from '@/components/Header';
 import { Edit2, Plus, Clock, User, Search, Shuffle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -38,15 +37,17 @@ const WikiPage = () => {
   const [selectedPage, setSelectedPage] = useState<WikiPage | null>(null);
   const [editingWord, setEditingWord] = useState<number | null>(null);
   const [newWord, setNewWord] = useState('');
-  const [lastEdit, setLastEdit] = useState<Date | null>(null);
+  const [cooldownUntil, setCooldownUntil] = useState<Date | null>(null);
   const [edits, setEdits] = useState<WikiEdit[]>([]);
-  const [newPageTitle, setNewPageTitle] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchPages();
-  }, []);
+    if (user) {
+      checkCooldown();
+    }
+  }, [user]);
 
   useEffect(() => {
     if (selectedPage) {
@@ -58,6 +59,9 @@ const WikiPage = () => {
     // Filter pages based on search query
     if (searchQuery.trim() === '') {
       setFilteredPages(pages);
+      if (pages.length > 0 && !selectedPage) {
+        setSelectedPage(pages[0]);
+      }
     } else {
       const query = searchQuery.toLowerCase();
       const filtered = pages.filter(page => {
@@ -76,8 +80,28 @@ const WikiPage = () => {
       });
       
       setFilteredPages(filtered);
+      if (filtered.length > 0) {
+        setSelectedPage(filtered[0]);
+      } else {
+        setSelectedPage(null);
+      }
     }
   }, [searchQuery, pages]);
+
+  // Auto-update cooldown timer
+  useEffect(() => {
+    if (!cooldownUntil) return;
+
+    const interval = setInterval(() => {
+      const now = new Date();
+      if (now >= cooldownUntil) {
+        setCooldownUntil(null);
+        clearInterval(interval);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [cooldownUntil]);
 
   const fetchPages = async () => {
     try {
@@ -88,10 +112,6 @@ const WikiPage = () => {
 
       if (error) throw error;
       setPages(data || []);
-      setFilteredPages(data || []);
-      if (data && data.length > 0 && !selectedPage) {
-        setSelectedPage(data[0]);
-      }
     } catch (error) {
       console.error('Error fetching wiki pages:', error);
     } finally {
@@ -115,17 +135,47 @@ const WikiPage = () => {
     }
   };
 
+  const checkCooldown = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('wiki_edits')
+        .select('created_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error checking wiki cooldown:', error);
+        return;
+      }
+
+      if (data) {
+        const lastEdit = new Date(data.created_at);
+        const now = new Date();
+        const diffSeconds = (now.getTime() - lastEdit.getTime()) / 1000;
+        
+        if (diffSeconds < 30) {
+          const cooldownEnd = new Date(lastEdit.getTime() + 30000);
+          setCooldownUntil(cooldownEnd);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking wiki cooldown:', error);
+    }
+  };
+
   const canEdit = () => {
     if (!user) return false;
-    if (!lastEdit) return true;
-    const now = new Date();
-    const timeDiff = (now.getTime() - lastEdit.getTime()) / 1000;
-    return timeDiff >= 30;
+    if (!cooldownUntil) return true;
+    return new Date() >= cooldownUntil;
   };
 
   const handleWordClick = (wordIndex: number, word: string) => {
     if (!canEdit()) {
-      const timeLeft = 30 - Math.floor((new Date().getTime() - (lastEdit?.getTime() || 0)) / 1000);
+      const timeLeft = Math.ceil((cooldownUntil!.getTime() - new Date().getTime()) / 1000);
       toast({
         title: "Cooldown aktiv",
         description: `Du kannst in ${timeLeft} Sekunden das nächste Wort bearbeiten.`,
@@ -184,7 +234,8 @@ const WikiPage = () => {
         updated_at: new Date().toISOString()
       });
 
-      setLastEdit(new Date());
+      // Set cooldown
+      setCooldownUntil(new Date(Date.now() + 30000));
       setEditingWord(null);
       fetchEdits(selectedPage.id);
 
@@ -208,7 +259,7 @@ const WikiPage = () => {
 
   const addWordAfter = (wordIndex: number) => {
     if (!canEdit()) {
-      const timeLeft = 30 - Math.floor((new Date().getTime() - (lastEdit?.getTime() || 0)) / 1000);
+      const timeLeft = Math.ceil((cooldownUntil!.getTime() - new Date().getTime()) / 1000);
       toast({
         title: "Cooldown aktiv",
         description: `Du kannst in ${timeLeft} Sekunden ein Wort hinzufügen.`,
@@ -227,9 +278,15 @@ const WikiPage = () => {
   };
 
   const getRandomPage = () => {
-    if (filteredPages.length === 0) return;
-    const randomIndex = Math.floor(Math.random() * filteredPages.length);
-    setSelectedPage(filteredPages[randomIndex]);
+    if (pages.length === 0) return;
+    const randomIndex = Math.floor(Math.random() * pages.length);
+    setSelectedPage(pages[randomIndex]);
+    setSearchQuery(''); // Clear search when using random
+  };
+
+  const handleSearch = () => {
+    // Search is handled by useEffect when searchQuery changes
+    // This function is here for potential future enhancements
   };
 
   const renderEditableContent = (content: string) => {
@@ -280,6 +337,15 @@ const WikiPage = () => {
     });
   };
 
+  const getCooldownText = () => {
+    if (!cooldownUntil) return null;
+    const now = new Date();
+    if (now >= cooldownUntil) return null;
+    
+    const remainingSeconds = Math.ceil((cooldownUntil.getTime() - now.getTime()) / 1000);
+    return `Cooldown: ${remainingSeconds}s`;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -313,6 +379,9 @@ const WikiPage = () => {
                   className="pl-10"
                 />
               </div>
+              <Button variant="outline" onClick={handleSearch} title="Suchen">
+                <Search className="h-4 w-4" />
+              </Button>
               <Button variant="outline" onClick={getRandomPage} title="Zufälliger Artikel">
                 <Shuffle className="h-4 w-4" />
               </Button>
@@ -359,11 +428,11 @@ const WikiPage = () => {
                   </div>
                 )}
                 
-                {user && !canEdit() && (
+                {user && getCooldownText() && (
                   <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                     <p className="text-sm text-yellow-800">
                       <Clock className="h-4 w-4 inline mr-1" />
-                      Cooldown aktiv. Du kannst in {30 - Math.floor((new Date().getTime() - (lastEdit?.getTime() || 0)) / 1000)} Sekunden das nächste Wort bearbeiten.
+                      {getCooldownText()}
                     </p>
                   </div>
                 )}
