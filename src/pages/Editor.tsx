@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -14,6 +13,7 @@ import { usePosts } from '@/hooks/usePosts';
 import { useAuth } from '@/hooks/useAuth';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import EditorBreadGPT from '@/components/EditorBreadGPT';
+import EditorToolbar from '@/components/EditorToolbar';
 
 const Editor = () => {
   const { postId } = useParams();
@@ -178,6 +178,27 @@ const Editor = () => {
     setContent(prev => prev + (prev ? '\n\n' : '') + text);
   };
 
+  const handleFormatText = (format: string) => {
+    // Simple formatting helpers
+    switch (format) {
+      case 'bold':
+        setContent(prev => prev + '**fetter Text**');
+        break;
+      case 'italic':
+        setContent(prev => prev + '*kursiver Text*');
+        break;
+      case 'strikethrough':
+        setContent(prev => prev + '~~durchgestrichener Text~~');
+        break;
+      case 'heading':
+        setContent(prev => prev + '\n## Überschrift\n');
+        break;
+      case 'sparkle':
+        setContent(prev => prev + '✨ *magischer Text* ✨');
+        break;
+    }
+  };
+
   if (!user && !isAnonymousUser) return null;
 
   return (
@@ -252,9 +273,12 @@ const Editor = () => {
             />
           </div>
 
-          {/* BreadGPT Integration - only for authenticated users */}
+          {/* Toolbar - only for authenticated users */}
           {user && (
-            <EditorBreadGPT onInsertText={handleInsertText} />
+            <EditorToolbar 
+              onInsertText={handleInsertText} 
+              onFormatText={handleFormatText}
+            />
           )}
 
           {/* Content with Tabs for Editor/Preview */}

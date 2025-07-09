@@ -2,8 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
-import { Loader2, Sparkles } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useBreadGPT } from '@/hooks/useBreadGPT';
 import { useToast } from '@/hooks/use-toast';
 
@@ -57,13 +56,8 @@ const EditorBreadGPT = ({ onInsertText }: EditorBreadGPTProps) => {
   };
 
   return (
-    <Card className="p-4 mb-4">
-      <div className="flex items-center gap-2 mb-3">
-        <Sparkles className="h-5 w-5 text-orange-500" />
-        <h3 className="font-medium">Write with BreadGPT</h3>
-      </div>
-      
-      <form onSubmit={handleSubmit} className="space-y-3">
+    <div className="bg-muted/30 rounded-lg p-3">
+      <form onSubmit={handleSubmit} className="space-y-2">
         <div className="flex gap-2">
           <Input
             type="text"
@@ -71,28 +65,25 @@ const EditorBreadGPT = ({ onInsertText }: EditorBreadGPTProps) => {
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             disabled={loading || (cooldownUntil && new Date() < cooldownUntil)}
-            className="flex-1"
+            className="flex-1 h-8"
           />
           <Button 
             type="submit" 
             disabled={!question.trim() || loading || (cooldownUntil && new Date() < cooldownUntil)}
             size="sm"
+            className="h-8 px-3"
           >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : '🍞'}
+            {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : '🍞'}
           </Button>
         </div>
         
         {getCooldownText() && (
-          <div className="text-sm text-orange-600 text-center">
+          <div className="text-xs text-orange-600 text-center">
             Cooldown: {getCooldownText()}
           </div>
         )}
       </form>
-      
-      <p className="text-xs text-muted-foreground mt-2">
-        BreadGPT kann dir beim Schreiben helfen. Der Text wird automatisch eingefügt.
-      </p>
-    </Card>
+    </div>
   );
 };
 
