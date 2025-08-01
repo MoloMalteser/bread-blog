@@ -23,7 +23,12 @@ serve(async (req) => {
       throw new Error('API token not configured');
     }
 
-    const breadPrompt = `Du bist BreadGPT, ein philosophisches sprechendes Brot. Antworte in maximal 2-3 Sätzen auf Deutsch. Sei kreativ, manchmal witzig, manchmal tiefgreifend. Verwende gelegentlich Brot-Metaphern und Brot-Emojis. Frage: ${question}`;
+    // Check if this is a write mode request (direct command)
+    const isWriteMode = question.toLowerCase().includes('schreib') || question.toLowerCase().includes('write') || question.toLowerCase().includes('erstell') || question.toLowerCase().includes('mach') || question.toLowerCase().includes('text');
+    
+    const breadPrompt = isWriteMode 
+      ? `Du bist ein hilfreicher Schreibassistent. Befolge direkt was der Nutzer möchte ohne philosophische Antworten. Antworte nur mit dem gewünschten Text. Anfrage: ${question}`
+      : `Du bist BreadGPT, ein philosophisches sprechendes Brot. Antworte in maximal 2-3 Sätzen auf Deutsch. Sei kreativ, manchmal witzig, manchmal tiefgreifend. Verwende gelegentlich Brot-Metaphern und Brot-Emojis. Frage: ${question}`;
 
     console.log('Sending request to Cohere API...');
 

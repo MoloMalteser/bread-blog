@@ -49,7 +49,7 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background pb-20">
       <Header />
       
-      <main className="pt-20 pb-20 max-w-6xl mx-auto px-4 py-8">
+      <main className="pt-20 pb-20 max-w-6xl mx-auto px-4 py-8 min-h-screen">
         <div className="mb-8">
           <h1 className="text-3xl font-semibold mb-2">
             Willkommen zurück, {user.user_metadata?.username || user.email?.split('@')[0]}!
@@ -73,38 +73,38 @@ const Dashboard = () => {
 
           <TabsContent value="posts" className="space-y-8">
             {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
               <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/editor')}>
-                <CardContent className="p-6 text-center">
-                  <PlusCircle className="h-8 w-8 mx-auto mb-3 text-primary" />
-                  <h3 className="font-semibold mb-1">Neuer Post</h3>
-                  <p className="text-sm text-muted-foreground">Teile deine Gedanken</p>
+                <CardContent className="p-4 md:p-6 text-center">
+                  <PlusCircle className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2 md:mb-3 text-primary" />
+                  <h3 className="font-semibold text-sm md:text-base mb-1">Neuer Post</h3>
+                  <p className="text-xs md:text-sm text-muted-foreground">Teile deine Gedanken</p>
                 </CardContent>
               </Card>
 
               <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/webbuilder')}>
-                <CardContent className="p-6 text-center">
-                  <div className="text-2xl mb-3">🏗️</div>
-                  <h3 className="font-semibold mb-1">WebBuilder</h3>
-                  <p className="text-sm text-muted-foreground">Erstelle deine Website</p>
+                <CardContent className="p-4 md:p-6 text-center">
+                  <div className="text-xl md:text-2xl mb-2 md:mb-3">🏗️</div>
+                  <h3 className="font-semibold text-sm md:text-base mb-1">WebBuilder</h3>
+                  <p className="text-xs md:text-sm text-muted-foreground">Erstelle deine Website</p>
                 </CardContent>
               </Card>
 
               <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/profile/${user.user_metadata?.username || user.email?.split('@')[0]}`)}>
-                <CardContent className="p-6 text-center">
-                  <Eye className="h-8 w-8 mx-auto mb-3 text-primary" />
-                  <h3 className="font-semibold mb-1">Mein Profil</h3>
-                  <p className="text-sm text-muted-foreground">
+                <CardContent className="p-4 md:p-6 text-center">
+                  <Eye className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2 md:mb-3 text-primary" />
+                  <h3 className="font-semibold text-sm md:text-base mb-1">Mein Profil</h3>
+                  <p className="text-xs md:text-sm text-muted-foreground break-all">
                     bread.blog/{user.user_metadata?.username || user.email?.split('@')[0]}
                   </p>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardContent className="p-6 text-center">
-                  <Calendar className="h-8 w-8 mx-auto mb-3 text-primary" />
-                  <h3 className="font-semibold mb-1">Statistiken</h3>
-                  <p className="text-sm text-muted-foreground">
+                <CardContent className="p-4 md:p-6 text-center">
+                  <Calendar className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2 md:mb-3 text-primary" />
+                  <h3 className="font-semibold text-sm md:text-base mb-1">Statistiken</h3>
+                  <p className="text-xs md:text-sm text-muted-foreground">
                     {publishedPosts.reduce((sum, post) => sum + (post.view_count || 0), 0)} Aufrufe gesamt
                   </p>
                 </CardContent>

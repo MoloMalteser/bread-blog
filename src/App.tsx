@@ -25,6 +25,7 @@ import SecretAdminMenu from "./pages/secret-admin-menu"
 import Flappybread from "./pages/secret"
 import BreadGPTPage from "./pages/BreadGPTPage";
 import WikiPage from "./pages/WikiPage";
+import WebBuilder from "./pages/WebBuilder";
 import BottomNavigation from "@/components/BottomNavigation";
 import Settings from "./pages/Settings";
 
@@ -55,6 +56,7 @@ const AppContent = () => {
         <Route path="/breadgpt" element={<BreadGPTPage />} />
         <Route path="/wiki" element={<WikiPage />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/webbuilder" element={<WebBuilder />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
