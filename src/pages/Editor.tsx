@@ -147,14 +147,15 @@ const Editor = () => {
     setIsSaving(true);
     
     try {
-      // Determine if we're publishing publicly or as draft
+      // Fix publishing logic
       const shouldPublishPublic = isPublic && !isAnonymous;
       const shouldPublishAnonymous = isAnonymous;
+      const isPublishing = shouldPublishPublic || shouldPublishAnonymous;
       
       if (postId) {
-        await updatePost(postId, title.trim(), content.trim(), shouldPublishPublic || shouldPublishAnonymous, isAnonymous);
+        await updatePost(postId, title.trim(), content.trim(), isPublishing, isAnonymous);
       } else {
-        const newPost = await createPost(title.trim(), content.trim(), shouldPublishPublic || shouldPublishAnonymous, isAnonymous);
+        const newPost = await createPost(title.trim(), content.trim(), isPublishing, isAnonymous);
         if (newPost) {
           navigate(`/editor/${newPost.id}`, { replace: true });
         }
@@ -164,7 +165,7 @@ const Editor = () => {
       
       toast({
         title: `Post ${publishType} veröffentlicht`,
-        description: shouldPublishPublic || shouldPublishAnonymous ? `Dein Post ist jetzt ${publishType} sichtbar` : "Post wurde als Entwurf gespeichert",
+        description: isPublishing ? `Dein Post ist jetzt ${publishType} sichtbar` : "Post wurde als Entwurf gespeichert",
       });
       
       navigate('/dashboard');

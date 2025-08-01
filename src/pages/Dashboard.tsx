@@ -49,7 +49,7 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background pb-20">
       <Header />
       
-      <main className="pt-20 max-w-6xl mx-auto px-4 py-8">
+      <main className="pt-20 pb-20 max-w-6xl mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-semibold mb-2">
             Willkommen zurück, {user.user_metadata?.username || user.email?.split('@')[0]}!
@@ -73,12 +73,20 @@ const Dashboard = () => {
 
           <TabsContent value="posts" className="space-y-8">
             {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/editor')}>
                 <CardContent className="p-6 text-center">
                   <PlusCircle className="h-8 w-8 mx-auto mb-3 text-primary" />
                   <h3 className="font-semibold mb-1">Neuer Post</h3>
                   <p className="text-sm text-muted-foreground">Teile deine Gedanken</p>
+                </CardContent>
+              </Card>
+
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/webbuilder')}>
+                <CardContent className="p-6 text-center">
+                  <div className="text-2xl mb-3">🏗️</div>
+                  <h3 className="font-semibold mb-1">WebBuilder</h3>
+                  <p className="text-sm text-muted-foreground">Erstelle deine Website</p>
                 </CardContent>
               </Card>
 
