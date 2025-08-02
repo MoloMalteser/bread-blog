@@ -390,6 +390,45 @@ export type Database = {
         }
         Relationships: []
       }
+      websites: {
+        Row: {
+          content: Json
+          created_at: string
+          custom_domain: string | null
+          html_content: string | null
+          id: string
+          is_published: boolean
+          slug: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          custom_domain?: string | null
+          html_content?: string | null
+          id?: string
+          is_published?: boolean
+          slug: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          custom_domain?: string | null
+          html_content?: string | null
+          id?: string
+          is_published?: boolean
+          slug?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       wiki_edits: {
         Row: {
           created_at: string

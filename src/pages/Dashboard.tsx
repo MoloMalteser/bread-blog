@@ -12,10 +12,13 @@ import { PlusCircle, Edit3, Eye, Calendar, Trash2, Trophy, Target } from 'lucide
 import { useToast } from "@/hooks/use-toast";
 import { usePosts } from '@/hooks/usePosts';
 import { useAuth } from '@/hooks/useAuth';
+import { useWebsites } from '@/hooks/useWebsites';
+import { Globe, Plus } from 'lucide-react';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const { posts, loading, deletePost } = usePosts();
+  const { websites, deleteWebsite, publishWebsite } = useWebsites();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -60,14 +63,18 @@ const Dashboard = () => {
         </div>
 
         <Tabs defaultValue="posts" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-8">
+          <TabsList className="grid w-full grid-cols-3 mb-8">
             <TabsTrigger value="posts" className="flex items-center gap-2">
               <Edit3 className="h-4 w-4" />
-              Meine Posts
+              Posts
+            </TabsTrigger>
+            <TabsTrigger value="websites" className="flex items-center gap-2">
+              <Globe className="h-4 w-4" />
+              Websites
             </TabsTrigger>
             <TabsTrigger value="missions" className="flex items-center gap-2">
               <Target className="h-4 w-4" />
-              Tägliche Missionen
+              Missionen
             </TabsTrigger>
           </TabsList>
 
@@ -85,8 +92,8 @@ const Dashboard = () => {
               <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/webbuilder')}>
                 <CardContent className="p-4 md:p-6 text-center">
                   <div className="text-xl md:text-2xl mb-2 md:mb-3">🏗️</div>
-                  <h3 className="font-semibold text-sm md:text-base mb-1">WebBuilder</h3>
-                  <p className="text-xs md:text-sm text-muted-foreground">Erstelle deine Website</p>
+                  <h3 className="font-semibold text-sm md:text-base mb-1">Neue Website</h3>
+                  <p className="text-xs md:text-sm text-muted-foreground">Erstelle eine Website</p>
                 </CardContent>
               </Card>
 
@@ -204,6 +211,96 @@ const Dashboard = () => {
                     ))
                   )}
                 </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="websites" className="space-y-8">
+            {/* Websites Management */}
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-semibold">Meine Websites ({websites.length})</h2>
+                <Button onClick={() => navigate('/webbuilder')}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Neue Website
+                </Button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {websites.length === 0 ? (
+                  <Card className="col-span-full">
+                    <CardContent className="p-8 text-center text-muted-foreground">
+                      <Globe className="h-12 w-12 mx-auto mb-4" />
+                      <p className="text-lg mb-2">Noch keine Websites erstellt</p>
+                      <p className="mb-6">Erstelle deine erste Website mit dem WebBuilder</p>
+                      <Button onClick={() => navigate('/webbuilder')}>
+                        Website erstellen
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  websites.map(website => (
+                    <Card key={website.id} className="hover:shadow-lg transition-shadow">
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-lg mb-2">{website.title}</h3>
+                            <p className="text-sm text-muted-foreground mb-2">
+                              /{website.slug}
+                            </p>
+                            <div className="flex items-center gap-2 mb-4">
+                              <Badge variant={website.is_published ? "default" : "secondary"}>
+                                {website.is_published ? "Veröffentlicht" : "Entwurf"}
+                              </Badge>
+                              <span className="text-xs text-muted-foreground">
+                                {new Date(website.updated_at).toLocaleDateString('de-DE')}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => navigate(`/webbuilder/${website.id}`)}
+                          >
+                            <Edit3 className="h-4 w-4 mr-1" />
+                            Bearbeiten
+                          </Button>
+                          
+                          {website.is_published ? (
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => window.open(`/pages/${website.slug}`, '_blank')}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              Ansehen
+                            </Button>
+                          ) : (
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => publishWebsite(website.id)}
+                            >
+                              <Globe className="h-4 w-4 mr-1" />
+                              Veröffentlichen
+                            </Button>
+                          )}
+                          
+                          <Button 
+                            variant="destructive" 
+                            size="sm" 
+                            onClick={() => deleteWebsite(website.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
               </div>
             </div>
           </TabsContent>

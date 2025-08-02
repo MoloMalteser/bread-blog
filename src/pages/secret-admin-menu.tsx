@@ -1,10 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  'https://pzrdesbjuxykihqumrvi.supabase',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6cmRlc2JqdXh5a2locXVtcnZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2OTQ4NTQsImV4cCI6MjA2NzI3MDg1NH0.NmcR-aSKElAAJYmqLsPE6QHbYDefZRG4SkN32PkCAp0'
-);
+import { supabase } from '@/integrations/supabase/client';
 
 const ADMIN_USERNAME = 'admin';
 const ADMIN_PASSWORD = 'HerrMogli!2012';
