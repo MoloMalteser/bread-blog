@@ -269,19 +269,21 @@ const WebBuilder = () => {
       overflow: 'hidden'
     };
 
-    const handleMouseDown = (e: React.MouseEvent) => {
+    const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
       if (!isCanvas) return;
       e.stopPropagation();
       setDraggedElement(element.id);
       setDragMode(true);
     };
 
-    const handleMouseMove = useCallback((e: MouseEvent) => {
+    const handleMouseMove = useCallback((e: MouseEvent | TouchEvent) => {
       if (!dragMode || !draggedElement || !canvasRef.current) return;
       
       const rect = canvasRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
       
       updateElement(draggedElement, {
         styles: {
@@ -301,9 +303,13 @@ const WebBuilder = () => {
       if (dragMode) {
         document.addEventListener('mousemove', handleMouseMove);
         document.addEventListener('mouseup', handleMouseUp);
+        document.addEventListener('touchmove', handleMouseMove);
+        document.addEventListener('touchend', handleMouseUp);
         return () => {
           document.removeEventListener('mousemove', handleMouseMove);
           document.removeEventListener('mouseup', handleMouseUp);
+          document.removeEventListener('touchmove', handleMouseMove);
+          document.removeEventListener('touchend', handleMouseUp);
         };
       }
     }, [dragMode, handleMouseMove, handleMouseUp]);
@@ -311,7 +317,8 @@ const WebBuilder = () => {
     const commonProps = {
       style: elementStyle,
       onClick: isCanvas ? (e: React.MouseEvent) => handleElementClick(element, e) : undefined,
-      onMouseDown: isCanvas ? handleMouseDown : undefined
+      onMouseDown: isCanvas ? handleMouseDown : undefined,
+      onTouchStart: isCanvas ? handleMouseDown : undefined
     };
 
     switch (element.type) {
@@ -334,10 +341,10 @@ const WebBuilder = () => {
     <div className={`min-h-screen bg-background ${isFullscreen ? 'overflow-hidden' : ''}`}>
       {!isFullscreen && <Header />}
       
-      <main className={`${!isFullscreen ? 'pt-20 pb-20' : ''} flex`}>
-        {/* Sidebar */}
+      <main className={`${!isFullscreen ? 'pt-20 pb-20 lg:pb-0' : ''} flex flex-col lg:flex-row`}>
+        {/* Mobile-First Sidebar */}
         {!isFullscreen && (
-          <div className="w-80 bg-muted/50 border-r p-4 space-y-6 overflow-y-auto">
+          <div className="w-full lg:w-80 bg-muted/50 border-r p-4 space-y-6 overflow-y-auto max-h-96 lg:max-h-none">
             {/* Website Settings */}
             <Card>
               <CardHeader>
@@ -511,25 +518,26 @@ const WebBuilder = () => {
 
         {/* Main Canvas Area */}
         <div className="flex-1 flex flex-col">
-          <div className="bg-background border-b p-4 flex items-center justify-between">
-            <h1 className="text-2xl font-semibold">WebBuilder 🏗️</h1>
+          <div className="bg-background border-b p-2 lg:p-4 flex items-center justify-between">
+            <h1 className="text-lg lg:text-2xl font-semibold">WebBuilder 🏗️</h1>
             <div className="flex gap-2">
               <Button
                 variant="outline"
+                size="sm"
                 onClick={() => setIsFullscreen(!isFullscreen)}
               >
-                <Maximize2 className="h-4 w-4 mr-1" />
-                {isFullscreen ? 'Beenden' : 'Vollbild'}
+                <Maximize2 className="h-4 w-4 lg:mr-1" />
+                <span className="hidden lg:inline">{isFullscreen ? 'Beenden' : 'Vollbild'}</span>
               </Button>
             </div>
           </div>
 
           {/* Canvas */}
-          <div className="flex-1 bg-white relative overflow-auto">
+          <div className="flex-1 bg-white relative overflow-auto touch-none">
             <div
               ref={canvasRef}
-              className="relative min-h-[600px] w-full"
-              style={{ minWidth: '800px' }}
+              className="relative min-h-[400px] lg:min-h-[600px] w-full"
+              style={{ minWidth: '100%' }}
               onClick={handleCanvasClick}
             >
               {elements.length === 0 ? (
