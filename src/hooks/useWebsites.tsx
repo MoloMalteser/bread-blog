@@ -104,7 +104,7 @@ export const useWebsites = () => {
     }
   };
 
-  const publishWebsite = async (id: string) => {
+  const publishWebsite = async (id: string): Promise<boolean> => {
     try {
       const { error } = await supabase
         .from('websites')
@@ -119,12 +119,14 @@ export const useWebsites = () => {
       });
       
       fetchWebsites(); // Refresh list
+      return true;
     } catch (error: any) {
       toast({
         title: "Fehler beim Veröffentlichen",
         description: error.message,
         variant: "destructive"
       });
+      return false;
     }
   };
 

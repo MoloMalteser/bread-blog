@@ -1,23 +1,25 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save, Globe, Layout, Type, Image, Move, Trash2, Plus, Settings, Maximize2 } from 'lucide-react';
+import { ArrowLeft, Save, Globe, Eye, Menu, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useWebsites, Website } from '@/hooks/useWebsites';
 import Header from '@/components/Header';
 import BottomNavigation from '@/components/BottomNavigation';
+import ElementToolbar from '@/components/webbuilder/ElementToolbar';
+import ElementEditor from '@/components/webbuilder/ElementEditor';
+import Canvas from '@/components/webbuilder/Canvas';
 
 interface Element {
   id: string;
   type: string;
   content: string;
   styles: {
-    position: 'absolute' | 'relative';
+    position: 'absolute';
     left: number;
     top: number;
     width: number;
@@ -39,15 +41,17 @@ const WebBuilder = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { id } = useParams();
-  const { saveWebsite, websites } = useWebsites();
-  const canvasRef = useRef<HTMLDivElement>(null);
+  const { saveWebsite, publishWebsite, websites } = useWebsites();
   
   const [title, setTitle] = useState('Meine Website');
   const [slug, setSlug] = useState('');
   const [elements, setElements] = useState<Element[]>([]);
   const [selectedElement, setSelectedElement] = useState<Element | null>(null);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [isPublished, setIsPublished] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dragMode, setDragMode] = useState(false);
   const [draggedElement, setDraggedElement] = useState<string | null>(null);
 
@@ -64,71 +68,131 @@ const WebBuilder = () => {
         setTitle(website.title);
         setSlug(website.slug);
         setElements(Array.isArray(website.content) ? website.content : []);
+        setIsPublished(website.is_published);
       }
     }
   }, [user, navigate, id, websites]);
 
-  // Element types for the toolbar
-  const elementTypes = [
-    { type: 'heading', icon: Type, label: 'Überschrift' },
-    { type: 'paragraph', icon: Type, label: 'Text' },
-    { type: 'image', icon: Image, label: 'Bild' },
-    { type: 'button', icon: Layout, label: 'Button' }
-  ];
+  const createNewElement = (type: string): Element => {
+    const getRandomPosition = () => ({
+      x: Math.random() * 300 + 50,
+      y: Math.random() * 200 + 50
+    });
 
-  const createNewElement = (type: string, x = 50, y = 50): Element => ({
-    id: Date.now().toString(),
-    type,
-    content: type === 'heading' ? 'Neue Überschrift' : 
-             type === 'paragraph' ? 'Neuer Text' :
-             type === 'button' ? 'Button' : '',
-    styles: {
-      position: 'absolute',
-      left: x,
-      top: y,
-      width: type === 'image' ? 200 : 150,
-      height: type === 'image' ? 150 : type === 'paragraph' ? 100 : 40,
-      fontSize: type === 'heading' ? 24 : 16,
-      color: '#000000',
-      backgroundColor: type === 'button' ? '#007bff' : 'transparent',
-      padding: 10,
-      borderRadius: 4,
-      fontWeight: type === 'heading' ? 'bold' : 'normal',
-      textAlign: 'left',
-      zIndex: elements.length + 1
-    },
-    props: type === 'image' ? { src: 'https://via.placeholder.com/200x150', alt: 'Bild' } : {}
-  });
+    const position = getRandomPosition();
+    
+    const baseElement = {
+      id: Date.now().toString(),
+      type,
+      styles: {
+        position: 'absolute' as const,
+        left: position.x,
+        top: position.y,
+        padding: 10,
+        borderRadius: 4,
+        fontWeight: 'normal' as const,
+        textAlign: 'left' as const,
+        zIndex: elements.length + 1
+      }
+    };
+
+    switch (type) {
+      case 'text':
+        return {
+          ...baseElement,
+          content: 'Klick mich zum Bearbeiten',
+          styles: {
+            ...baseElement.styles,
+            width: 200,
+            height: 40,
+            fontSize: 16,
+            color: '#000000',
+            backgroundColor: 'transparent'
+          }
+        };
+      case 'image':
+        return {
+          ...baseElement,
+          content: '',
+          styles: {
+            ...baseElement.styles,
+            width: 200,
+            height: 150,
+            fontSize: 16,
+            color: '#000000',
+            backgroundColor: 'transparent'
+          },
+          props: { src: 'https://via.placeholder.com/200x150?text=Bild', alt: 'Bild' }
+        };
+      case 'button':
+        return {
+          ...baseElement,
+          content: 'Button',
+          styles: {
+            ...baseElement.styles,
+            width: 120,
+            height: 40,
+            fontSize: 16,
+            color: '#ffffff',
+            backgroundColor: '#007bff',
+            borderRadius: 8
+          }
+        };
+      case 'container':
+        return {
+          ...baseElement,
+          content: 'Container',
+          styles: {
+            ...baseElement.styles,
+            width: 200,
+            height: 100,
+            fontSize: 14,
+            color: '#666666',
+            backgroundColor: '#f8f9fa',
+            borderRadius: 8
+          }
+        };
+      default:
+        return baseElement as Element;
+    }
+  };
 
   const addElement = (type: string) => {
     const newElement = createNewElement(type);
     setElements([...elements, newElement]);
     setSelectedElement(newElement);
+    setIsEditorOpen(true);
+    setSidebarOpen(false);
   };
 
-  const updateElement = (id: string, updates: Partial<Element>) => {
+  const updateElement = (updatedElement: Element) => {
     setElements(elements.map(el => 
-      el.id === id ? { ...el, ...updates } : el
+      el.id === updatedElement.id ? updatedElement : el
     ));
-    if (selectedElement?.id === id) {
-      setSelectedElement({ ...selectedElement, ...updates });
-    }
+    setSelectedElement(updatedElement);
   };
 
   const deleteElement = (id: string) => {
     setElements(elements.filter(el => el.id !== id));
-    if (selectedElement?.id === id) {
+    setSelectedElement(null);
+  };
+
+  const handleElementClick = (element: Element | null) => {
+    if (element) {
+      setSelectedElement(element);
+      setIsEditorOpen(true);
+    } else {
       setSelectedElement(null);
+      setIsEditorOpen(false);
     }
   };
 
-  const handleElementClick = (element: Element, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setSelectedElement(element);
-  };
-
-  const handleCanvasClick = () => {
-    setSelectedElement(null);
+  const handleElementMove = (id: string, x: number, y: number) => {
+    setElements(elements.map(el => 
+      el.id === id 
+        ? { ...el, styles: { ...el.styles, left: x, top: y } }
+        : el
+    ));
   };
 
   const handleSave = async () => {
@@ -149,7 +213,7 @@ const WebBuilder = () => {
       slug,
       content: elements,
       html_content: generateHTML(),
-      is_published: false
+      is_published: isPublished
     };
 
     const result = await saveWebsite(websiteData);
@@ -158,6 +222,60 @@ const WebBuilder = () => {
     }
     
     setIsSaving(false);
+  };
+
+  const handlePublish = async () => {
+    if (!title.trim() || !slug.trim()) {
+      toast({
+        title: "Fehlende Angaben",
+        description: "Bitte gib einen Titel und Slug ein",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsPublishing(true);
+
+    try {
+      // First save the website
+      const websiteData: Partial<Website> = {
+        ...(id && { id }),
+        title,
+        slug,
+        content: elements,
+        html_content: generateHTML(),
+        is_published: false
+      };
+
+      let websiteId = id;
+      if (!websiteId) {
+        const result = await saveWebsite(websiteData);
+        websiteId = result?.id;
+        if (websiteId) {
+          navigate(`/webbuilder/${websiteId}`);
+        }
+      } else {
+        await saveWebsite(websiteData);
+      }
+
+      // Then publish it
+      if (websiteId) {
+        await publishWebsite(websiteId);
+        setIsPublished(true);
+        toast({
+          title: "Website veröffentlicht!",
+          description: `Deine Website ist jetzt unter /pages/${slug} erreichbar`,
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Fehler beim Veröffentlichen",
+        description: "Es gab ein Problem beim Veröffentlichen der Website",
+        variant: "destructive"
+      });
+    }
+
+    setIsPublishing(false);
   };
 
   const generateHTML = () => {
@@ -174,6 +292,7 @@ const WebBuilder = () => {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             position: relative;
             min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
         .bread-login-widget {
             position: fixed;
@@ -187,14 +306,30 @@ const WebBuilder = () => {
             font-size: 14px;
             box-shadow: 0 4px 12px rgba(0,123,255,0.3);
             z-index: 1000;
+            transition: all 0.3s ease;
         }
         .bread-login-widget:hover {
             background: #0056b3;
             transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,123,255,0.4);
+        }
+        .made-with-bread {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #28a745;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 12px;
+            font-weight: 500;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(40,167,69,0.3);
         }
     </style>
 </head>
-<body>`;
+<body>
+    <div class="made-with-bread">🍞 Made with Bread</div>`;
 
     elements.forEach(element => {
       const { styles } = element;
@@ -214,20 +349,23 @@ const WebBuilder = () => {
         z-index: ${styles.zIndex};
         border: none;
         cursor: ${element.type === 'button' ? 'pointer' : 'default'};
+        display: flex;
+        align-items: center;
+        justify-content: ${styles.textAlign === 'center' ? 'center' : 'flex-start'};
       `;
 
       switch (element.type) {
-        case 'heading':
-          html += `<h1 style="${styleString}">${element.content}</h1>`;
-          break;
-        case 'paragraph':
-          html += `<p style="${styleString}">${element.content}</p>`;
+        case 'text':
+          html += `<div style="${styleString}">${element.content}</div>`;
           break;
         case 'image':
-          html += `<img src="${element.props?.src}" alt="${element.props?.alt}" style="${styleString}" />`;
+          html += `<img src="${element.props?.src}" alt="${element.props?.alt}" style="${styleString}; object-fit: cover;" />`;
           break;
         case 'button':
           html += `<button style="${styleString}" onclick="alert('Button geklickt!')">${element.content}</button>`;
+          break;
+        case 'container':
+          html += `<div style="${styleString}; border: 2px solid #e0e0e0;">${element.content}</div>`;
           break;
       }
     });
@@ -242,325 +380,156 @@ const WebBuilder = () => {
     return html;
   };
 
-  const renderElement = (element: Element, isCanvas = false) => {
-    const { styles } = element;
-    const isSelected = selectedElement?.id === element.id;
-    
-    const elementStyle = {
-      position: styles.position as 'absolute',
-      left: `${styles.left}px`,
-      top: `${styles.top}px`,
-      width: `${styles.width}px`,
-      height: element.type === 'image' ? `${styles.height}px` : 'auto',
-      minHeight: element.type !== 'image' ? `${styles.height}px` : undefined,
-      fontSize: `${styles.fontSize}px`,
-      color: styles.color,
-      backgroundColor: styles.backgroundColor,
-      padding: `${styles.padding}px`,
-      borderRadius: `${styles.borderRadius}px`,
-      fontWeight: styles.fontWeight,
-      textAlign: styles.textAlign,
-      zIndex: styles.zIndex,
-      border: isSelected ? '2px dashed #007bff' : '1px solid transparent',
-      cursor: isCanvas ? 'pointer' : 'default',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: styles.textAlign === 'center' ? 'center' : 'flex-start',
-      overflow: 'hidden'
-    };
-
-    const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
-      if (!isCanvas) return;
-      e.stopPropagation();
-      setDraggedElement(element.id);
-      setDragMode(true);
-    };
-
-    const handleMouseMove = useCallback((e: MouseEvent | TouchEvent) => {
-      if (!dragMode || !draggedElement || !canvasRef.current) return;
-      
-      const rect = canvasRef.current.getBoundingClientRect();
-      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-      const x = clientX - rect.left;
-      const y = clientY - rect.top;
-      
-      updateElement(draggedElement, {
-        styles: {
-          ...elements.find(el => el.id === draggedElement)?.styles!,
-          left: Math.max(0, x - 75),
-          top: Math.max(0, y - 20)
-        }
-      });
-    }, [dragMode, draggedElement, elements, updateElement]);
-
-    const handleMouseUp = useCallback(() => {
-      setDragMode(false);
-      setDraggedElement(null);
-    }, []);
-
-    useEffect(() => {
-      if (dragMode) {
-        document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
-        document.addEventListener('touchmove', handleMouseMove);
-        document.addEventListener('touchend', handleMouseUp);
-        return () => {
-          document.removeEventListener('mousemove', handleMouseMove);
-          document.removeEventListener('mouseup', handleMouseUp);
-          document.removeEventListener('touchmove', handleMouseMove);
-          document.removeEventListener('touchend', handleMouseUp);
-        };
-      }
-    }, [dragMode, handleMouseMove, handleMouseUp]);
-
-    const commonProps = {
-      style: elementStyle,
-      onClick: isCanvas ? (e: React.MouseEvent) => handleElementClick(element, e) : undefined,
-      onMouseDown: isCanvas ? handleMouseDown : undefined,
-      onTouchStart: isCanvas ? handleMouseDown : undefined
-    };
-
-    switch (element.type) {
-      case 'heading':
-        return <h1 key={element.id} {...commonProps}>{element.content}</h1>;
-      case 'paragraph':
-        return <p key={element.id} {...commonProps}>{element.content}</p>;
-      case 'image':
-        return <img key={element.id} {...commonProps} src={element.props?.src} alt={element.props?.alt} />;
-      case 'button':
-        return <button key={element.id} {...commonProps}>{element.content}</button>;
-      default:
-        return null;
-    }
-  };
-
   if (!user) return null;
 
   return (
-    <div className={`min-h-screen bg-background ${isFullscreen ? 'overflow-hidden' : ''}`}>
-      {!isFullscreen && <Header />}
+    <div className="min-h-screen bg-background">
+      <Header />
       
-      <main className={`${!isFullscreen ? 'pt-20 pb-20 lg:pb-0' : ''} flex flex-col lg:flex-row`}>
-        {/* Mobile-First Sidebar */}
-        {!isFullscreen && (
-          <div className="w-full lg:w-80 bg-muted/50 border-r p-4 space-y-6 overflow-y-auto max-h-96 lg:max-h-none">
-            {/* Website Settings */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings className="h-4 w-4" />
-                  Website Einstellungen
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="title">Titel</Label>
-                  <Input
-                    id="title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Meine Website"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="slug">URL-Name (Slug)</Label>
-                  <Input
-                    id="slug"
-                    value={slug}
-                    onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                    placeholder="meine-website"
-                  />
-                  {slug && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      bread-blog.lovable.app/pages/{slug}
-                    </p>
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" onClick={handleSave} disabled={isSaving} className="flex-1">
-                    <Save className="h-4 w-4 mr-1" />
-                    {isSaving ? 'Speichern...' : 'Speichern'}
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => navigate('/dashboard')}
-                    size="sm"
+      <main className="pt-20 pb-20 lg:pb-0 flex flex-col lg:flex-row h-screen">
+        {/* Mobile Menu Button */}
+        <div className="lg:hidden fixed top-24 left-4 z-50">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
+            {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          </Button>
+        </div>
+
+        {/* Sidebar */}
+        <div className={`
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
+          lg:translate-x-0 
+          fixed lg:relative 
+          top-20 lg:top-0 
+          left-0 
+          w-80 
+          bg-muted/50 
+          border-r 
+          p-4 
+          space-y-6 
+          overflow-y-auto 
+          z-40 
+          transition-transform 
+          duration-300 
+          h-full
+        `}>
+          {/* Website Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Website Einstellungen</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="title">Titel</Label>
+                <Input
+                  id="title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Meine Website"
+                />
+              </div>
+              <div>
+                <Label htmlFor="slug">URL-Name (Slug)</Label>
+                <Input
+                  id="slug"
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                  placeholder="meine-website"
+                />
+                {slug && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    bread-blog.lovable.app/pages/{slug}
+                  </p>
+                )}
+              </div>
+              
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={handleSave} 
+                  disabled={isSaving} 
+                  className="flex-1"
+                >
+                  <Save className="h-4 w-4 mr-1" />
+                  {isSaving ? 'Speichern...' : 'Speichern'}
+                </Button>
+                <Button
+                  onClick={() => navigate('/dashboard')}
+                  variant="outline"
+                  size="sm"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  onClick={handlePublish}
+                  disabled={isPublishing}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <Globe className="h-4 w-4 mr-1" />
+                  {isPublishing ? 'Veröffentlichen...' : 'Veröffentlichen'}
+                </Button>
+                {isPublished && slug && (
+                  <Button
+                    variant="outline"
+                    onClick={() => window.open(`/pages/${slug}`, '_blank')}
                   >
-                    <ArrowLeft className="h-4 w-4" />
+                    <Eye className="h-4 w-4 mr-1" />
+                    Ansehen
                   </Button>
+                )}
+              </div>
+              
+              {isPublished && (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-800 font-medium">
+                    ✅ Website ist veröffentlicht!
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
+              )}
+            </CardContent>
+          </Card>
 
-            {/* Element Toolbar */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Plus className="h-4 w-4" />
-                  Elemente hinzufügen
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-2">
-                  {elementTypes.map((type) => (
-                    <Button
-                      key={type.type}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => addElement(type.type)}
-                      className="flex flex-col gap-1 h-auto py-3"
-                    >
-                      <type.icon className="h-4 w-4" />
-                      <span className="text-xs">{type.label}</span>
-                    </Button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+          {/* Element Toolbar */}
+          <ElementToolbar onAddElement={addElement} />
+        </div>
 
-            {/* Element Properties */}
-            {selectedElement && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    Element bearbeiten
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => deleteElement(selectedElement.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label>Inhalt</Label>
-                    {selectedElement.type === 'image' ? (
-                      <Input
-                        value={selectedElement.props?.src || ''}
-                        onChange={(e) => updateElement(selectedElement.id, {
-                          props: { ...selectedElement.props, src: e.target.value }
-                        })}
-                        placeholder="Bild URL"
-                      />
-                    ) : (
-                      <Textarea
-                        value={selectedElement.content}
-                        onChange={(e) => updateElement(selectedElement.id, { content: e.target.value })}
-                        placeholder="Text eingeben..."
-                      />
-                    )}
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <Label>Breite</Label>
-                      <Input
-                        type="number"
-                        value={selectedElement.styles.width}
-                        onChange={(e) => updateElement(selectedElement.id, {
-                          styles: { ...selectedElement.styles, width: parseInt(e.target.value) || 0 }
-                        })}
-                      />
-                    </div>
-                    <div>
-                      <Label>Höhe</Label>
-                      <Input
-                        type="number"
-                        value={selectedElement.styles.height}
-                        onChange={(e) => updateElement(selectedElement.id, {
-                          styles: { ...selectedElement.styles, height: parseInt(e.target.value) || 0 }
-                        })}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <Label>Schriftgröße</Label>
-                      <Input
-                        type="number"
-                        value={selectedElement.styles.fontSize}
-                        onChange={(e) => updateElement(selectedElement.id, {
-                          styles: { ...selectedElement.styles, fontSize: parseInt(e.target.value) || 0 }
-                        })}
-                      />
-                    </div>
-                    <div>
-                      <Label>Textfarbe</Label>
-                      <Input
-                        type="color"
-                        value={selectedElement.styles.color}
-                        onChange={(e) => updateElement(selectedElement.id, {
-                          styles: { ...selectedElement.styles, color: e.target.value }
-                        })}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label>Hintergrundfarbe</Label>
-                    <Input
-                      type="color"
-                      value={selectedElement.styles.backgroundColor}
-                      onChange={(e) => updateElement(selectedElement.id, {
-                        styles: { ...selectedElement.styles, backgroundColor: e.target.value }
-                      })}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+        {/* Overlay for mobile */}
+        {sidebarOpen && (
+          <div 
+            className="lg:hidden fixed inset-0 bg-black/50 z-30 top-20"
+            onClick={() => setSidebarOpen(false)}
+          />
         )}
 
-        {/* Main Canvas Area */}
-        <div className="flex-1 flex flex-col">
-          <div className="bg-background border-b p-2 lg:p-4 flex items-center justify-between">
-            <h1 className="text-lg lg:text-2xl font-semibold">WebBuilder 🏗️</h1>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsFullscreen(!isFullscreen)}
-              >
-                <Maximize2 className="h-4 w-4 lg:mr-1" />
-                <span className="hidden lg:inline">{isFullscreen ? 'Beenden' : 'Vollbild'}</span>
-              </Button>
-            </div>
-          </div>
+        {/* Canvas */}
+        <Canvas
+          elements={elements}
+          selectedElement={selectedElement}
+          onElementClick={handleElementClick}
+          onElementMove={handleElementMove}
+          dragMode={dragMode}
+          setDragMode={setDragMode}
+          draggedElement={draggedElement}
+          setDraggedElement={setDraggedElement}
+        />
 
-          {/* Canvas */}
-          <div className="flex-1 bg-white relative overflow-auto touch-none">
-            <div
-              ref={canvasRef}
-              className="relative min-h-[400px] lg:min-h-[600px] w-full"
-              style={{ minWidth: '100%' }}
-              onClick={handleCanvasClick}
-            >
-              {elements.length === 0 ? (
-                <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-                  <div className="text-center">
-                    <Layout className="h-12 w-12 mx-auto mb-4" />
-                    <p>Ziehe Elemente hierher, um deine Website zu erstellen</p>
-                  </div>
-                </div>
-              ) : (
-                elements.map(element => renderElement(element, true))
-              )}
-              
-              {/* Bread Login Widget Preview */}
-              <div className="fixed bottom-4 right-4 bg-primary text-primary-foreground px-4 py-2 rounded-full text-sm font-medium shadow-lg">
-                🍞 Login with Bread
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Element Editor Dialog */}
+        <ElementEditor
+          element={selectedElement}
+          isOpen={isEditorOpen}
+          onClose={() => setIsEditorOpen(false)}
+          onSave={updateElement}
+          onDelete={deleteElement}
+        />
       </main>
 
-      {!isFullscreen && <BottomNavigation />}
+      <BottomNavigation />
     </div>
   );
 };
