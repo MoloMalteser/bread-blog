@@ -1,18 +1,22 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Plus, Type, Image, Square, Circle, MousePointer } from 'lucide-react';
+import { Plus, Type, Image, Square, Circle, MousePointer, FileText } from 'lucide-react';
+import { useUserRoles } from '@/hooks/useUserRoles';
 
 interface ElementToolbarProps {
   onAddElement: (type: string) => void;
 }
 
 const ElementToolbar: React.FC<ElementToolbarProps> = ({ onAddElement }) => {
+  const { isAdmin } = useUserRoles();
+  
   const elementTypes = [
     { type: 'text', icon: Type, label: 'Text', color: 'bg-blue-500' },
     { type: 'image', icon: Image, label: 'Bild', color: 'bg-green-500' },
-    { type: 'button', icon: Square, label: 'Button', color: 'bg-purple-500' },
-    { type: 'container', icon: Circle, label: 'Container', color: 'bg-orange-500' }
+    { type: 'button', icon: MousePointer, label: 'Button', color: 'bg-purple-500' },
+    { type: 'container', icon: Square, label: 'Container', color: 'bg-orange-500' },
+    ...(isAdmin() ? [{ type: 'blog', icon: FileText, label: 'Blog Artikel', color: 'bg-red-500' }] : [])
   ];
 
   return (

@@ -152,6 +152,20 @@ const WebBuilder = () => {
             borderRadius: 8
           }
         };
+      case 'blog':
+        return {
+          ...baseElement,
+          content: 'Blog Artikel',
+          styles: {
+            ...baseElement.styles,
+            width: 400,
+            height: 300,
+            fontSize: 14,
+            color: '#333333',
+            backgroundColor: '#ffffff',
+            borderRadius: 12
+          }
+        };
       default:
         return baseElement as Element;
     }
@@ -367,6 +381,16 @@ const WebBuilder = () => {
         case 'container':
           html += `<div style="${styleString}; border: 2px solid #e0e0e0;">${element.content}</div>`;
           break;
+        case 'blog':
+          html += `<div style="${styleString}; border: 2px solid #e0e0e0; overflow-y: auto;">
+            <div style="padding: 10px; background: #f8f9fa; border-bottom: 1px solid #dee2e6;">
+              <strong>Blog Artikel</strong>
+            </div>
+            <div style="padding: 10px; color: #666;">
+              Die Blog-Artikel werden beim Veröffentlichen automatisch hier angezeigt.
+            </div>
+          </div>`;
+          break;
       }
     });
 
@@ -520,13 +544,14 @@ const WebBuilder = () => {
         />
 
         {/* Element Editor Dialog */}
-        <ElementEditor
-          element={selectedElement}
-          isOpen={isEditorOpen}
-          onClose={() => setIsEditorOpen(false)}
-          onSave={updateElement}
-          onDelete={deleteElement}
-        />
+          <ElementEditor
+            element={selectedElement}
+            isOpen={isEditorOpen}
+            onClose={() => setIsEditorOpen(false)}
+            onSave={updateElement}
+            onDelete={deleteElement}
+            websiteId={id}
+          />
       </main>
 
       <BottomNavigation />
