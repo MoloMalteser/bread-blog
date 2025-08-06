@@ -158,6 +158,65 @@ export type Database = {
         }
         Relationships: []
       }
+      everything_sessions: {
+        Row: {
+          ai_modules: Json
+          created_at: string
+          id: string
+          session_data: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_modules?: Json
+          created_at?: string
+          id?: string
+          session_data?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_modules?: Json
+          created_at?: string
+          id?: string
+          session_data?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "everything_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "everything_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      everything_users: {
+        Row: {
+          created_at: string
+          id: string
+          last_active: string
+          security_answers: Json
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_active?: string
+          security_answers: Json
+          username: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_active?: string
+          security_answers?: Json
+          username?: string
+        }
+        Relationships: []
+      }
       follows: {
         Row: {
           created_at: string
@@ -229,6 +288,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notification_subscriptions: {
+        Row: {
+          created_at: string
+          id: string
+          subscription: Json
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          subscription: Json
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          subscription?: Json
+          user_id?: string
+        }
+        Relationships: []
       }
       posts: {
         Row: {
@@ -354,6 +434,27 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_stats: {
         Row: {
           breadgpt_questions: number | null
@@ -389,6 +490,50 @@ export type Database = {
           wiki_contributions?: number | null
         }
         Relationships: []
+      }
+      website_posts: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string
+          id: string
+          is_published: boolean
+          slug: string
+          title: string
+          updated_at: string
+          website_id: string
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          slug: string
+          title: string
+          updated_at?: string
+          website_id: string
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          slug?: string
+          title?: string
+          updated_at?: string
+          website_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_posts_website_id_fkey"
+            columns: ["website_id"]
+            isOneToOne: false
+            referencedRelation: "websites"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       websites: {
         Row: {
@@ -500,13 +645,20 @@ export type Database = {
         Args: { title: string }
         Returns: string
       }
+      has_role: {
+        Args: {
+          _user_id: string
+          _role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: boolean
+      }
       increment_view_count: {
         Args: { post_id: string }
         Returns: undefined
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -633,6 +785,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const
