@@ -238,15 +238,17 @@ export const useWebsites = () => {
             box-shadow: 0 6px 20px rgba(238, 90, 36, 0.6);
         }
         .blog-posts {
-            margin: 20px;
-            max-width: 800px;
-        }
-        .blog-post {
             background: white;
-            margin: 20px 0;
-            padding: 20px;
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .blog-post {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .blog-post:last-child {
+            border-bottom: none;
         }
         .blog-post h2 {
             margin: 0 0 10px 0;
@@ -262,6 +264,12 @@ export const useWebsites = () => {
             color: #444;
             line-height: 1.6;
             white-space: pre-wrap;
+        }
+        .no-posts {
+            padding: 40px;
+            text-align: center;
+            color: #666;
+            font-style: italic;
         }
     </style>
 </head>
@@ -320,7 +328,9 @@ export const useWebsites = () => {
             });
             html += `</div>`;
           } else {
-            html += `<div style="${styleString}">Keine Blog-Artikel verfügbar</div>`;
+            html += `<div class="blog-posts" style="${styleString}">
+              <div class="no-posts">Noch keine Blog-Artikel veröffentlicht</div>
+            </div>`;
           }
           break;
       }

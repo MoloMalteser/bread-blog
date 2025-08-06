@@ -163,6 +163,26 @@ const Canvas: React.FC<CanvasProps> = ({
             {element.content || 'Container'}
           </div>
         );
+      case 'blog':
+        return (
+          <div 
+            key={element.id} 
+            {...commonProps}
+            style={{ 
+              ...elementStyle, 
+              border: isSelected ? '2px dashed #007bff' : '2px solid #e0e0e0',
+              backgroundColor: styles.backgroundColor || '#ffffff',
+              overflow: 'auto'
+            }}
+          >
+            <div style={{ padding: '10px', background: '#f8f9fa', borderBottom: '1px solid #dee2e6', fontWeight: 'bold' }}>
+              📝 Blog Artikel
+            </div>
+            <div style={{ padding: '10px', color: '#666', fontSize: '12px' }}>
+              Die Blog-Artikel werden beim Veröffentlichen automatisch hier angezeigt.
+            </div>
+          </div>
+        );
       default:
         return null;
     }

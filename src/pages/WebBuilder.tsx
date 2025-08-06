@@ -13,6 +13,7 @@ import BottomNavigation from '@/components/BottomNavigation';
 import ElementToolbar from '@/components/webbuilder/ElementToolbar';
 import ElementEditor from '@/components/webbuilder/ElementEditor';
 import Canvas from '@/components/webbuilder/Canvas';
+import QuickStartGuide from '@/components/webbuilder/QuickStartGuide';
 
 interface Element {
   id: string;
@@ -342,8 +343,7 @@ const WebBuilder = () => {
         }
     </style>
 </head>
-<body>
-    <div class="made-with-bread">🍞 Made with Bread</div>`;
+<body>`;
 
     elements.forEach(element => {
       const { styles } = element;
@@ -395,6 +395,7 @@ const WebBuilder = () => {
     });
 
     html += `
+    <div class="made-with-bread">🍞 Made with Bread</div>
     <a href="https://bread-blog.lovable.app/auth" class="bread-login-widget">
         🍞 Login with Bread
     </a>
@@ -518,6 +519,11 @@ const WebBuilder = () => {
               )}
             </CardContent>
           </Card>
+
+          {/* Quick Start Guide */}
+          {elements.length === 0 && (
+            <QuickStartGuide onStepClick={addElement} />
+          )}
 
           {/* Element Toolbar */}
           <ElementToolbar onAddElement={addElement} />
