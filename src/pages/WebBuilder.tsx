@@ -5,37 +5,13 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save, Globe, Eye, Menu, X } from 'lucide-react';
+import { ArrowLeft, Save, Globe, Palette, Eye } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useWebsites, Website } from '@/hooks/useWebsites';
 import Header from '@/components/Header';
 import BottomNavigation from '@/components/BottomNavigation';
-import ElementToolbar from '@/components/webbuilder/ElementToolbar';
-import ElementEditor from '@/components/webbuilder/ElementEditor';
-import Canvas from '@/components/webbuilder/Canvas';
-import QuickStartGuide from '@/components/webbuilder/QuickStartGuide';
 
-interface Element {
-  id: string;
-  type: string;
-  content: string;
-  styles: {
-    position: 'absolute';
-    left: number;
-    top: number;
-    width: number;
-    height: number;
-    fontSize: number;
-    color: string;
-    backgroundColor: string;
-    padding: number;
-    borderRadius: number;
-    fontWeight: 'normal' | 'bold';
-    textAlign: 'left' | 'center' | 'right';
-    zIndex: number;
-  };
-  props?: any;
-}
+// Simple template-based website builder
 
 const WebBuilder = () => {
   const { user } = useAuth();
@@ -46,15 +22,10 @@ const WebBuilder = () => {
   
   const [title, setTitle] = useState('Meine Website');
   const [slug, setSlug] = useState('');
-  const [elements, setElements] = useState<Element[]>([]);
-  const [selectedElement, setSelectedElement] = useState<Element | null>(null);
-  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [primaryColor, setPrimaryColor] = useState('#007bff');
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [isPublished, setIsPublished] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [dragMode, setDragMode] = useState(false);
-  const [draggedElement, setDraggedElement] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -68,146 +39,26 @@ const WebBuilder = () => {
       if (website) {
         setTitle(website.title);
         setSlug(website.slug);
-        setElements(Array.isArray(website.content) ? website.content : []);
         setIsPublished(website.is_published);
+        // Extract primary color from content if available
+        const content = website.content;
+        if (content && content.primaryColor) {
+          setPrimaryColor(content.primaryColor);
+        }
       }
     }
   }, [user, navigate, id, websites]);
 
-  const createNewElement = (type: string): Element => {
-    const getRandomPosition = () => ({
-      x: Math.random() * 300 + 50,
-      y: Math.random() * 200 + 50
-    });
-
-    const position = getRandomPosition();
-    
-    const baseElement = {
-      id: Date.now().toString(),
-      type,
-      styles: {
-        position: 'absolute' as const,
-        left: position.x,
-        top: position.y,
-        padding: 10,
-        borderRadius: 4,
-        fontWeight: 'normal' as const,
-        textAlign: 'left' as const,
-        zIndex: elements.length + 1
-      }
+  // Create a blog template with customizable title and color
+  const createBlogTemplate = () => {
+    return {
+      title,
+      primaryColor,
+      hasLogin: true,
+      hasBlog: true,
+      hasAbout: true,
+      hasContact: true
     };
-
-    switch (type) {
-      case 'text':
-        return {
-          ...baseElement,
-          content: 'Klick mich zum Bearbeiten',
-          styles: {
-            ...baseElement.styles,
-            width: 200,
-            height: 40,
-            fontSize: 16,
-            color: '#000000',
-            backgroundColor: 'transparent'
-          }
-        };
-      case 'image':
-        return {
-          ...baseElement,
-          content: '',
-          styles: {
-            ...baseElement.styles,
-            width: 200,
-            height: 150,
-            fontSize: 16,
-            color: '#000000',
-            backgroundColor: 'transparent'
-          },
-          props: { src: 'https://via.placeholder.com/200x150?text=Bild', alt: 'Bild' }
-        };
-      case 'button':
-        return {
-          ...baseElement,
-          content: 'Button',
-          styles: {
-            ...baseElement.styles,
-            width: 120,
-            height: 40,
-            fontSize: 16,
-            color: '#ffffff',
-            backgroundColor: '#007bff',
-            borderRadius: 8
-          }
-        };
-      case 'container':
-        return {
-          ...baseElement,
-          content: 'Container',
-          styles: {
-            ...baseElement.styles,
-            width: 200,
-            height: 100,
-            fontSize: 14,
-            color: '#666666',
-            backgroundColor: '#f8f9fa',
-            borderRadius: 8
-          }
-        };
-      case 'blog':
-        return {
-          ...baseElement,
-          content: 'Blog Artikel',
-          styles: {
-            ...baseElement.styles,
-            width: 400,
-            height: 300,
-            fontSize: 14,
-            color: '#333333',
-            backgroundColor: '#ffffff',
-            borderRadius: 12
-          }
-        };
-      default:
-        return baseElement as Element;
-    }
-  };
-
-  const addElement = (type: string) => {
-    const newElement = createNewElement(type);
-    setElements([...elements, newElement]);
-    setSelectedElement(newElement);
-    setIsEditorOpen(true);
-    setSidebarOpen(false);
-  };
-
-  const updateElement = (updatedElement: Element) => {
-    setElements(elements.map(el => 
-      el.id === updatedElement.id ? updatedElement : el
-    ));
-    setSelectedElement(updatedElement);
-  };
-
-  const deleteElement = (id: string) => {
-    setElements(elements.filter(el => el.id !== id));
-    setSelectedElement(null);
-  };
-
-  const handleElementClick = (element: Element | null) => {
-    if (element) {
-      setSelectedElement(element);
-      setIsEditorOpen(true);
-    } else {
-      setSelectedElement(null);
-      setIsEditorOpen(false);
-    }
-  };
-
-  const handleElementMove = (id: string, x: number, y: number) => {
-    setElements(elements.map(el => 
-      el.id === id 
-        ? { ...el, styles: { ...el.styles, left: x, top: y } }
-        : el
-    ));
   };
 
   const handleSave = async () => {
@@ -226,7 +77,7 @@ const WebBuilder = () => {
       ...(id && { id }),
       title,
       slug,
-      content: elements,
+      content: createBlogTemplate(),
       html_content: generateHTML(),
       is_published: isPublished
     };
@@ -257,7 +108,7 @@ const WebBuilder = () => {
         ...(id && { id }),
         title,
         slug,
-        content: elements,
+        content: createBlogTemplate(),
         html_content: generateHTML(),
         is_published: false
       };
@@ -294,115 +145,172 @@ const WebBuilder = () => {
   };
 
   const generateHTML = () => {
-    let html = `<!DOCTYPE html>
+    return `<!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${title}</title>
+    <meta name="description" content="${title} - Powered by Bread">
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
-            margin: 0; 
-            padding: 0; 
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            position: relative;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            line-height: 1.6;
+            background: linear-gradient(135deg, ${primaryColor}22 0%, ${primaryColor}11 100%);
+            color: #333;
         }
-        .bread-login-widget {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #007bff;
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        
+        header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: ${primaryColor};
+        }
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+        .nav-links a {
+            text-decoration: none;
+            color: #666;
+            transition: color 0.3s;
+        }
+        .nav-links a:hover { color: ${primaryColor}; }
+        
+        .hero {
+            background: linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd);
             color: white;
-            padding: 10px 20px;
+            text-align: center;
+            padding: 4rem 0;
+        }
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }
+        .btn {
+            display: inline-block;
+            background: white;
+            color: ${primaryColor};
+            padding: 0.8rem 2rem;
             border-radius: 50px;
             text-decoration: none;
-            font-size: 14px;
-            box-shadow: 0 4px 12px rgba(0,123,255,0.3);
-            z-index: 1000;
-            transition: all 0.3s ease;
+            font-weight: bold;
+            transition: transform 0.3s;
         }
-        .bread-login-widget:hover {
-            background: #0056b3;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,123,255,0.4);
+        .btn:hover { transform: translateY(-2px); }
+        
+        .blog-section {
+            padding: 4rem 0;
+            background: white;
         }
-        .made-with-bread {
+        .blog-post {
+            background: #f8f9fa;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .blog-post h2 {
+            color: ${primaryColor};
+            margin-bottom: 1rem;
+        }
+        .blog-meta {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        
+        footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+        }
+        
+        .bread-branding {
             position: fixed;
-            top: 20px;
+            bottom: 20px;
             left: 20px;
-            background: #28a745;
+            background: rgba(0, 0, 0, 0.8);
             color: white;
             padding: 8px 16px;
             border-radius: 25px;
             font-size: 12px;
-            font-weight: 500;
             z-index: 1000;
-            box-shadow: 0 2px 8px rgba(40,167,69,0.3);
+        }
+        
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .hero h1 { font-size: 2rem; }
+            .container { padding: 0 15px; }
         }
     </style>
 </head>
-<body>`;
+<body>
+    <header>
+        <nav class="container">
+            <div class="logo">${title}</div>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#blog">Blog</a></li>
+                <li><a href="#about">Über uns</a></li>
+                <li><a href="#contact">Kontakt</a></li>
+            </ul>
+        </nav>
+    </header>
 
-    elements.forEach(element => {
-      const { styles } = element;
-      const styleString = `
-        position: ${styles.position};
-        left: ${styles.left}px;
-        top: ${styles.top}px;
-        width: ${styles.width}px;
-        height: ${styles.height}px;
-        font-size: ${styles.fontSize}px;
-        color: ${styles.color};
-        background-color: ${styles.backgroundColor};
-        padding: ${styles.padding}px;
-        border-radius: ${styles.borderRadius}px;
-        font-weight: ${styles.fontWeight};
-        text-align: ${styles.textAlign};
-        z-index: ${styles.zIndex};
-        border: none;
-        cursor: ${element.type === 'button' ? 'pointer' : 'default'};
-        display: flex;
-        align-items: center;
-        justify-content: ${styles.textAlign === 'center' ? 'center' : 'flex-start'};
-      `;
-
-      switch (element.type) {
-        case 'text':
-          html += `<div style="${styleString}">${element.content}</div>`;
-          break;
-        case 'image':
-          html += `<img src="${element.props?.src}" alt="${element.props?.alt}" style="${styleString}; object-fit: cover;" />`;
-          break;
-        case 'button':
-          html += `<button style="${styleString}" onclick="alert('Button geklickt!')">${element.content}</button>`;
-          break;
-        case 'container':
-          html += `<div style="${styleString}; border: 2px solid #e0e0e0;">${element.content}</div>`;
-          break;
-        case 'blog':
-          html += `<div style="${styleString}; border: 2px solid #e0e0e0; overflow-y: auto;">
-            <div style="padding: 10px; background: #f8f9fa; border-bottom: 1px solid #dee2e6;">
-              <strong>Blog Artikel</strong>
+    <main>
+        <section class="hero" id="home">
+            <div class="container">
+                <h1>Willkommen bei ${title}</h1>
+                <p>Entdecke unsere neuesten Blog-Artikel und bleibe auf dem Laufenden</p>
+                <a href="#blog" class="btn">Zum Blog</a>
             </div>
-            <div style="padding: 10px; color: #666;">
-              Die Blog-Artikel werden beim Veröffentlichen automatisch hier angezeigt.
-            </div>
-          </div>`;
-          break;
-      }
-    });
+        </section>
 
-    html += `
-    <div class="made-with-bread">🍞 Made with Bread</div>
-    <a href="https://bread-blog.lovable.app/auth" class="bread-login-widget">
-        🍞 Login with Bread
-    </a>
+        <section class="blog-section" id="blog">
+            <div class="container">
+                <h2 style="text-align: center; margin-bottom: 3rem; color: ${primaryColor};">Neueste Blog-Artikel</h2>
+                <div id="blog-posts">
+                    <!-- Blog posts will be loaded here -->
+                    <div class="blog-post">
+                        <h2>Willkommen auf unserer Website!</h2>
+                        <div class="blog-meta">Erstellt mit Bread</div>
+                        <p>Dies ist deine neue Website. Erstelle Blog-Artikel über das Dashboard und sie werden hier automatisch angezeigt.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer id="contact">
+        <div class="container">
+            <p>&copy; 2024 ${title}. Erstellt mit ❤️ und Bread.</p>
+        </div>
+    </footer>
+
+    <div class="bread-branding">🍞 Made with Bread</div>
 </body>
 </html>`;
-
-    return html;
   };
 
   if (!user) return null;
@@ -411,153 +319,156 @@ const WebBuilder = () => {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="pt-20 pb-20 lg:pb-0 flex flex-col lg:flex-row h-screen">
-        {/* Mobile Menu Button */}
-        <div className="lg:hidden fixed top-24 left-4 z-50">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-          >
-            {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-          </Button>
-        </div>
+      <main className="pt-20 pb-20 lg:pb-0">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-2">Website Builder</h1>
+            <p className="text-muted-foreground">Erstelle deine Blog-Website mit fertigen Templates</p>
+          </div>
 
-        {/* Sidebar */}
-        <div className={`
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
-          lg:translate-x-0 
-          fixed lg:relative 
-          top-20 lg:top-0 
-          left-0 
-          w-80 
-          bg-muted/50 
-          border-r 
-          p-4 
-          space-y-6 
-          overflow-y-auto 
-          z-40 
-          transition-transform 
-          duration-300 
-          h-full
-        `}>
-          {/* Website Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Website Einstellungen</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="title">Titel</Label>
-                <Input
-                  id="title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Meine Website"
-                />
-              </div>
-              <div>
-                <Label htmlFor="slug">URL-Name (Slug)</Label>
-                <Input
-                  id="slug"
-                  value={slug}
-                  onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                  placeholder="meine-website"
-                />
-                {slug && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    bread-blog.lovable.app/pages/{slug}
-                  </p>
-                )}
-              </div>
-              
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  onClick={handleSave} 
-                  disabled={isSaving} 
-                  className="flex-1"
-                >
-                  <Save className="h-4 w-4 mr-1" />
-                  {isSaving ? 'Speichern...' : 'Speichern'}
-                </Button>
-                <Button
-                  onClick={() => navigate('/dashboard')}
-                  variant="outline"
-                  size="sm"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                </Button>
-              </div>
+          <div className="grid lg:grid-cols-2 gap-8">
+            {/* Settings */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Globe className="h-5 w-5" />
+                  Website Einstellungen
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="title">Website Name</Label>
+                  <Input
+                    id="title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Meine Blog Website"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="slug">URL-Name (Slug)</Label>
+                  <Input
+                    id="slug"
+                    value={slug}
+                    onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                    placeholder="meine-website"
+                  />
+                  {slug && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      bread-blog.lovable.app/pages/{slug}
+                    </p>
+                  )}
+                </div>
 
-              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label htmlFor="color">Primärfarbe</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="color"
+                      type="color"
+                      value={primaryColor}
+                      onChange={(e) => setPrimaryColor(e.target.value)}
+                      className="w-16 h-10 p-1"
+                    />
+                    <Input
+                      value={primaryColor}
+                      onChange={(e) => setPrimaryColor(e.target.value)}
+                      placeholder="#007bff"
+                      className="flex-1"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-2 pt-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={handleSave} 
+                    disabled={isSaving} 
+                    className="flex-1"
+                  >
+                    <Save className="h-4 w-4 mr-1" />
+                    {isSaving ? 'Speichern...' : 'Speichern'}
+                  </Button>
+                  <Button
+                    onClick={() => navigate('/dashboard')}
+                    variant="outline"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                </div>
+
                 <Button
                   onClick={handlePublish}
                   disabled={isPublishing}
-                  className="bg-green-600 hover:bg-green-700 text-white"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white"
                 >
                   <Globe className="h-4 w-4 mr-1" />
                   {isPublishing ? 'Veröffentlichen...' : 'Veröffentlichen'}
                 </Button>
+                
                 {isPublished && slug && (
                   <Button
                     variant="outline"
                     onClick={() => window.open(`/pages/${slug}`, '_blank')}
+                    className="w-full mt-2"
                   >
                     <Eye className="h-4 w-4 mr-1" />
-                    Ansehen
+                    Website ansehen
                   </Button>
                 )}
-              </div>
-              
-              {isPublished && (
-                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-sm text-green-800 font-medium">
-                    ✅ Website ist veröffentlicht!
-                  </p>
+                
+                {isPublished && (
+                  <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-sm text-green-800 font-medium">
+                      ✅ Website ist veröffentlicht!
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Preview */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Palette className="h-5 w-5" />
+                  Vorschau
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div 
+                  className="border rounded-lg overflow-hidden bg-white" 
+                  style={{ height: '400px' }}
+                >
+                  <div 
+                    className="h-16 flex items-center justify-between px-4 text-white"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    <div className="font-bold">{title || 'Meine Website'}</div>
+                    <div className="flex gap-4 text-sm">
+                      <span>Home</span>
+                      <span>Blog</span>
+                      <span>Kontakt</span>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <h2 className="text-2xl font-bold mb-4">Willkommen bei {title || 'Meine Website'}</h2>
+                    <p className="text-muted-foreground mb-4">
+                      Dies ist eine Vorschau deiner Blog-Website. Sie enthält:
+                    </p>
+                    <ul className="list-disc list-inside text-sm space-y-1 text-muted-foreground">
+                      <li>Automatische Blog-Integration</li>
+                      <li>Responsive Design</li>
+                      <li>Login-System</li>
+                      <li>Anpassbare Farben</li>
+                    </ul>
+                  </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Quick Start Guide */}
-          {elements.length === 0 && (
-            <QuickStartGuide onStepClick={addElement} />
-          )}
-
-          {/* Element Toolbar */}
-          <ElementToolbar onAddElement={addElement} />
+              </CardContent>
+            </Card>
+          </div>
         </div>
-
-        {/* Overlay for mobile */}
-        {sidebarOpen && (
-          <div 
-            className="lg:hidden fixed inset-0 bg-black/50 z-30 top-20"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
-
-        {/* Canvas */}
-        <Canvas
-          elements={elements}
-          selectedElement={selectedElement}
-          onElementClick={handleElementClick}
-          onElementMove={handleElementMove}
-          dragMode={dragMode}
-          setDragMode={setDragMode}
-          draggedElement={draggedElement}
-          setDraggedElement={setDraggedElement}
-        />
-
-        {/* Element Editor Dialog */}
-          <ElementEditor
-            element={selectedElement}
-            isOpen={isEditorOpen}
-            onClose={() => setIsEditorOpen(false)}
-            onSave={updateElement}
-            onDelete={deleteElement}
-            websiteId={id}
-          />
       </main>
 
       <BottomNavigation />

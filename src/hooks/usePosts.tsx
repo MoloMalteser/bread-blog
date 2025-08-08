@@ -51,53 +51,61 @@ export const usePosts = () => {
   const createPost = async (title: string, content: string, isPublic: boolean = true, isAnonymous: boolean = false) => {
     if (!user) return null;
 
-    const { data: slugData } = await supabase.rpc('generate_slug', { title });
-    
-    const { data, error } = await supabase
-      .from('posts')
-      .insert({
-        title,
-        content,
-        slug: slugData,
-        is_public: isPublic,
-        is_anonymous: isAnonymous,
-        author_id: user.id
-      })
-      .select()
-      .single();
+    try {
+      const { data: slugData } = await supabase.rpc('generate_slug', { title });
+      
+      const { data, error } = await supabase
+        .from('posts')
+        .insert({
+          title,
+          content,
+          slug: slugData,
+          is_public: isPublic,
+          author_id: user.id
+        })
+        .select()
+        .single();
 
-    if (error) {
-      console.error('Error creating post:', error);
-      return null;
+      if (error) {
+        console.error('Error creating post:', error);
+        throw error;
+      }
+
+      await fetchPosts();
+      return data;
+    } catch (error) {
+      console.error('Error in createPost:', error);
+      throw error;
     }
-
-    fetchPosts();
-    return data;
   };
 
   const updatePost = async (id: string, title: string, content: string, isPublic: boolean = true, isAnonymous: boolean = false) => {
     if (!user) return null;
 
-    const { data, error } = await supabase
-      .from('posts')
-      .update({
-        title,
-        content,
-        is_public: isPublic,
-        is_anonymous: isAnonymous
-      })
-      .eq('id', id)
-      .eq('author_id', user.id)
-      .select()
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('posts')
+        .update({
+          title,
+          content,
+          is_public: isPublic
+        })
+        .eq('id', id)
+        .eq('author_id', user.id)
+        .select()
+        .single();
 
-    if (error) {
-      console.error('Error updating post:', error);
-      return null;
+      if (error) {
+        console.error('Error updating post:', error);
+        throw error;
+      }
+
+      await fetchPosts();
+      return data;
+    } catch (error) {
+      console.error('Error in updatePost:', error);
+      throw error;
     }
-
-    fetchPosts();
-    return data;
   };
 
   const deletePost = async (id: string) => {
