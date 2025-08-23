@@ -10,6 +10,22 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+    const hideBadge = () => {
+      const badge = document.getElementById("lovable-badge");
+      if (badge) badge.style.display = "none";
+    };
+
+    // sofort ausblenden, falls schon vorhanden
+    hideBadge();
+
+    // DOM auf Änderungen überwachen (für dynamische Elemente)
+    const observer = new MutationObserver(hideBadge);
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
