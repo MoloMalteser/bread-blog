@@ -1,4 +1,4 @@
-package com.example.mobile;
+package com.nostudios.bread;
 
 import com.getcapacitor.BridgeActivity;
 

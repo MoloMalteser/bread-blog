@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.example.mobile',
-  appName: 'MobileApp',
+  appId: 'com.nostudios.bread',
+  appName: 'Bread',
   webDir: 'dist'
 };
 
