@@ -16,6 +16,7 @@ interface Post {
   title: string;
   content: string;
   excerpt: string;
+  slug: string;
   published: boolean;
   createdAt: string;
   tags: string[];
@@ -26,14 +27,14 @@ interface Post {
 }
 
 const Post = () => {
-  const { postId } = useParams();
+  const { slug } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [post, setPost] = useState<Post | null>(null);
   const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
-    if (!postId) return;
+    if (!slug) return;
 
     const fetchPost = async () => {
       try {
@@ -47,7 +48,7 @@ const Post = () => {
               bio
             )
           `)
-          .eq('id', postId)
+          .eq('slug', slug)
           .eq('is_public', true)
           .single();
 
@@ -57,6 +58,7 @@ const Post = () => {
             title: supabaseData.title,
             content: supabaseData.content,
             excerpt: supabaseData.content.substring(0, 150) + '...',
+            slug: supabaseData.slug,
             published: supabaseData.is_public,
             createdAt: new Date(supabaseData.created_at).toLocaleDateString('de-DE'),
             tags: [], // Add tags if needed
@@ -81,11 +83,11 @@ const Post = () => {
       const savedPosts = localStorage.getItem('bread-posts');
       if (savedPosts) {
         const posts: Post[] = JSON.parse(savedPosts);
-        const foundPost = posts.find(p => p.id === postId);
+        const foundPost = posts.find(p => p.slug === slug);
         
         if (foundPost) {
           foundPost.views += 1;
-          const updatedPosts = posts.map(p => p.id === postId ? foundPost : p);
+          const updatedPosts = posts.map(p => p.slug === slug ? foundPost : p);
           localStorage.setItem('bread-posts', JSON.stringify(updatedPosts));
           
           setPost(foundPost);
@@ -100,7 +102,7 @@ const Post = () => {
     };
 
     fetchPost();
-  }, [postId]);
+  }, [slug]);
 
   const handleShare = async () => {
     const url = window.location.href;
