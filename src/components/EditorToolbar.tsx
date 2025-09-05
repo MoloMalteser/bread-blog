@@ -1,25 +1,44 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Bold, Italic, Strikethrough, Type, Sparkles } from 'lucide-react';
+import { Bold, Italic, Strikethrough, Type, Sparkles, Image, BarChart3 } from 'lucide-react';
 import EditorBreadGPT from './EditorBreadGPT';
 
 interface EditorToolbarProps {
   onInsertText: (text: string) => void;
-  onFormatText: (format: string) => void;
+  onFormatText: (format: string, selectedText?: string) => void;
+  textareaRef?: React.RefObject<HTMLTextAreaElement>;
 }
 
-const EditorToolbar = ({ onInsertText, onFormatText }: EditorToolbarProps) => {
+const EditorToolbar = ({ onInsertText, onFormatText, textareaRef }: EditorToolbarProps) => {
   const [showBreadGPT, setShowBreadGPT] = useState(false);
 
+  const handleFormat = (format: string) => {
+    if (textareaRef?.current) {
+      const textarea = textareaRef.current;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const selectedText = textarea.value.substring(start, end);
+      
+      if (selectedText) {
+        onFormatText(format, selectedText);
+      } else {
+        onFormatText(format);
+      }
+    } else {
+      onFormatText(format);
+    }
+  };
+
   return (
-    <div className="border-b border-border">
-      <div className="flex items-center gap-1 px-4 py-2">
+    <div className="bg-muted/30 rounded-xl border mb-4">
+      <div className="flex items-center gap-1 px-4 py-3 overflow-x-auto">
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => onFormatText('bold')}
-          className="h-8 w-8 p-0"
+          onClick={() => handleFormat('bold')}
+          className="h-9 w-9 p-0 rounded-lg hover:bg-background"
+          title="Fett"
         >
           <Bold className="h-4 w-4" />
         </Button>
@@ -27,8 +46,9 @@ const EditorToolbar = ({ onInsertText, onFormatText }: EditorToolbarProps) => {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => onFormatText('italic')}
-          className="h-8 w-8 p-0"
+          onClick={() => handleFormat('italic')}
+          className="h-9 w-9 p-0 rounded-lg hover:bg-background"
+          title="Kursiv"
         >
           <Italic className="h-4 w-4" />
         </Button>
@@ -36,8 +56,9 @@ const EditorToolbar = ({ onInsertText, onFormatText }: EditorToolbarProps) => {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => onFormatText('strikethrough')}
-          className="h-8 w-8 p-0"
+          onClick={() => handleFormat('strikethrough')}
+          className="h-9 w-9 p-0 rounded-lg hover:bg-background"
+          title="Durchgestrichen"
         >
           <Strikethrough className="h-4 w-4" />
         </Button>
@@ -45,17 +66,43 @@ const EditorToolbar = ({ onInsertText, onFormatText }: EditorToolbarProps) => {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => onFormatText('heading')}
-          className="h-8 w-8 p-0"
+          onClick={() => handleFormat('heading')}
+          className="h-9 w-9 p-0 rounded-lg hover:bg-background"
+          title="Überschrift"
         >
           <Type className="h-4 w-4" />
+        </Button>
+        
+        <div className="mx-2 h-4 w-px bg-border" />
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onFormatText('image')}
+          className="h-9 w-9 p-0 rounded-lg hover:bg-background"
+          title="Bild einfügen"
+        >
+          <Image className="h-4 w-4" />
         </Button>
         
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => onFormatText('sparkle')}
-          className="h-8 w-8 p-0"
+          onClick={() => onFormatText('poll')}
+          className="h-9 w-9 p-0 rounded-lg hover:bg-background"
+          title="Umfrage erstellen"
+        >
+          <BarChart3 className="h-4 w-4" />
+        </Button>
+        
+        <div className="mx-2 h-4 w-px bg-border" />
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => handleFormat('sparkle')}
+          className="h-9 w-9 p-0 rounded-lg hover:bg-background"
+          title="Sparkle"
         >
           <Sparkles className="h-4 w-4" />
         </Button>
@@ -66,10 +113,11 @@ const EditorToolbar = ({ onInsertText, onFormatText }: EditorToolbarProps) => {
           variant="ghost"
           size="sm"
           onClick={() => setShowBreadGPT(!showBreadGPT)}
-          className="h-8 px-2 animate-gentle-bounce"
+          className="h-9 px-3 rounded-lg hover:bg-background animate-gentle-bounce"
+          title="BreadGPT AI-Assistent"
         >
           <span className="text-base">🍞</span>
-          <span className="ml-1 text-xs">AI</span>
+          <span className="ml-1 text-xs font-medium">AI</span>
         </Button>
       </div>
       

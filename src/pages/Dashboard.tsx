@@ -54,25 +54,46 @@ const Dashboard = () => {
       
       <main className="pt-20 pb-20 max-w-6xl mx-auto px-4 py-8 min-h-screen">
         <div className="mb-8">
-          <h1 className="text-3xl font-semibold mb-2">
-            Willkommen zurück, {user.user_metadata?.username || user.email?.split('@')[0]}!
-          </h1>
-          <p className="text-muted-foreground">
-            Dein persönlicher Schreibbereich bei Bread
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-semibold mb-2">
+                Willkommen zurück, {user.user_metadata?.username || user.email?.split('@')[0]}!
+              </h1>
+              <p className="text-muted-foreground">
+                Dein persönlicher Schreibbereich bei Bread
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/settings')}
+              className="rounded-full"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </Button>
+          </div>
         </div>
 
         <Tabs defaultValue="posts" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
-            <TabsTrigger value="posts" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-4 mb-8 rounded-xl">
+            <TabsTrigger value="posts" className="flex items-center gap-2 rounded-lg">
               <Edit3 className="h-4 w-4" />
               Posts
             </TabsTrigger>
-            <TabsTrigger value="websites" className="flex items-center gap-2">
+            <TabsTrigger value="websites" className="flex items-center gap-2 rounded-lg">
               <Globe className="h-4 w-4" />
               Websites
             </TabsTrigger>
-            <TabsTrigger value="missions" className="flex items-center gap-2">
+            <TabsTrigger value="wiki" className="flex items-center gap-2 rounded-lg">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+              Wiki
+            </TabsTrigger>
+            <TabsTrigger value="missions" className="flex items-center gap-2 rounded-lg">
               <Target className="h-4 w-4" />
               Missionen
             </TabsTrigger>
@@ -81,7 +102,7 @@ const Dashboard = () => {
           <TabsContent value="posts" className="space-y-8">
             {/* Quick Actions */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/editor')}>
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer rounded-xl border-2 border-transparent hover:border-primary/20" onClick={() => navigate('/editor')}>
                 <CardContent className="p-4 md:p-6 text-center">
                   <PlusCircle className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2 md:mb-3 text-primary" />
                   <h3 className="font-semibold text-sm md:text-base mb-1">Neuer Post</h3>
@@ -89,7 +110,7 @@ const Dashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/webbuilder')}>
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer rounded-xl border-2 border-transparent hover:border-primary/20" onClick={() => navigate('/webbuilder')}>
                 <CardContent className="p-4 md:p-6 text-center">
                   <div className="text-xl md:text-2xl mb-2 md:mb-3">🏗️</div>
                   <h3 className="font-semibold text-sm md:text-base mb-1">Neue Website</h3>
@@ -97,7 +118,7 @@ const Dashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/profile/${user.user_metadata?.username || user.email?.split('@')[0]}`)}>
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer rounded-xl border-2 border-transparent hover:border-primary/20" onClick={() => navigate(`/profile/${user.user_metadata?.username || user.email?.split('@')[0]}`)}>
                 <CardContent className="p-4 md:p-6 text-center">
                   <Eye className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2 md:mb-3 text-primary" />
                   <h3 className="font-semibold text-sm md:text-base mb-1">Mein Profil</h3>
@@ -107,7 +128,7 @@ const Dashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="rounded-xl border-2 border-transparent">
                 <CardContent className="p-4 md:p-6 text-center">
                   <Calendar className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2 md:mb-3 text-primary" />
                   <h3 className="font-semibold text-sm md:text-base mb-1">Statistiken</h3>
@@ -128,17 +149,17 @@ const Dashboard = () => {
                 
                 <div className="space-y-4">
                   {publishedPosts.length === 0 ? (
-                    <Card>
+                    <Card className="rounded-xl">
                       <CardContent className="p-6 text-center text-muted-foreground">
                         <p>Noch keine veröffentlichten Posts.</p>
-                        <Button className="mt-4" onClick={() => navigate('/editor')}>
+                        <Button className="mt-4 rounded-lg" onClick={() => navigate('/editor')}>
                           Ersten Post schreiben
                         </Button>
                       </CardContent>
                     </Card>
                   ) : (
                     publishedPosts.map(post => (
-                      <Card key={post.id} className="hover:shadow-md transition-shadow">
+                      <Card key={post.id} className="hover:shadow-md transition-shadow rounded-xl border-2 border-transparent hover:border-primary/20">
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
@@ -153,10 +174,10 @@ const Dashboard = () => {
                               </div>
                             </div>
                             <div className="flex gap-1">
-                              <Button variant="ghost" size="sm" onClick={() => handleEditPost(post.id)}>
+                              <Button variant="ghost" size="sm" onClick={() => handleEditPost(post.id)} className="rounded-lg">
                                 <Edit3 className="h-4 w-4" />
                               </Button>
-                              <Button variant="ghost" size="sm" onClick={() => handleDeletePost(post.id)}>
+                              <Button variant="ghost" size="sm" onClick={() => handleDeletePost(post.id)} className="rounded-lg">
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
@@ -176,14 +197,14 @@ const Dashboard = () => {
                 
                 <div className="space-y-4">
                   {draftPosts.length === 0 ? (
-                    <Card>
+                    <Card className="rounded-xl">
                       <CardContent className="p-6 text-center text-muted-foreground">
                         <p>Keine Entwürfe vorhanden.</p>
                       </CardContent>
                     </Card>
                   ) : (
                     draftPosts.map(post => (
-                      <Card key={post.id} className="hover:shadow-md transition-shadow">
+                      <Card key={post.id} className="hover:shadow-md transition-shadow rounded-xl border-2 border-transparent hover:border-primary/20">
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
@@ -192,16 +213,16 @@ const Dashboard = () => {
                                 {post.content.substring(0, 120)}...
                               </p>
                               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                                <Badge variant="outline" className="text-xs">Entwurf</Badge>
+                                <Badge variant="outline" className="text-xs rounded-lg">Entwurf</Badge>
                                 <span>•</span>
                                 <span>{new Date(post.created_at).toLocaleDateString('de-DE')}</span>
                               </div>
                             </div>
                             <div className="flex gap-1">
-                              <Button variant="ghost" size="sm" onClick={() => handleEditPost(post.id)}>
+                              <Button variant="ghost" size="sm" onClick={() => handleEditPost(post.id)} className="rounded-lg">
                                 <Edit3 className="h-4 w-4" />
                               </Button>
-                              <Button variant="ghost" size="sm" onClick={() => handleDeletePost(post.id)}>
+                              <Button variant="ghost" size="sm" onClick={() => handleDeletePost(post.id)} className="rounded-lg">
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
@@ -302,6 +323,34 @@ const Dashboard = () => {
                   ))
                 )}
               </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="wiki" className="space-y-8">
+            {/* Wiki Section */}
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-semibold">Wiki & Wissen</h2>
+                <Button onClick={() => navigate('/wiki')} className="rounded-lg">
+                  <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                  Zum Wiki
+                </Button>
+              </div>
+              
+              <Card className="rounded-xl border-2 border-transparent">
+                <CardContent className="p-8 text-center text-muted-foreground">
+                  <svg className="h-12 w-12 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                  <p className="text-lg mb-2">Gemeinsames Wissen schaffen</p>
+                  <p className="mb-6">Trage zum Community-Wiki bei und teile dein Wissen mit anderen</p>
+                  <Button onClick={() => navigate('/wiki')} className="rounded-lg">
+                    Wiki besuchen
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
 

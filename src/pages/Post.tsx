@@ -8,6 +8,8 @@ import BreadLogo from '@/components/BreadLogo';
 import ThemeToggle from '@/components/ThemeToggle';
 import { ArrowLeft, Calendar, Eye, Edit3, Share2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from '@/integrations/supabase/client';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 
 interface Post {
   id: string;
@@ -33,28 +35,71 @@ const Post = () => {
   useEffect(() => {
     if (!postId) return;
 
-    // Load post
-    const savedPosts = localStorage.getItem('bread-posts');
-    if (savedPosts) {
-      const posts: Post[] = JSON.parse(savedPosts);
-      const foundPost = posts.find(p => p.id === postId);
-      
-      if (foundPost) {
-        // Increment view count
-        foundPost.views += 1;
-        const updatedPosts = posts.map(p => p.id === postId ? foundPost : p);
-        localStorage.setItem('bread-posts', JSON.stringify(updatedPosts));
+    const fetchPost = async () => {
+      try {
+        // Try to fetch from Supabase first
+        const { data: supabaseData } = await supabase
+          .from('posts')
+          .select(`
+            *,
+            profiles (
+              username,
+              bio
+            )
+          `)
+          .eq('id', postId)
+          .eq('is_public', true)
+          .single();
+
+        if (supabaseData) {
+          const mappedPost: Post = {
+            id: supabaseData.id,
+            title: supabaseData.title,
+            content: supabaseData.content,
+            excerpt: supabaseData.content.substring(0, 150) + '...',
+            published: supabaseData.is_public,
+            createdAt: new Date(supabaseData.created_at).toLocaleDateString('de-DE'),
+            tags: [], // Add tags if needed
+            views: supabaseData.view_count || 0,
+            authorId: supabaseData.author_id,
+            authorUsername: supabaseData.profiles?.username || 'unknown',
+            authorDisplayName: supabaseData.profiles?.username || 'Anonym'
+          };
+          
+          setPost(mappedPost);
+          
+          // Check if current user is owner
+          const currentUser = supabase.auth.getUser();
+          setIsOwner((await currentUser).data.user?.id === mappedPost.authorId);
+          return;
+        }
+      } catch (error) {
+        console.error('Error fetching post from Supabase:', error);
+      }
+
+      // Fallback to localStorage
+      const savedPosts = localStorage.getItem('bread-posts');
+      if (savedPosts) {
+        const posts: Post[] = JSON.parse(savedPosts);
+        const foundPost = posts.find(p => p.id === postId);
         
-        setPost(foundPost);
-        
-        // Check if current user is owner
-        const userData = localStorage.getItem('bread-user');
-        if (userData) {
-          const user = JSON.parse(userData);
-          setIsOwner(user.id === foundPost.authorId);
+        if (foundPost) {
+          foundPost.views += 1;
+          const updatedPosts = posts.map(p => p.id === postId ? foundPost : p);
+          localStorage.setItem('bread-posts', JSON.stringify(updatedPosts));
+          
+          setPost(foundPost);
+          
+          const userData = localStorage.getItem('bread-user');
+          if (userData) {
+            const user = JSON.parse(userData);
+            setIsOwner(user.id === foundPost.authorId);
+          }
         }
       }
-    }
+    };
+
+    fetchPost();
   }, [postId]);
 
   const handleShare = async () => {
@@ -202,9 +247,7 @@ const Post = () => {
 
         {/* Post Content */}
         <div className="prose prose-lg max-w-none">
-          <div className="whitespace-pre-wrap leading-relaxed text-foreground">
-            {post.content}
-          </div>
+          <MarkdownRenderer content={post.content} className="leading-relaxed" />
         </div>
 
         {/* Post Footer */}

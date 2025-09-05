@@ -184,25 +184,80 @@ const Editor = () => {
     setContent(prev => prev + (prev ? '\n\n' : '') + text);
   };
 
-  const handleFormatText = (format: string) => {
-    // Simple formatting helpers
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+
+  const handleFormatText = (format: string, selectedText?: string) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const currentContent = content;
+    
+    let formattedText = '';
+    let newCursorPos = start;
+
     switch (format) {
       case 'bold':
-        setContent(prev => prev + '**fetter Text**');
+        if (selectedText) {
+          formattedText = `**${selectedText}**`;
+          newCursorPos = start + formattedText.length;
+        } else {
+          formattedText = '**fetter Text**';
+          newCursorPos = start + 2; // Position cursor after **
+        }
         break;
       case 'italic':
-        setContent(prev => prev + '*kursiver Text*');
+        if (selectedText) {
+          formattedText = `*${selectedText}*`;
+          newCursorPos = start + formattedText.length;
+        } else {
+          formattedText = '*kursiver Text*';
+          newCursorPos = start + 1;
+        }
         break;
       case 'strikethrough':
-        setContent(prev => prev + '~~durchgestrichener Text~~');
+        if (selectedText) {
+          formattedText = `~~${selectedText}~~`;
+          newCursorPos = start + formattedText.length;
+        } else {
+          formattedText = '~~durchgestrichener Text~~';
+          newCursorPos = start + 2;
+        }
         break;
       case 'heading':
-        setContent(prev => prev + '\n## Überschrift\n');
+        formattedText = '\n## Überschrift\n';
+        newCursorPos = start + 4; // Position after "## "
         break;
       case 'sparkle':
-        setContent(prev => prev + '✨ *magischer Text* ✨');
+        if (selectedText) {
+          formattedText = `✨ ${selectedText} ✨`;
+          newCursorPos = start + formattedText.length;
+        } else {
+          formattedText = '✨ magischer Text ✨';
+          newCursorPos = start + 2;
+        }
         break;
+      case 'image':
+        formattedText = '\n![Bildbeschreibung](https://beispiel.com/bild.jpg)\n';
+        newCursorPos = start + 3; // Position at description
+        break;
+      case 'poll':
+        formattedText = '\n**📊 Umfrage**\n\n🔘 Option 1\n🔘 Option 2\n🔘 Option 3\n';
+        newCursorPos = start + formattedText.length;
+        break;
+      default:
+        return;
     }
+
+    const newContent = currentContent.substring(0, start) + formattedText + currentContent.substring(end);
+    setContent(newContent);
+
+    // Set cursor position after state update
+    setTimeout(() => {
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
+      textarea.focus();
+    }, 0);
   };
 
   if (!user && !isAnonymousUser) return null;
@@ -210,7 +265,7 @@ const Editor = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Editor Header */}
-      <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-10">
+      <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-10 rounded-b-xl">
         <div className="max-w-4xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -287,6 +342,7 @@ const Editor = () => {
             <EditorToolbar 
               onInsertText={handleInsertText} 
               onFormatText={handleFormatText}
+              textareaRef={textareaRef}
             />
           )}
 
@@ -299,15 +355,16 @@ const Editor = () => {
             
             <TabsContent value="editor">
               <Textarea
-                placeholder="Teile deine Gedanken... \n\nDu kannst Markdown verwenden:\n**fett**, *kursiv*, `code`, [Link](https://example.com)\n# Überschrift 1\n## Überschrift 2\n### Überschrift 3"
+                ref={textareaRef}
+                placeholder="Teile deine Gedanken... \n\nDu kannst Markdown verwenden:\n**fett**, *kursiv*, `code`, [Link](https://example.com)\n# Überschrift 1\n## Überschrift 2\n### Überschrift 3\n\n📊 Umfragen: **📊 Titel** mit 🔘 Optionen\n🖼️ Bilder: ![Alt-Text](URL)"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                className="min-h-[400px] border-none px-0 resize-none focus-visible:ring-0 focus-visible:ring-offset-0 text-base leading-relaxed"
+                className="min-h-[400px] border-none px-0 resize-none focus-visible:ring-0 focus-visible:ring-offset-0 text-base leading-relaxed rounded-xl"
               />
             </TabsContent>
             
             <TabsContent value="preview">
-              <div className="min-h-[400px] p-4 border rounded-lg bg-background">
+              <div className="min-h-[400px] p-6 border rounded-xl bg-background/50">
                 {content ? (
                   <MarkdownRenderer content={content} />
                 ) : (
@@ -319,7 +376,7 @@ const Editor = () => {
 
           {/* Publishing Options - New Island Design */}
           {user && (
-            <div className="bg-muted/30 rounded-2xl p-6">
+            <div className="bg-muted/30 rounded-2xl p-6 border">
               <h3 className="font-medium mb-4 text-center">Veröffentlichungs-Optionen</h3>
               
               {/* Toggle Island */}
@@ -388,7 +445,7 @@ const Editor = () => {
           )}
 
           {/* Tips */}
-          <Card className="p-4 bg-muted/30">
+          <Card className="p-4 bg-muted/30 border rounded-xl">
             <h4 className="font-medium mb-2">✨ Schreibtipps</h4>
             <ul className="text-sm text-muted-foreground space-y-1">
               <li>• Verwende Markdown: **fett**, *kursiv*, `code`</li>
