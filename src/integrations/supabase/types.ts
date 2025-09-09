@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.12 (cd3cf9e)"
@@ -307,6 +307,36 @@ export type Database = {
           id?: string
           subscription?: Json
           user_id?: string
+        }
+        Relationships: []
+      }
+      polls: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          options: Json
+          post_id: string
+          title: string
+          votes: Json
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          options?: Json
+          post_id: string
+          title: string
+          votes?: Json
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          options?: Json
+          post_id?: string
+          title?: string
+          votes?: Json
         }
         Relationships: []
       }
@@ -647,14 +677,18 @@ export type Database = {
       }
       has_role: {
         Args: {
-          _user_id: string
           _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
         }
         Returns: boolean
       }
       increment_view_count: {
         Args: { post_id: string }
         Returns: undefined
+      }
+      vote_on_poll: {
+        Args: { option_index: number; poll_id: string }
+        Returns: Json
       }
     }
     Enums: {
