@@ -19,13 +19,13 @@ const BottomNavigation = () => {
   // For anonymous users, only show Feed
   if (isAnonymousUser) {
     return (
-      <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50 pb-safe">
-        <div className="flex justify-center items-center py-2 px-2 max-w-md mx-auto">
+      <div className="fixed bottom-0 left-0 right-0 glass-effect border-t border-border/50 z-50 pb-safe rounded-t-3xl mx-2 mb-2 animate-slide-up">
+        <div className="flex justify-center items-center py-3 px-4 max-w-md mx-auto">
           <Link to="/feed">
             <Button 
-              variant={isActive('/feed') ? 'default' : 'ghost'} 
-              size="sm" 
-              className="flex flex-col items-center gap-1 h-auto py-2 rounded-full min-w-[50px]"
+              variant={isActive('/feed') ? 'gradient' : 'ghost'} 
+              size="icon-sm" 
+              className="flex flex-col items-center gap-1 h-auto py-3 px-3 rounded-2xl min-w-[60px] transition-all duration-300 hover:scale-105"
             >
               <Home className="h-4 w-4" />
               <span className="text-xs">Feed</span>
@@ -37,14 +37,14 @@ const BottomNavigation = () => {
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50 pb-safe">
-      <div className="flex justify-around items-center py-2 px-2 max-w-md mx-auto">
+    <div className="fixed bottom-0 left-0 right-0 glass-effect border-t border-border/50 z-50 pb-safe rounded-t-3xl mx-2 mb-2 animate-slide-up">
+      <div className="flex justify-around items-center py-3 px-4 max-w-md mx-auto">
         <Link to="/feed">
-          <Button 
-            variant={isActive('/feed') ? 'default' : 'ghost'} 
-            size="sm" 
-            className="flex flex-col items-center gap-1 h-auto py-2 rounded-full min-w-[50px]"
-          >
+            <Button 
+              variant={isActive('/feed') ? 'gradient' : 'ghost'} 
+              size="icon-sm" 
+              className="flex flex-col items-center gap-1 h-auto py-3 px-3 rounded-2xl min-w-[60px] transition-all duration-300 hover:scale-105"
+            >
             <Home className="h-4 w-4" />
             <span className="text-xs">Feed</span>
           </Button>
@@ -52,31 +52,21 @@ const BottomNavigation = () => {
         
         <Link to="/editor">
           <Button 
-            variant={isActive('/editor') ? 'default' : 'ghost'} 
-            size="sm" 
-            className="flex flex-col items-center gap-1 h-auto py-2 rounded-full min-w-[50px]"
+            variant={isActive('/editor') ? 'gradient' : 'ghost'} 
+            size="icon-sm" 
+            className="flex flex-col items-center gap-1 h-auto py-3 px-3 rounded-2xl min-w-[60px] transition-all duration-300 hover:scale-105"
           >
             <PlusCircle className="h-4 w-4" />
             <span className="text-xs">Schreiben</span>
           </Button>
         </Link>
 
-        <Link to="/wiki">
-          <Button 
-            variant={isActive('/wiki') ? 'default' : 'ghost'} 
-            size="sm" 
-            className="flex flex-col items-center gap-1 h-auto py-2 rounded-full min-w-[50px]"
-          >
-            <BookOpen className="h-4 w-4" />
-            <span className="text-xs">Wiki</span>
-          </Button>
-        </Link>
 
         <Link to="/breadgpt">
           <Button 
-            variant={isActive('/breadgpt') ? 'default' : 'ghost'} 
-            size="sm" 
-            className="flex flex-col items-center gap-1 h-auto py-2 rounded-full min-w-[50px]"
+            variant={isActive('/breadgpt') ? 'gradient' : 'ghost'} 
+            size="icon-sm" 
+            className="flex flex-col items-center gap-1 h-auto py-3 px-3 rounded-2xl min-w-[60px] transition-all duration-300 hover:scale-105"
           >
             <HelpCircle className="h-4 w-4" />
             <span className="text-xs">BreadGPT</span>
@@ -85,9 +75,9 @@ const BottomNavigation = () => {
 
         <Link to="/friends">
           <Button 
-            variant={isActive('/friends') ? 'default' : 'ghost'} 
-            size="sm" 
-            className="flex flex-col items-center gap-1 h-auto py-2 rounded-full min-w-[50px]"
+            variant={isActive('/friends') ? 'gradient' : 'ghost'} 
+            size="icon-sm" 
+            className="flex flex-col items-center gap-1 h-auto py-3 px-3 rounded-2xl min-w-[60px] transition-all duration-300 hover:scale-105"
           >
             <Users className="h-4 w-4" />
             <span className="text-xs">Freunde</span>
@@ -96,9 +86,9 @@ const BottomNavigation = () => {
         
         <Link to="/dashboard">
           <Button 
-            variant={isActive('/dashboard') ? 'default' : 'ghost'} 
-            size="sm" 
-            className="flex flex-col items-center gap-1 h-auto py-2 rounded-full min-w-[50px]"
+            variant={isActive('/dashboard') ? 'gradient' : 'ghost'} 
+            size="icon-sm" 
+            className="flex flex-col items-center gap-1 h-auto py-3 px-3 rounded-2xl min-w-[60px] transition-all duration-300 hover:scale-105"
           >
             <LayoutDashboard className="h-4 w-4" />
             <span className="text-xs">Dashboard</span>
