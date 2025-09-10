@@ -21,31 +21,45 @@ export interface Post {
 
 export const usePosts = () => {
   const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [cache, setCache] = useState<Map<string, Post[]>>(new Map());
   const { user } = useAuth();
 
-  const fetchPosts = async () => {
+  const fetchPosts = async (forceRefresh = false) => {
     if (!user) return;
 
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('posts')
-      .select(`
-        *,
-        profiles (
-          username,
-          bio
-        )
-      `)
-      .eq('author_id', user.id)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching posts:', error);
-    } else {
-      setPosts(data || []);
+    const cacheKey = `posts_${user.id}`;
+    
+    // Check cache first
+    if (!forceRefresh && cache.has(cacheKey)) {
+      setPosts(cache.get(cacheKey) || []);
+      return;
     }
-    setLoading(false);
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('posts')
+        .select(`
+          *,
+          profiles (
+            username,
+            bio
+          )
+        `)
+        .eq('author_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching posts:', error);
+      } else {
+        const fetchedPosts = data || [];
+        setPosts(fetchedPosts);
+        setCache(prev => new Map(prev).set(cacheKey, fetchedPosts));
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const createPost = async (title: string, content: string, isPublic: boolean = true, isAnonymous: boolean = false) => {
@@ -71,7 +85,7 @@ export const usePosts = () => {
         throw error;
       }
 
-      await fetchPosts();
+      await fetchPosts(true);
       return data;
     } catch (error) {
       console.error('Error in createPost:', error);
@@ -100,7 +114,7 @@ export const usePosts = () => {
         throw error;
       }
 
-      await fetchPosts();
+      await fetchPosts(true);
       return data;
     } catch (error) {
       console.error('Error in updatePost:', error);
@@ -122,7 +136,7 @@ export const usePosts = () => {
       return false;
     }
 
-    fetchPosts();
+    fetchPosts(true);
     return true;
   };
 

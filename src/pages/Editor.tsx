@@ -12,14 +12,16 @@ import { ArrowLeft, Save, Eye, Send, Globe, Theater } from 'lucide-react';
 import { usePosts } from '@/hooks/usePosts';
 import { useAuth } from '@/hooks/useAuth';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
+import { usePolls } from '@/hooks/usePolls';
 import EditorToolbar from '@/components/EditorToolbar';
 
 const Editor = () => {
   const { postId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuth();
+const { user } = useAuth();
   const { posts, createPost, updatePost } = usePosts();
+  const { createPoll } = usePolls();
   
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -184,6 +186,18 @@ const Editor = () => {
     setContent(prev => prev + (prev ? '\n\n' : '') + text);
   };
 
+  const handleImageInsert = (url: string) => {
+    const imageMarkdown = `![Bild](${url})`;
+    setContent(prev => prev + '\n' + imageMarkdown);
+  };
+
+  const handlePollCreate = async (title: string, options: string[]) => {
+    // For now, just show in content as placeholder
+    // Real poll will be created when post is published
+    const pollMarkdown = `\n\n**📊 ${title}**\n${options.map(opt => `🔘 ${opt}`).join('\n')}\n`;
+    setContent(prev => prev + pollMarkdown);
+  };
+
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
   const handleFormatText = (format: string, selectedText?: string) => {
@@ -342,6 +356,8 @@ const Editor = () => {
             <EditorToolbar 
               onInsertText={handleInsertText} 
               onFormatText={handleFormatText}
+              onImageInsert={handleImageInsert}
+              onPollCreate={handlePollCreate}
               textareaRef={textareaRef}
             />
           )}

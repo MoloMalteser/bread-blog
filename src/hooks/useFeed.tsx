@@ -7,75 +7,99 @@ import { Post } from '@/hooks/usePosts';
 export const useFeed = () => {
   const [feedPosts, setFeedPosts] = useState<Post[]>([]);
   const [allPosts, setAllPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [cache, setCache] = useState<Map<string, Post[]>>(new Map());
   const { user } = useAuth();
 
   // Fetch posts from followed users
-  const fetchFeedPosts = async () => {
+  const fetchFeedPosts = async (forceRefresh = false) => {
     if (!user) return;
 
-    setLoading(true);
+    const cacheKey = `feed_${user.id}`;
     
-    // Get users that the current user follows
-    const { data: follows } = await supabase
-      .from('follows')
-      .select('following_id')
-      .eq('follower_id', user.id);
-
-    if (!follows || follows.length === 0) {
-      setFeedPosts([]);
-      setLoading(false);
+    // Check cache first
+    if (!forceRefresh && cache.has(cacheKey)) {
+      setFeedPosts(cache.get(cacheKey) || []);
       return;
     }
 
-    const followingIds = follows.map(f => f.following_id);
+    setLoading(true);
+    try {
+      // Get users that the current user follows
+      const { data: follows } = await supabase
+        .from('follows')
+        .select('following_id')
+        .eq('follower_id', user.id);
 
-    // Get posts from followed users
-    const { data: posts, error } = await supabase
-      .from('posts')
-      .select(`
-        *,
-        profiles (
-          username,
-          bio
-        )
-      `)
-      .in('author_id', followingIds)
-      .eq('is_public', true)
-      .order('created_at', { ascending: false });
+      if (!follows || follows.length === 0) {
+        setFeedPosts([]);
+        return;
+      }
 
-    if (error) {
-      console.error('Error fetching feed posts:', error);
-    } else {
-      setFeedPosts(posts || []);
+      const followingIds = follows.map(f => f.following_id);
+
+      // Get posts from followed users with limit for performance
+      const { data: posts, error } = await supabase
+        .from('posts')
+        .select(`
+          *,
+          profiles (
+            username,
+            bio
+          )
+        `)
+        .in('author_id', followingIds)
+        .eq('is_public', true)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) {
+        console.error('Error fetching feed posts:', error);
+      } else {
+        const fetchedPosts = posts || [];
+        setFeedPosts(fetchedPosts);
+        setCache(prev => new Map(prev).set(cacheKey, fetchedPosts));
+      }
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   // Fetch all public posts
-  const fetchAllPosts = async () => {
-    setLoading(true);
+  const fetchAllPosts = async (forceRefresh = false) => {
+    const cacheKey = 'all_posts';
     
-    const { data: posts, error } = await supabase
-      .from('posts')
-      .select(`
-        *,
-        profiles (
-          username,
-          bio
-        )
-      `)
-      .eq('is_public', true)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching all posts:', error);
-    } else {
-      setAllPosts(posts || []);
+    // Check cache first
+    if (!forceRefresh && cache.has(cacheKey)) {
+      setAllPosts(cache.get(cacheKey) || []);
+      return;
     }
-    
-    setLoading(false);
+
+    setLoading(true);
+    try {
+      const { data: posts, error } = await supabase
+        .from('posts')
+        .select(`
+          *,
+          profiles (
+            username,
+            bio
+          )
+        `)
+        .eq('is_public', true)
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      if (error) {
+        console.error('Error fetching all posts:', error);
+      } else {
+        const fetchedPosts = posts || [];
+        setAllPosts(fetchedPosts);
+        setCache(prev => new Map(prev).set(cacheKey, fetchedPosts));
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return {

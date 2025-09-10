@@ -1,16 +1,20 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Bold, Italic, Strikethrough, Type, Sparkles, Image, BarChart3 } from 'lucide-react';
+import { Bold, Italic, Strikethrough, Type, Sparkles } from 'lucide-react';
 import EditorBreadGPT from './EditorBreadGPT';
+import ImageUpload from '@/components/ImageUpload';
+import PollCreator from '@/components/PollCreator';
 
 interface EditorToolbarProps {
   onInsertText: (text: string) => void;
   onFormatText: (format: string, selectedText?: string) => void;
+  onImageInsert: (url: string) => void;
+  onPollCreate: (title: string, options: string[]) => void;
   textareaRef?: React.RefObject<HTMLTextAreaElement>;
 }
 
-const EditorToolbar = ({ onInsertText, onFormatText, textareaRef }: EditorToolbarProps) => {
+const EditorToolbar = ({ onInsertText, onFormatText, onImageInsert, onPollCreate, textareaRef }: EditorToolbarProps) => {
   const [showBreadGPT, setShowBreadGPT] = useState(false);
 
   const handleFormat = (format: string) => {
@@ -75,25 +79,13 @@ const EditorToolbar = ({ onInsertText, onFormatText, textareaRef }: EditorToolba
         
         <div className="mx-2 h-4 w-px bg-border" />
         
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onFormatText('image')}
-          className="h-9 w-9 p-0 rounded-lg hover:bg-background"
-          title="Bild einfügen"
-        >
-          <Image className="h-4 w-4" />
-        </Button>
+        <ImageUpload 
+          onImageUploaded={onImageInsert}
+        />
         
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onFormatText('poll')}
-          className="h-9 w-9 p-0 rounded-lg hover:bg-background"
-          title="Umfrage erstellen"
-        >
-          <BarChart3 className="h-4 w-4" />
-        </Button>
+        <PollCreator 
+          onPollCreated={onPollCreate}
+        />
         
         <div className="mx-2 h-4 w-px bg-border" />
         

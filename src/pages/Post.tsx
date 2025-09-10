@@ -249,7 +249,7 @@ const Post = () => {
 
         {/* Post Content */}
         <div className="prose prose-lg max-w-none">
-          <MarkdownRenderer content={post.content} className="leading-relaxed" />
+          <MarkdownRenderer content={post.content} postId={post.id} className="leading-relaxed" />
         </div>
 
         {/* Post Footer */}
