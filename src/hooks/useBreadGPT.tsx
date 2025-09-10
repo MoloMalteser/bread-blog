@@ -117,7 +117,7 @@ export const useBreadGPT = () => {
 
       if (error) {
         console.error('Edge function error:', error);
-        return 'Mein Ofen ist gerade kaputt... Versuche es später nochmal! 🥖';
+        return 'Entschuldigung, ich kann momentan nicht antworten. Versuche es später nochmal.';
       }
 
       // Update mission progress
@@ -139,10 +139,10 @@ export const useBreadGPT = () => {
           breadgpt_questions: currentQuestions + 1
         });
 
-      return data?.text || 'Hmm... *Brotkrümel fallen* ... Probiere eine andere Frage! 🥖';
+      return data?.text || 'Ich konnte keine passende Antwort finden. Versuche es mit einer anderen Frage.';
     } catch (error) {
       console.error('Error asking BreadGPT:', error);
-      return 'Meine Krümel sind heute besonders störrisch... 🍞';
+      return 'Es gab einen technischen Fehler. Bitte versuche es erneut.';
     } finally {
       setLoading(false);
     }

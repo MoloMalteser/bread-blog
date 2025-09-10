@@ -217,8 +217,9 @@ const { user } = useAuth();
           formattedText = `**${selectedText}**`;
           newCursorPos = start + formattedText.length;
         } else {
-          formattedText = '**fetter Text**';
-          newCursorPos = start + 2; // Position cursor after **
+          // Insert markdown markers for persistent formatting
+          formattedText = '****';
+          newCursorPos = start + 2; // Position cursor between **|**
         }
         break;
       case 'italic':
@@ -226,8 +227,9 @@ const { user } = useAuth();
           formattedText = `*${selectedText}*`;
           newCursorPos = start + formattedText.length;
         } else {
-          formattedText = '*kursiver Text*';
-          newCursorPos = start + 1;
+          // Insert markdown markers for persistent formatting
+          formattedText = '**';
+          newCursorPos = start + 1; // Position cursor between *|*
         }
         break;
       case 'strikethrough':
@@ -235,8 +237,9 @@ const { user } = useAuth();
           formattedText = `~~${selectedText}~~`;
           newCursorPos = start + formattedText.length;
         } else {
-          formattedText = '~~durchgestrichener Text~~';
-          newCursorPos = start + 2;
+          // Insert markdown markers for persistent formatting
+          formattedText = '~~~~';
+          newCursorPos = start + 2; // Position cursor between ~~|~~
         }
         break;
       case 'heading':

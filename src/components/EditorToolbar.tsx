@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Bold, Italic, Strikethrough, Type, Sparkles } from 'lucide-react';
 import EditorBreadGPT from './EditorBreadGPT';
-import ImageUpload from '@/components/ImageUpload';
-import PollCreator from '@/components/PollCreator';
+import ImageUploadDialog from '@/components/ImageUploadDialog';
+import PollConfigDialog from '@/components/PollConfigDialog';
 
 interface EditorToolbarProps {
   onInsertText: (text: string) => void;
@@ -16,6 +16,7 @@ interface EditorToolbarProps {
 
 const EditorToolbar = ({ onInsertText, onFormatText, onImageInsert, onPollCreate, textareaRef }: EditorToolbarProps) => {
   const [showBreadGPT, setShowBreadGPT] = useState(false);
+  const [activeFormats, setActiveFormats] = useState<Set<string>>(new Set());
 
   const handleFormat = (format: string) => {
     if (textareaRef?.current) {
@@ -23,6 +24,15 @@ const EditorToolbar = ({ onInsertText, onFormatText, onImageInsert, onPollCreate
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
       const selectedText = textarea.value.substring(start, end);
+      
+      // Toggle format state
+      const newActiveFormats = new Set(activeFormats);
+      if (activeFormats.has(format)) {
+        newActiveFormats.delete(format);
+      } else {
+        newActiveFormats.add(format);
+      }
+      setActiveFormats(newActiveFormats);
       
       if (selectedText) {
         onFormatText(format, selectedText);
@@ -41,7 +51,9 @@ const EditorToolbar = ({ onInsertText, onFormatText, onImageInsert, onPollCreate
           variant="ghost"
           size="sm"
           onClick={() => handleFormat('bold')}
-          className="h-9 w-9 p-0 rounded-lg hover:bg-background"
+          className={`h-9 w-9 p-0 rounded-lg hover:bg-background ${
+            activeFormats.has('bold') ? 'bg-primary text-primary-foreground' : ''
+          }`}
           title="Fett"
         >
           <Bold className="h-4 w-4" />
@@ -51,7 +63,9 @@ const EditorToolbar = ({ onInsertText, onFormatText, onImageInsert, onPollCreate
           variant="ghost"
           size="sm"
           onClick={() => handleFormat('italic')}
-          className="h-9 w-9 p-0 rounded-lg hover:bg-background"
+          className={`h-9 w-9 p-0 rounded-lg hover:bg-background ${
+            activeFormats.has('italic') ? 'bg-primary text-primary-foreground' : ''
+          }`}
           title="Kursiv"
         >
           <Italic className="h-4 w-4" />
@@ -61,7 +75,9 @@ const EditorToolbar = ({ onInsertText, onFormatText, onImageInsert, onPollCreate
           variant="ghost"
           size="sm"
           onClick={() => handleFormat('strikethrough')}
-          className="h-9 w-9 p-0 rounded-lg hover:bg-background"
+          className={`h-9 w-9 p-0 rounded-lg hover:bg-background ${
+            activeFormats.has('strikethrough') ? 'bg-primary text-primary-foreground' : ''
+          }`}
           title="Durchgestrichen"
         >
           <Strikethrough className="h-4 w-4" />
@@ -79,11 +95,11 @@ const EditorToolbar = ({ onInsertText, onFormatText, onImageInsert, onPollCreate
         
         <div className="mx-2 h-4 w-px bg-border" />
         
-        <ImageUpload 
+        <ImageUploadDialog 
           onImageUploaded={onImageInsert}
         />
         
-        <PollCreator 
+        <PollConfigDialog 
           onPollCreated={onPollCreate}
         />
         

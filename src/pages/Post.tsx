@@ -10,6 +10,7 @@ import { ArrowLeft, Calendar, Eye, Edit3, Share2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
+import TranslateButton from '@/components/TranslateButton';
 
 interface Post {
   id: string;
@@ -32,6 +33,8 @@ const Post = () => {
   const { toast } = useToast();
   const [post, setPost] = useState<Post | null>(null);
   const [isOwner, setIsOwner] = useState(false);
+  const [translatedContent, setTranslatedContent] = useState<string | null>(null);
+  const [isTranslated, setIsTranslated] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
@@ -217,6 +220,14 @@ const Post = () => {
             </div>
 
             <div className="flex items-center gap-2">
+              <TranslateButton
+                content={post.content}
+                onTranslated={(translated, targetLang) => {
+                  setTranslatedContent(translated);
+                  setIsTranslated(true);
+                }}
+              />
+              
               <Button variant="outline" size="sm" onClick={handleShare}>
                 <Share2 className="h-4 w-4 mr-1" />
                 Teilen
@@ -249,7 +260,26 @@ const Post = () => {
 
         {/* Post Content */}
         <div className="prose prose-lg max-w-none">
-          <MarkdownRenderer content={post.content} postId={post.id} className="leading-relaxed" />
+          {isTranslated && translatedContent ? (
+            <div className="space-y-4">
+              <div className="bg-muted/50 border border-border rounded-lg p-4 mb-6">
+                <p className="text-sm text-muted-foreground mb-2">
+                  Übersetzt von BreadGPT
+                </p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsTranslated(false)}
+                  className="text-primary hover:text-primary/80"
+                >
+                  Original anzeigen
+                </Button>
+              </div>
+              <MarkdownRenderer content={translatedContent} postId={post.id} className="leading-relaxed" />
+            </div>
+          ) : (
+            <MarkdownRenderer content={post.content} postId={post.id} className="leading-relaxed" />
+          )}
         </div>
 
         {/* Post Footer */}

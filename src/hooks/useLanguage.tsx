@@ -43,7 +43,18 @@ const translations = {
     cancel: 'Abbrechen',
     save: 'Speichern',
     delete: 'Löschen',
-    edit: 'Bearbeiten'
+    edit: 'Bearbeiten',
+    
+    // CTA Section
+    ctaTitle: 'Bereit, deine Gedanken zu teilen?',
+    ctaDescription: 'Schließe dich unserer Community an und beginne noch heute mit dem Schreiben. Es ist kostenlos und dauert nur wenige Sekunden.',
+    getStarted: 'Kostenlos starten',
+    viewDemo: 'Demo ansehen',
+    
+    // Translation
+    translate: 'Übersetzen',
+    translating: 'Übersetzt...',
+    translatedBy: 'Übersetzt von BreadGPT'
   },
   en: {
     // Navigation
@@ -78,7 +89,18 @@ const translations = {
     cancel: 'Cancel',
     save: 'Save',
     delete: 'Delete',
-    edit: 'Edit'
+    edit: 'Edit',
+    
+    // CTA Section
+    ctaTitle: 'Ready to share your thoughts?',
+    ctaDescription: 'Join our community and start writing today. It\'s free and takes only a few seconds.',
+    getStarted: 'Get Started Free',
+    viewDemo: 'View Demo',
+    
+    // Translation
+    translate: 'Translate',
+    translating: 'Translating...',
+    translatedBy: 'Translated by BreadGPT'
   }
 };
 
@@ -87,12 +109,18 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [language, setLanguage] = useState<Language>('de');
 
+  // Save language preference to localStorage
+  const handleSetLanguage = (lang: Language) => {
+    setLanguage(lang);
+    localStorage.setItem('preferred-language', lang);
+  };
+
   const t = (key: string): string => {
     return translations[language][key as keyof typeof translations[typeof language]] || key;
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage: handleSetLanguage, t }}>
       {children}
     </LanguageContext.Provider>
   );
