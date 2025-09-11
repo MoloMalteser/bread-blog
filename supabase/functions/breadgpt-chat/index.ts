@@ -28,7 +28,7 @@ serve(async (req) => {
     
     const breadPrompt = isWriteMode 
       ? `Du bist ein hilfreicher Schreibassistent. Befolge direkt was der Nutzer möchte ohne philosophische Antworten. Antworte nur mit dem gewünschten Text. Anfrage: ${question}`
-      : `Du bist BreadGPT, ein philosophisches sprechendes Brot. Antworte in maximal 2-3 Sätzen auf Deutsch. Sei kreativ, manchmal witzig, manchmal tiefgreifend. Verwende gelegentlich Brot-Metaphern und Brot-Emojis. Frage: ${question}`;
+      : `Du bist ein hilfreicher AI-Assistent. Gib klare, direkte und nützliche Antworten auf Nutzerfragen. Sei informativ und präzise. Antworte auf Deutsch. Frage: ${question}`;
 
     console.log('Sending request to Cohere API...');
 
@@ -71,10 +71,10 @@ serve(async (req) => {
     // Fallback if response is empty or too short
     if (!generatedText || generatedText.length < 10) {
       const fallbacks = [
-        'Das Leben ist wie Brot backen – es braucht Zeit, Geduld und die richtige Temperatur! 🥖',
-        'Manchmal muss man sich fallen lassen, wie eine Scheibe Toast in den Toaster. 🍞',
-        'Jeder Krümel erzählt eine Geschichte... Was ist deine? ✨',
-        'In der Wärme des Ofens finde ich meine Antworten. Und du? 🔥'
+        'Entschuldigung, ich konnte keine passende Antwort finden. Versuche es mit einer anderen Frage.',
+        'Ich konnte dir bei dieser Frage nicht helfen. Probiere es anders formuliert.',
+        'Dafür habe ich momentan keine Antwort. Stelle gerne eine andere Frage.',
+        'Das kann ich leider nicht beantworten. Versuche es mit etwas anderem.'
       ];
       generatedText = fallbacks[Math.floor(Math.random() * fallbacks.length)];
     }
@@ -92,9 +92,9 @@ serve(async (req) => {
     console.error('Error in breadgpt-chat function:', error);
 
     const errorResponses = [
-      'Mein Teig ist heute etwas zäh... Versuche es gleich nochmal! 🥖',
-      'Der Ofen ist überhitzt! Lass mich kurz abkühlen. 🔥',
-      'Meine Krümel sind durcheinander geraten... *schüttel* 🍞'
+      'Es gab einen technischen Fehler. Bitte versuche es erneut.',
+      'Entschuldigung, ich bin momentan nicht verfügbar. Versuche es später nochmal.',
+      'Ein Fehler ist aufgetreten. Bitte probiere es noch einmal.'
     ];
 
     return new Response(JSON.stringify({
