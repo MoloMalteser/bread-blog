@@ -27,7 +27,7 @@ const translations = {
     loadingPosts: 'Lade Posts...',
     
     // Post interactions
-    views: 'Aufrufe',
+    viewsLabel: 'Aufrufe',
     like: 'Gefällt mir',
     comment: 'Kommentar',
     writeComment: 'Kommentar schreiben...',
@@ -54,7 +54,51 @@ const translations = {
     // Translation
     translate: 'Übersetzen',
     translating: 'Übersetzt...',
-    translatedBy: 'Übersetzt von BreadGPT'
+    translatedBy: 'Übersetzt von BreadGPT',
+    
+    // Friends page
+    friendsAndCommunity: 'Freunde & Community',
+    discoverFriends: 'Entdecke neue Freunde, verwalte deine Kontakte und baue dein Netzwerk auf',
+    search: 'Suchen',
+    friends: 'Freunde',
+    suggestions: 'Empfehlungen',
+    userSearch: 'Nutzer suchen',
+    enterUsername: 'Benutzername eingeben...',
+    searchResults: 'Suchergebnisse:',
+    viewProfile: 'Profil ansehen',
+    follow: 'Folgen',
+    unfollow: 'Entfolgen',
+    yourFriends: 'Deine Freunde',
+    noFriends: 'Noch keine Freunde',
+    noFriendsDescription: 'Nutze die Suche oder Empfehlungen, um neue Freunde zu finden und ihnen zu folgen.',
+    findFriendsNow: 'Jetzt Freunde finden',
+    recommendedUsers: 'Empfohlene Nutzer',
+    noSuggestions: 'Keine neuen Empfehlungen',
+    noSuggestionsDescription: 'Schaue später nochmal vorbei für neue Nutzervorschläge.',
+    
+    // Dashboard
+    welcomeBack: 'Willkommen zurück',
+    personalWritingSpace: 'Dein persönlicher Schreibbereich bei Bread',
+    postsTab: 'Posts',
+    websites: 'Websites',
+    wiki: 'Wiki',
+    missions: 'Missionen',
+    newPostAction: 'Neuer Post',
+    shareThoughts: 'Teile deine Gedanken',
+    newWebsite: 'Neue Website',
+    createWebsite: 'Erstelle eine Website',
+    myProfile: 'Mein Profil',
+    statistics: 'Statistiken',
+    totalViews: 'Aufrufe gesamt',
+    publishedPosts: 'Veröffentlichte Posts',
+    drafts: 'Entwürfe',
+    myWebsites: 'Meine Websites',
+    
+    // Common UI
+    back: 'Zurück',
+    share: 'Teilen',
+    viewsCount: 'Aufrufe',
+    by: 'Von'
   },
   en: {
     // Navigation
@@ -73,7 +117,7 @@ const translations = {
     loadingPosts: 'Loading posts...',
     
     // Post interactions
-    views: 'Views',
+    viewsLabel: 'Views',
     like: 'Like',
     comment: 'Comment',
     writeComment: 'Write a comment...',
@@ -100,7 +144,51 @@ const translations = {
     // Translation
     translate: 'Translate',
     translating: 'Translating...',
-    translatedBy: 'Translated by BreadGPT'
+    translatedBy: 'Translated by BreadGPT',
+    
+    // Friends page
+    friendsAndCommunity: 'Friends & Community',
+    discoverFriends: 'Discover new friends, manage your contacts and build your network',
+    search: 'Search',
+    friends: 'Friends',
+    suggestions: 'Suggestions',
+    userSearch: 'Search Users',
+    enterUsername: 'Enter username...',
+    searchResults: 'Search Results:',
+    viewProfile: 'View Profile',
+    follow: 'Follow',
+    unfollow: 'Unfollow',
+    yourFriends: 'Your Friends',
+    noFriends: 'No friends yet',
+    noFriendsDescription: 'Use search or suggestions to find new friends and follow them.',
+    findFriendsNow: 'Find Friends Now',
+    recommendedUsers: 'Recommended Users',
+    noSuggestions: 'No new recommendations',
+    noSuggestionsDescription: 'Check back later for new user suggestions.',
+    
+    // Dashboard
+    welcomeBack: 'Welcome back',
+    personalWritingSpace: 'Your personal writing space at Bread',
+    postsTab: 'Posts',
+    websites: 'Websites',
+    wiki: 'Wiki',
+    missions: 'Missions',
+    newPostAction: 'New Post',
+    shareThoughts: 'Share your thoughts',
+    newWebsite: 'New Website',
+    createWebsite: 'Create a website',
+    myProfile: 'My Profile',
+    statistics: 'Statistics',
+    totalViews: 'Total views',
+    publishedPosts: 'Published Posts',
+    drafts: 'Drafts',
+    myWebsites: 'My Websites',
+    
+    // Common UI
+    back: 'Back',
+    share: 'Share',
+    viewsCount: 'Views',
+    by: 'By'
   }
 };
 

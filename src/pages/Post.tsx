@@ -34,6 +34,7 @@ const Post = () => {
   const [post, setPost] = useState<Post | null>(null);
   const [isOwner, setIsOwner] = useState(false);
   const [translatedContent, setTranslatedContent] = useState<string | null>(null);
+  const [translatedTitle, setTranslatedTitle] = useState<string>('');
   const [isTranslated, setIsTranslated] = useState(false);
 
   useEffect(() => {
@@ -196,7 +197,7 @@ const Post = () => {
         {/* Post Header */}
         <header className="mb-8 space-y-4">
           <h1 className="text-4xl md:text-5xl font-semibold leading-tight">
-            {post.title}
+            {isTranslated && translatedTitle ? translatedTitle : post.title}
           </h1>
           
           <div className="flex items-center justify-between">
@@ -222,8 +223,10 @@ const Post = () => {
             <div className="flex items-center gap-2">
               <TranslateButton
                 content={post.content}
-                onTranslated={(translated, targetLang) => {
+                title={post.title}
+                onTranslated={(translated, translatedTitleText, targetLang) => {
                   setTranslatedContent(translated);
+                  setTranslatedTitle(translatedTitleText);
                   setIsTranslated(true);
                 }}
               />

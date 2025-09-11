@@ -7,11 +7,12 @@ import { useToast } from '@/hooks/use-toast';
 
 interface TranslateButtonProps {
   content: string;
-  onTranslated: (translatedContent: string, targetLanguage: string) => void;
+  title?: string;
+  onTranslated: (translatedContent: string, translatedTitle: string, targetLanguage: string) => void;
   className?: string;
 }
 
-const TranslateButton: React.FC<TranslateButtonProps> = ({ content, onTranslated, className = '' }) => {
+const TranslateButton: React.FC<TranslateButtonProps> = ({ content, title, onTranslated, className = '' }) => {
   const { language, t } = useLanguage();
   const { askBreadGPT, loading } = useBreadGPT();
   const { toast } = useToast();
@@ -25,15 +26,25 @@ const TranslateButton: React.FC<TranslateButtonProps> = ({ content, onTranslated
     const targetLanguage = language === 'de' ? 'English' : 'Deutsch';
     const targetLangCode = language === 'de' ? 'en' : 'de';
     
-    const translationPrompt = `Please translate the following text to ${targetLanguage}. Only provide the translation, no additional comments or explanations:
+    try {
+      // Translate content
+      const contentPrompt = `Please translate the following text to ${targetLanguage}. Only provide the translation, no additional comments or explanations:
 
 ${content}`;
-
-    try {
-      const translatedText = await askBreadGPT(translationPrompt);
       
-      if (translatedText) {
-        onTranslated(translatedText, targetLangCode);
+      const translatedContent = await askBreadGPT(contentPrompt);
+      
+      // Translate title if provided
+      let translatedTitle = '';
+      if (title && title.trim()) {
+        const titlePrompt = `Please translate the following title to ${targetLanguage}. Only provide the translation, no additional comments or explanations:
+
+${title}`;
+        translatedTitle = await askBreadGPT(titlePrompt);
+      }
+      
+      if (translatedContent) {
+        onTranslated(translatedContent, translatedTitle || title || '', targetLangCode);
         toast({
           title: t('translate'),
           description: `${t('translatedBy')} → ${targetLanguage}`,

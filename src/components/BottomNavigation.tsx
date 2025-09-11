@@ -28,7 +28,6 @@ const BottomNavigation = () => {
               className="flex flex-col items-center gap-1 h-auto py-3 px-3 rounded-2xl min-w-[60px] transition-all duration-300 hover:scale-105"
             >
               <Home className="h-4 w-4" />
-              <span className="text-xs">Feed</span>
             </Button>
           </Link>
         </div>
@@ -46,7 +45,6 @@ const BottomNavigation = () => {
               className="flex flex-col items-center gap-1 h-auto py-3 px-3 rounded-2xl min-w-[60px] transition-all duration-300 hover:scale-105"
             >
             <Home className="h-4 w-4" />
-            <span className="text-xs">Feed</span>
           </Button>
         </Link>
         
@@ -57,7 +55,6 @@ const BottomNavigation = () => {
             className="flex flex-col items-center gap-1 h-auto py-3 px-3 rounded-2xl min-w-[60px] transition-all duration-300 hover:scale-105"
           >
             <PlusCircle className="h-4 w-4" />
-            <span className="text-xs">Schreiben</span>
           </Button>
         </Link>
 
@@ -69,7 +66,6 @@ const BottomNavigation = () => {
             className="flex flex-col items-center gap-1 h-auto py-3 px-3 rounded-2xl min-w-[60px] transition-all duration-300 hover:scale-105"
           >
             <HelpCircle className="h-4 w-4" />
-            <span className="text-xs">BreadGPT</span>
           </Button>
         </Link>
 
@@ -80,7 +76,6 @@ const BottomNavigation = () => {
             className="flex flex-col items-center gap-1 h-auto py-3 px-3 rounded-2xl min-w-[60px] transition-all duration-300 hover:scale-105"
           >
             <Users className="h-4 w-4" />
-            <span className="text-xs">Freunde</span>
           </Button>
         </Link>
         
@@ -91,7 +86,6 @@ const BottomNavigation = () => {
             className="flex flex-col items-center gap-1 h-auto py-3 px-3 rounded-2xl min-w-[60px] transition-all duration-300 hover:scale-105"
           >
             <LayoutDashboard className="h-4 w-4" />
-            <span className="text-xs">Dashboard</span>
           </Button>
         </Link>
       </div>
