@@ -8,8 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Header from '@/components/Header';
-import BottomNavigation from '@/components/BottomNavigation';
-import MarkdownRenderer from '@/components/MarkdownRenderer';
+import RichContentRenderer from '@/components/RichContentRenderer';
 import { useFeed } from '@/hooks/useFeed';
 import { useSocial } from '@/hooks/useSocial';
 import { useAuth } from '@/hooks/useAuth';
@@ -182,29 +181,28 @@ const Feed = () => {
 
   // Show content for both authenticated and anonymous users
   if (!user && !isAnonymousUser) {
-    return (
-      <div className="min-h-screen bg-background pb-20">
-        <Header />
-        <div className="pt-20 flex items-center justify-center min-h-[80vh]">
-          <Card className="p-8 text-center max-w-md">
-            <CardContent>
-              <h2 className="text-2xl font-semibold mb-4">Anmeldung erforderlich</h2>
-              <p className="text-muted-foreground mb-6">
-                Melde dich an oder nutze den anonymen Modus um Posts zu lesen
-              </p>
-              <Link to="/auth">
-                <Button>Jetzt anmelden</Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
-        <BottomNavigation />
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      <div className="pt-20 flex items-center justify-center min-h-[80vh]">
+        <Card className="p-8 text-center max-w-md">
+          <CardContent>
+            <h2 className="text-2xl font-semibold mb-4">{t('loginRequired')}</h2>
+            <p className="text-muted-foreground mb-6">
+              {t('loginRequiredDescription')}
+            </p>
+            <Link to={`/${language}/auth`}>
+              <Button>{t('loginNow')}</Button>
+            </Link>
+          </CardContent>
+        </Card>
       </div>
-    );
+    </div>
+  );
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background">
       <Header />
       
       <main className="pt-20 max-w-4xl mx-auto px-4 py-8">
@@ -237,7 +235,7 @@ const Feed = () => {
             <Button size="sm" variant="outline" className="rounded-full" onClick={handleSearch}>
               <Search className="h-4 w-4" />
             </Button>
-            <Link to="/editor">
+            <Link to={`/${language}/editor`}>
               <Button size="sm" variant="outline" className="rounded-full">
                 <Plus className="h-4 w-4" />
               </Button>
@@ -300,7 +298,7 @@ const Feed = () => {
                         <span className="font-semibold text-muted-foreground">Anonym</span>
                       ) : (
                         <Link 
-                          to={`/profile/${post.profiles?.username}`}
+                          to={`/${language}/profile/${post.profiles?.username}`}
                           className="font-semibold hover:text-primary transition-colors"
                         >
                           {post.profiles?.username}
@@ -320,7 +318,7 @@ const Feed = () => {
 
                   {/* Post Content */}
                   <Link 
-                    to={`/post/${post.slug}`}
+                    to={`/${language}/post/${post.slug}`}
                     onClick={() => handlePostClick(post.id)}
                     className="block mb-4"
                   >
@@ -328,7 +326,7 @@ const Feed = () => {
                       {post.title}
                     </h3>
                     <div className="text-muted-foreground">
-                      <MarkdownRenderer content={post.content.substring(0, 200) + '...'} />
+                      <RichContentRenderer content={post.content.substring(0, 200) + '...'} />
                     </div>
                   </Link>
 
@@ -400,7 +398,7 @@ const Feed = () => {
                                 {format(new Date(comment.created_at), 'PPp', { locale: dateLocale })}
                               </span>
                             </div>
-                            <MarkdownRenderer content={comment.content} className="text-sm" />
+                            <RichContentRenderer content={comment.content} className="text-sm" />
                           </div>
                         </div>
                       ))}
@@ -439,8 +437,6 @@ const Feed = () => {
           </div>
         )}
       </main>
-
-      <BottomNavigation />
     </div>
   );
 };

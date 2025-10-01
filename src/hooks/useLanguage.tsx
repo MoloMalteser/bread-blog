@@ -98,7 +98,12 @@ const translations = {
     back: 'Zurück',
     share: 'Teilen',
     viewsCount: 'Aufrufe',
-    by: 'Von'
+    by: 'Von',
+    
+    // Polls
+    vote: 'Stimme',
+    votes: 'Stimmen',
+    totalVotes: 'Insgesamt'
   },
   en: {
     // Navigation
@@ -188,14 +193,32 @@ const translations = {
     back: 'Back',
     share: 'Share',
     viewsCount: 'Views',
-    by: 'By'
+    by: 'By',
+    
+    // Polls
+    vote: 'vote',
+    votes: 'votes',
+    totalVotes: 'Total'
   }
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
-  const [language, setLanguage] = useState<Language>('de');
+  const [language, setLanguage] = useState<Language>(() => {
+    // Initialize from localStorage or URL
+    const saved = localStorage.getItem('preferred-language');
+    if (saved && (saved === 'de' || saved === 'en')) return saved;
+    
+    // Try to get from URL
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname;
+      if (path.startsWith('/en')) return 'en';
+      if (path.startsWith('/de')) return 'de';
+    }
+    
+    return 'de';
+  });
 
   // Save language preference to localStorage
   const handleSetLanguage = (lang: Language) => {

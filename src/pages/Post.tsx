@@ -9,8 +9,9 @@ import ThemeToggle from '@/components/ThemeToggle';
 import { ArrowLeft, Calendar, Eye, Edit3, Share2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
-import MarkdownRenderer from '@/components/MarkdownRenderer';
+import RichContentRenderer from '@/components/RichContentRenderer';
 import TranslateButton from '@/components/TranslateButton';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface Post {
   id: string;
@@ -31,6 +32,7 @@ const Post = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { language } = useLanguage();
   const [post, setPost] = useState<Post | null>(null);
   const [isOwner, setIsOwner] = useState(false);
   const [translatedContent, setTranslatedContent] = useState<string | null>(null);
@@ -278,10 +280,10 @@ const Post = () => {
                   Original anzeigen
                 </Button>
               </div>
-              <MarkdownRenderer content={translatedContent} postId={post.id} className="leading-relaxed" />
+              <RichContentRenderer content={translatedContent} postId={post.id} className="leading-relaxed" />
             </div>
           ) : (
-            <MarkdownRenderer content={post.content} postId={post.id} className="leading-relaxed" />
+            <RichContentRenderer content={post.content} postId={post.id} className="leading-relaxed" />
           )}
         </div>
 

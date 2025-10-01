@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -11,6 +12,8 @@ import { useLanguage } from '@/hooks/useLanguage';
 
 const LanguageSelector = () => {
   const { language, setLanguage } = useLanguage();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const languages = [
     { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
@@ -18,6 +21,27 @@ const LanguageSelector = () => {
   ];
 
   const currentLanguage = languages.find(lang => lang.code === language);
+
+  const handleLanguageChange = (newLang: 'de' | 'en') => {
+    setLanguage(newLang);
+    
+    // Get current path and replace language prefix
+    const currentPath = location.pathname;
+    let newPath = currentPath;
+    
+    if (currentPath.startsWith('/de/')) {
+      newPath = currentPath.replace('/de/', `/${newLang}/`);
+    } else if (currentPath.startsWith('/en/')) {
+      newPath = currentPath.replace('/en/', `/${newLang}/`);
+    } else if (currentPath === '/de' || currentPath === '/en') {
+      newPath = `/${newLang}`;
+    } else {
+      // If no language prefix, add one
+      newPath = `/${newLang}${currentPath}`;
+    }
+    
+    navigate(newPath);
+  };
 
   return (
     <DropdownMenu>
@@ -32,7 +56,7 @@ const LanguageSelector = () => {
         {languages.map((lang) => (
           <DropdownMenuItem
             key={lang.code}
-            onClick={() => setLanguage(lang.code as 'de' | 'en')}
+            onClick={() => handleLanguageChange(lang.code as 'de' | 'en')}
             className="gap-2"
           >
             <span className="text-lg">{lang.flag}</span>

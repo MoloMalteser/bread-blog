@@ -23,12 +23,10 @@ import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
 import SecretAdminMenu from "./pages/secret-admin-menu"
 import Flappybread from "./pages/secret"
-import BreadGPTPage from "./pages/BreadGPTPage";
-import WikiPage from "./pages/WikiPage";
 import WebBuilder from "./pages/WebBuilder";
 import PublishedWebsite from "./pages/PublishedWebsite";
-import BottomNavigation from "@/components/BottomNavigation";
 import Settings from "./pages/Settings";
+import LanguageRedirect from "./components/LanguageRedirect";
 
 const queryClient = new QueryClient();
 
@@ -45,31 +43,55 @@ const AppContent = () => {
   return (
     <div>
       <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/editor" element={<Editor />} />
-        <Route path="/editor/:postId" element={<Editor />} />
-        <Route path="/profile/:username" element={<Profile />} />
-        <Route path="/post/:slug" element={<Post />} />
-        <Route path="/feed" element={<Feed />} />
-        <Route path="/friends" element={<Friends />} />
-        <Route path="/breadgpt" element={<BreadGPTPage />} />
-        <Route path="/wiki" element={<WikiPage />} />
-        <Route path="/settings" element={<Settings />} />
-          <Route path="/webbuilder" element={<WebBuilder />} />
-          <Route path="/webbuilder/:id" element={<WebBuilder />} />
-          <Route path="/pages/:slug" element={<PublishedWebsite />} />
-        <Route path="/pricing" element={<Pricing />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/privacy" element={<Privacy />} />
-        <Route path="/terms" element={<Terms />} />
-        <Route path="*" element={<NotFound />} />
+        {/* Root redirects based on IP */}
+        <Route path="/" element={<LanguageRedirect />} />
+        
+        {/* German routes */}
+        <Route path="/de" element={<Index />} />
+        <Route path="/de/auth" element={<Auth />} />
+        <Route path="/de/dashboard" element={<Dashboard />} />
+        <Route path="/de/editor" element={<Editor />} />
+        <Route path="/de/editor/:postId" element={<Editor />} />
+        <Route path="/de/profile/:username" element={<Profile />} />
+        <Route path="/de/post/:slug" element={<Post />} />
+        <Route path="/de/feed" element={<Feed />} />
+        <Route path="/de/friends" element={<Friends />} />
+        <Route path="/de/settings" element={<Settings />} />
+        <Route path="/de/webbuilder" element={<WebBuilder />} />
+        <Route path="/de/webbuilder/:id" element={<WebBuilder />} />
+        <Route path="/de/pages/:slug" element={<PublishedWebsite />} />
+        <Route path="/de/pricing" element={<Pricing />} />
+        <Route path="/de/about" element={<About />} />
+        <Route path="/de/contact" element={<Contact />} />
+        <Route path="/de/privacy" element={<Privacy />} />
+        <Route path="/de/terms" element={<Terms />} />
+        
+        {/* English routes */}
+        <Route path="/en" element={<Index />} />
+        <Route path="/en/auth" element={<Auth />} />
+        <Route path="/en/dashboard" element={<Dashboard />} />
+        <Route path="/en/editor" element={<Editor />} />
+        <Route path="/en/editor/:postId" element={<Editor />} />
+        <Route path="/en/profile/:username" element={<Profile />} />
+        <Route path="/en/post/:slug" element={<Post />} />
+        <Route path="/en/feed" element={<Feed />} />
+        <Route path="/en/friends" element={<Friends />} />
+        <Route path="/en/settings" element={<Settings />} />
+        <Route path="/en/webbuilder" element={<WebBuilder />} />
+        <Route path="/en/webbuilder/:id" element={<WebBuilder />} />
+        <Route path="/en/pages/:slug" element={<PublishedWebsite />} />
+        <Route path="/en/pricing" element={<Pricing />} />
+        <Route path="/en/about" element={<About />} />
+        <Route path="/en/contact" element={<Contact />} />
+        <Route path="/en/privacy" element={<Privacy />} />
+        <Route path="/en/terms" element={<Terms />} />
+        
+        {/* Special routes (no language prefix) */}
         <Route path="/adminmenu" element={<SecretAdminMenu/>} />
         <Route path="/game" element={<Flappybread/>} />
+        
+        <Route path="*" element={<NotFound />} />
       </Routes>
-      <BottomNavigation />
     </div>
   );
 };

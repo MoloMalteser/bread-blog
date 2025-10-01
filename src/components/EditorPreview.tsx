@@ -101,7 +101,7 @@ const EditorPreview = () => {
               <div>
                 <h3 className="font-semibold mb-1">Shortcuts</h3>
                 <p className="text-sm text-muted-foreground">
-                  Markdown-Unterstützung und praktische Tastenkombinationen für schnelles Schreiben.
+                  Formatierungen und praktische Tastenkombinationen für schnelles Schreiben.
                 </p>
               </div>
             </div>

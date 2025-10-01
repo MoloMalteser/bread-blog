@@ -14,7 +14,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/hooks/useLanguage';
 import Header from '@/components/Header';
-import BottomNavigation from '@/components/BottomNavigation';
 
 interface UserProfile {
   id: string;
@@ -26,7 +25,7 @@ const Friends = () => {
   const { user } = useAuth();
   const { friends, following, loading, toggleFollow, getFollowStatus } = useSocial();
   const { toast } = useToast();
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<UserProfile[]>([]);
   const [searching, setSearching] = useState(false);
@@ -132,8 +131,8 @@ const Friends = () => {
           <p className="text-muted-foreground mb-4">
             Du musst angemeldet sein, um Freunde zu finden.
           </p>
-          <Link to="/auth">
-            <Button>Anmelden</Button>
+          <Link to={`/${language}/auth`}>
+            <Button>{t('loginNow')}</Button>
           </Link>
         </div>
       </div>
@@ -141,7 +140,7 @@ const Friends = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background">
       <Header />
       
       <main className="pt-20 pb-20 max-w-6xl mx-auto px-4 py-8">
@@ -370,8 +369,6 @@ const Friends = () => {
           </TabsContent>
         </Tabs>
       </main>
-      
-      <BottomNavigation />
     </div>
   );
 };

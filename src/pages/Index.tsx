@@ -11,7 +11,7 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { useIPLanguage } from '@/hooks/useIPLanguage';
 
 const Index = () => {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   useIPLanguage();
 
   return (
@@ -31,12 +31,12 @@ const Index = () => {
               {t('ctaDescription')}
             </p>
             <div className="flex gap-4 justify-center">
-              <Link to="/auth">
+              <Link to={`/${language}/auth`}>
                 <Button size="lg" className="px-8">
                   {t('getStarted')}
                 </Button>
               </Link>
-              <Link to="/feed">
+              <Link to={`/${language}/feed`}>
                 <Button size="lg" variant="outline" className="px-8">
                   {t('viewDemo')}
                 </Button>

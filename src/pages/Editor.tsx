@@ -11,15 +11,17 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Save, Eye, Send, Globe, Theater } from 'lucide-react';
 import { usePosts } from '@/hooks/usePosts';
 import { useAuth } from '@/hooks/useAuth';
-import MarkdownRenderer from '@/components/MarkdownRenderer';
+import RichContentRenderer from '@/components/RichContentRenderer';
 import { usePolls } from '@/hooks/usePolls';
 import EditorToolbar from '@/components/EditorToolbar';
+import { useLanguage } from '@/hooks/useLanguage';
 
 const Editor = () => {
   const { postId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-const { user } = useAuth();
+  const { user } = useAuth();
+  const { language } = useLanguage();
   const { posts, createPost, updatePost } = usePosts();
   const { createPoll } = usePolls();
   
@@ -35,7 +37,7 @@ const { user } = useAuth();
 
   useEffect(() => {
     if (!user && !isAnonymousUser) {
-      navigate('/auth');
+      navigate(`/${language}/auth`);
       return;
     }
 
@@ -48,10 +50,10 @@ const { user } = useAuth();
         setIsPublic(post.is_public);
         setIsAnonymous(post.is_anonymous || false);
       } else {
-        navigate('/dashboard');
+        navigate(`/${language}/dashboard`);
       }
     }
-  }, [postId, posts, user, isAnonymousUser, navigate]);
+  }, [postId, posts, user, isAnonymousUser, navigate, language]);
 
   // Auto-save functionality
   useEffect(() => {
@@ -140,7 +142,7 @@ const { user } = useAuth();
         description: "Diese Funktion wird bald implementiert. Bitte melde dich an um zu posten.",
         variant: "destructive"
       });
-      navigate('/auth');
+      navigate(`/${language}/auth`);
       return;
     }
 
@@ -170,7 +172,7 @@ const { user } = useAuth();
         description: isPublishing ? `Dein Post ist jetzt ${publishType} sichtbar` : "Post wurde als Entwurf gespeichert",
       });
       
-      navigate('/dashboard');
+      navigate(`/${language}/dashboard`);
     } catch (error) {
       toast({
         title: "Fehler beim Veröffentlichen",
@@ -385,7 +387,7 @@ const { user } = useAuth();
             <TabsContent value="preview">
               <div className="min-h-[400px] p-6 border rounded-xl bg-background/50">
                 {content ? (
-                  <MarkdownRenderer content={content} />
+                  <RichContentRenderer content={content} />
                 ) : (
                   <p className="text-muted-foreground">Schreibe etwas im Editor, um die Vorschau zu sehen...</p>
                 )}

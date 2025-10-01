@@ -1,18 +1,24 @@
 
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import BreadLogo from './BreadLogo';
 import ThemeToggle from './ThemeToggle';
 import { useAuth } from '@/hooks/useAuth';
+import { useLanguage } from '@/hooks/useLanguage';
 
 const Header = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, signOut } = useAuth();
+  const { language } = useLanguage();
+  
+  // Get language prefix from current path
+  const langPrefix = location.pathname.startsWith('/en') ? '/en' : '/de';
 
   const handleLogout = async () => {
     await signOut();
-    navigate('/');
+    navigate(`/${language}`);
   };
 
   return (
@@ -20,7 +26,7 @@ const Header = () => {
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
         <div className="flex items-center justify-between h-18">
           {/* Logo */}
-          <Link to={user ? '/feed' : '/'} className="transition-transform duration-300 hover:scale-105">
+          <Link to={user ? `${langPrefix}/feed` : `${langPrefix}`} className="transition-transform duration-300 hover:scale-105">
             <BreadLogo />
           </Link>
           
@@ -31,24 +37,24 @@ const Header = () => {
                 <a href="#features" className="text-sm text-muted-foreground hover:text-primary transition-all duration-300 hover:scale-105 relative after:absolute after:w-0 after:h-0.5 after:bg-primary after:left-0 after:-bottom-1 after:transition-all after:duration-300 hover:after:w-full">
                   Features
                 </a>
-                <Link to="/pricing" className="text-sm text-muted-foreground hover:text-primary transition-all duration-300 hover:scale-105 relative after:absolute after:w-0 after:h-0.5 after:bg-primary after:left-0 after:-bottom-1 after:transition-all after:duration-300 hover:after:w-full">
-                  Preise
+                <Link to={`${langPrefix}/pricing`} className="text-sm text-muted-foreground hover:text-primary transition-all duration-300 hover:scale-105 relative after:absolute after:w-0 after:h-0.5 after:bg-primary after:left-0 after:-bottom-1 after:transition-all after:duration-300 hover:after:w-full">
+                  {language === 'de' ? 'Preise' : 'Pricing'}
                 </Link>
-                <Link to="/about" className="text-sm text-muted-foreground hover:text-primary transition-all duration-300 hover:scale-105 relative after:absolute after:w-0 after:h-0.5 after:bg-primary after:left-0 after:-bottom-1 after:transition-all after:duration-300 hover:after:w-full">
-                  Über uns
+                <Link to={`${langPrefix}/about`} className="text-sm text-muted-foreground hover:text-primary transition-all duration-300 hover:scale-105 relative after:absolute after:w-0 after:h-0.5 after:bg-primary after:left-0 after:-bottom-1 after:transition-all after:duration-300 hover:after:w-full">
+                  {language === 'de' ? 'Über uns' : 'About'}
                 </Link>
               </>
             )}
             {user && (
               <>
-                <Link to="/feed" className="text-sm text-muted-foreground hover:text-primary transition-all duration-300 hover:scale-105 relative after:absolute after:w-0 after:h-0.5 after:bg-primary after:left-0 after:-bottom-1 after:transition-all after:duration-300 hover:after:w-full">
+                <Link to={`${langPrefix}/feed`} className="text-sm text-muted-foreground hover:text-primary transition-all duration-300 hover:scale-105 relative after:absolute after:w-0 after:h-0.5 after:bg-primary after:left-0 after:-bottom-1 after:transition-all after:duration-300 hover:after:w-full">
                   Feed
                 </Link>
-                <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-primary transition-all duration-300 hover:scale-105 relative after:absolute after:w-0 after:h-0.5 after:bg-primary after:left-0 after:-bottom-1 after:transition-all after:duration-300 hover:after:w-full">
+                <Link to={`${langPrefix}/dashboard`} className="text-sm text-muted-foreground hover:text-primary transition-all duration-300 hover:scale-105 relative after:absolute after:w-0 after:h-0.5 after:bg-primary after:left-0 after:-bottom-1 after:transition-all after:duration-300 hover:after:w-full">
                   Dashboard
                 </Link>
-                <Link to="/editor" className="text-sm text-muted-foreground hover:text-primary transition-all duration-300 hover:scale-105 relative after:absolute after:w-0 after:h-0.5 after:bg-primary after:left-0 after:-bottom-1 after:transition-all after:duration-300 hover:after:w-full">
-                  Neuer Post
+                <Link to={`${langPrefix}/editor`} className="text-sm text-muted-foreground hover:text-primary transition-all duration-300 hover:scale-105 relative after:absolute after:w-0 after:h-0.5 after:bg-primary after:left-0 after:-bottom-1 after:transition-all after:duration-300 hover:after:w-full">
+                  {language === 'de' ? 'Neuer Post' : 'New Post'}
                 </Link>
               </>
             )}
@@ -60,22 +66,22 @@ const Header = () => {
             
             {!user ? (
               <>
-                <Link to="/auth">
+                <Link to={`${langPrefix}/auth`}>
                   <Button 
                     variant="ghost" 
                     size="sm"
                     className="text-sm rounded-xl hover:scale-105 transition-all duration-300"
                   >
-                    Anmelden
+                    {language === 'de' ? 'Anmelden' : 'Sign In'}
                   </Button>
                 </Link>
-                <Link to="/auth">
+                <Link to={`${langPrefix}/auth`}>
                   <Button 
                     variant="gradient"
                     size="sm"
                     className="text-sm rounded-xl hover:scale-105 transition-all duration-300"
                   >
-                    Registrieren
+                    {language === 'de' ? 'Registrieren' : 'Register'}
                   </Button>
                 </Link>
               </>
@@ -86,7 +92,7 @@ const Header = () => {
                 onClick={handleLogout}
                 className="text-sm rounded-xl hover:scale-105 transition-all duration-300"
               >
-                Abmelden
+                {language === 'de' ? 'Abmelden' : 'Sign Out'}
               </Button>
             )}
           </div>

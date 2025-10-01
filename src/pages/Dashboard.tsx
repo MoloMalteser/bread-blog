@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Header from '@/components/Header';
-import BottomNavigation from '@/components/BottomNavigation';
 import DailyMissions from '@/components/DailyMissions';
 import { PlusCircle, Edit3, Eye, Calendar, Trash2, Trophy, Target } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
@@ -15,6 +14,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useWebsites } from '@/hooks/useWebsites';
 import { Globe, Plus } from 'lucide-react';
 import LanguageSelector from '@/components/LanguageSelector';
+import { useLanguage } from '@/hooks/useLanguage';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -22,13 +22,14 @@ const Dashboard = () => {
   const { websites, deleteWebsite, publishWebsite } = useWebsites();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { language, t } = useLanguage();
 
   useEffect(() => {
     if (!user) {
-      navigate('/auth');
+      navigate(`/${language}/auth`);
       return;
     }
-  }, [user, navigate]);
+  }, [user, navigate, language]);
 
   const handleDeletePost = async (postId: string) => {
     const success = await deletePost(postId);
@@ -41,7 +42,7 @@ const Dashboard = () => {
   };
 
   const handleEditPost = (postId: string) => {
-    navigate(`/editor/${postId}`);
+    navigate(`/${language}/editor/${postId}`);
   };
 
   const publishedPosts = posts.filter(post => post.is_public);
@@ -363,11 +364,9 @@ const Dashboard = () => {
           </TabsContent>
         </Tabs>
       </main>
-
-      <BottomNavigation />
       
       {/* Language Selector at bottom right */}
-      <div className="fixed bottom-20 right-4 z-50">
+      <div className="fixed bottom-4 right-4 z-50">
         <LanguageSelector />
       </div>
     </div>
