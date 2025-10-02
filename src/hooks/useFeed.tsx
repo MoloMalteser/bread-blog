@@ -38,7 +38,7 @@ export const useFeed = () => {
 
       const followingIds = follows.map(f => f.following_id);
 
-      // Get posts from followed users with limit for performance
+      // Get posts from followed users with increased limit
       const { data: posts, error } = await supabase
         .from('posts')
         .select(`
@@ -51,7 +51,7 @@ export const useFeed = () => {
         .in('author_id', followingIds)
         .eq('is_public', true)
         .order('created_at', { ascending: false })
-        .limit(50);
+        .limit(200);
 
       if (error) {
         console.error('Error fetching feed posts:', error);
@@ -88,7 +88,7 @@ export const useFeed = () => {
         `)
         .eq('is_public', true)
         .order('created_at', { ascending: false })
-        .limit(100);
+        .limit(300);
 
       if (error) {
         console.error('Error fetching all posts:', error);

@@ -140,7 +140,7 @@ const Friends = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20 md:pb-0">
       <Header />
       
       <main className="pt-20 pb-20 max-w-6xl mx-auto px-4 py-8">

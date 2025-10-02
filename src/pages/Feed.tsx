@@ -182,7 +182,7 @@ const Feed = () => {
   // Show content for both authenticated and anonymous users
   if (!user && !isAnonymousUser) {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20 md:pb-0">
       <Header />
       <div className="pt-20 flex items-center justify-center min-h-[80vh]">
         <Card className="p-8 text-center max-w-md">

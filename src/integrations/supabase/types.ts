@@ -688,7 +688,7 @@ export type Database = {
       }
       vote_on_poll: {
         Args: { option_index: number; poll_id: string }
-        Returns: Json
+        Returns: undefined
       }
     }
     Enums: {

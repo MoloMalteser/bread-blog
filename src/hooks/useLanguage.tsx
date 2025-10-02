@@ -17,6 +17,8 @@ const translations = {
     dashboard: 'Dashboard',
     newPost: 'Neuer Post',
     profile: 'Profil',
+    messages: 'Nachrichten',
+    settings: 'Einstellungen',
     
     // Feed
     feedEmpty: 'Dein Feed ist leer',
@@ -44,10 +46,11 @@ const translations = {
     save: 'Speichern',
     delete: 'Löschen',
     edit: 'Bearbeiten',
+    send: 'Senden',
     
     // CTA Section
     ctaTitle: 'Bereit, deine Gedanken zu teilen?',
-    ctaDescription: 'Schließe dich unserer Community an und beginne noch heute mit dem Schreiben. Es ist kostenlos und dauert nur wenige Sekunden.',
+    ctaDescription: 'Schließe dich unserer Community an und beginne noch heute mit dem Schreiben.',
     getStarted: 'Kostenlos starten',
     viewDemo: 'Demo ansehen',
     
@@ -58,41 +61,47 @@ const translations = {
     
     // Friends page
     friendsAndCommunity: 'Freunde & Community',
-    discoverFriends: 'Entdecke neue Freunde, verwalte deine Kontakte und baue dein Netzwerk auf',
+    discoverFriends: 'Entdecke neue Freunde',
     search: 'Suchen',
     friends: 'Freunde',
     suggestions: 'Empfehlungen',
     userSearch: 'Nutzer suchen',
-    enterUsername: 'Benutzername eingeben...',
-    searchResults: 'Suchergebnisse:',
+    enterUsername: 'Benutzername...',
+    searchResults: 'Ergebnisse:',
     viewProfile: 'Profil ansehen',
     follow: 'Folgen',
     unfollow: 'Entfolgen',
     yourFriends: 'Deine Freunde',
     noFriends: 'Noch keine Freunde',
-    noFriendsDescription: 'Nutze die Suche oder Empfehlungen, um neue Freunde zu finden und ihnen zu folgen.',
+    noFriendsDescription: 'Nutze die Suche, um neue Freunde zu finden.',
     findFriendsNow: 'Jetzt Freunde finden',
     recommendedUsers: 'Empfohlene Nutzer',
     noSuggestions: 'Keine neuen Empfehlungen',
-    noSuggestionsDescription: 'Schaue später nochmal vorbei für neue Nutzervorschläge.',
     
     // Dashboard
     welcomeBack: 'Willkommen zurück',
-    personalWritingSpace: 'Dein persönlicher Schreibbereich bei Bread',
+    personalWritingSpace: 'Dein Schreibbereich',
     postsTab: 'Posts',
     websites: 'Websites',
-    wiki: 'Wiki',
     missions: 'Missionen',
     newPostAction: 'Neuer Post',
     shareThoughts: 'Teile deine Gedanken',
     newWebsite: 'Neue Website',
-    createWebsite: 'Erstelle eine Website',
+    createWebsite: 'Website erstellen',
     myProfile: 'Mein Profil',
     statistics: 'Statistiken',
     totalViews: 'Aufrufe gesamt',
-    publishedPosts: 'Veröffentlichte Posts',
+    publishedPosts: 'Posts',
     drafts: 'Entwürfe',
     myWebsites: 'Meine Websites',
+    
+    // Editor
+    title: 'Titel',
+    content: 'Inhalt',
+    publish: 'Veröffentlichen',
+    saveDraft: 'Entwurf speichern',
+    makePublic: 'Öffentlich',
+    makePrivate: 'Privat',
     
     // Common UI
     back: 'Zurück',
@@ -103,7 +112,16 @@ const translations = {
     // Polls
     vote: 'Stimme',
     votes: 'Stimmen',
-    totalVotes: 'Insgesamt'
+    totalVotes: 'Insgesamt',
+    createPoll: 'Umfrage',
+    pollQuestion: 'Frage',
+    addOption: 'Option hinzufügen',
+    
+    // Messages
+    newMessage: 'Neue Nachricht',
+    typeMessage: 'Nachricht eingeben...',
+    noMessages: 'Keine Nachrichten',
+    startConversation: 'Konversation starten'
   },
   en: {
     // Navigation
@@ -112,6 +130,8 @@ const translations = {
     dashboard: 'Dashboard',
     newPost: 'New Post',
     profile: 'Profile',
+    messages: 'Messages',
+    settings: 'Settings',
     
     // Feed
     feedEmpty: 'Your feed is empty',
@@ -139,10 +159,11 @@ const translations = {
     save: 'Save',
     delete: 'Delete',
     edit: 'Edit',
+    send: 'Send',
     
     // CTA Section
     ctaTitle: 'Ready to share your thoughts?',
-    ctaDescription: 'Join our community and start writing today. It\'s free and takes only a few seconds.',
+    ctaDescription: 'Join our community and start writing today.',
     getStarted: 'Get Started Free',
     viewDemo: 'View Demo',
     
@@ -153,7 +174,7 @@ const translations = {
     
     // Friends page
     friendsAndCommunity: 'Friends & Community',
-    discoverFriends: 'Discover new friends, manage your contacts and build your network',
+    discoverFriends: 'Discover new friends',
     search: 'Search',
     friends: 'Friends',
     suggestions: 'Suggestions',
@@ -165,18 +186,16 @@ const translations = {
     unfollow: 'Unfollow',
     yourFriends: 'Your Friends',
     noFriends: 'No friends yet',
-    noFriendsDescription: 'Use search or suggestions to find new friends and follow them.',
+    noFriendsDescription: 'Use search to find new friends.',
     findFriendsNow: 'Find Friends Now',
     recommendedUsers: 'Recommended Users',
     noSuggestions: 'No new recommendations',
-    noSuggestionsDescription: 'Check back later for new user suggestions.',
     
     // Dashboard
     welcomeBack: 'Welcome back',
-    personalWritingSpace: 'Your personal writing space at Bread',
+    personalWritingSpace: 'Your writing space',
     postsTab: 'Posts',
     websites: 'Websites',
-    wiki: 'Wiki',
     missions: 'Missions',
     newPostAction: 'New Post',
     shareThoughts: 'Share your thoughts',
@@ -185,9 +204,17 @@ const translations = {
     myProfile: 'My Profile',
     statistics: 'Statistics',
     totalViews: 'Total views',
-    publishedPosts: 'Published Posts',
+    publishedPosts: 'Posts',
     drafts: 'Drafts',
     myWebsites: 'My Websites',
+    
+    // Editor
+    title: 'Title',
+    content: 'Content',
+    publish: 'Publish',
+    saveDraft: 'Save Draft',
+    makePublic: 'Public',
+    makePrivate: 'Private',
     
     // Common UI
     back: 'Back',
@@ -198,7 +225,16 @@ const translations = {
     // Polls
     vote: 'vote',
     votes: 'votes',
-    totalVotes: 'Total'
+    totalVotes: 'Total',
+    createPoll: 'Poll',
+    pollQuestion: 'Question',
+    addOption: 'Add option',
+    
+    // Messages
+    newMessage: 'New Message',
+    typeMessage: 'Type a message...',
+    noMessages: 'No messages',
+    startConversation: 'Start conversation'
   }
 };
 
