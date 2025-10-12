@@ -7,6 +7,7 @@ import Features from '@/components/Features';
 import Footer from '@/components/Footer';
 import Header from '@/components/Header';
 import LanguageSelector from '@/components/LanguageSelector';
+import BottomNavigation from '@/components/BottomNavigation';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useIPLanguage } from '@/hooks/useIPLanguage';
 
@@ -51,6 +52,8 @@ const Index = () => {
       <div className="fixed bottom-4 right-4 z-50">
         <LanguageSelector />
       </div>
+      
+      <BottomNavigation />
     </div>
   );
 };

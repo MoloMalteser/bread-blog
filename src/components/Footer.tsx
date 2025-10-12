@@ -12,27 +12,27 @@ const Footer = () => {
           <div className="md:col-span-1">
             <BreadLogo className="mb-4" />
             <p className="text-sm text-muted-foreground">
-              Brot für den Kopf – einfaches, schönes Blogging für alle.
+              Bread for the mind – simple, beautiful blogging for everyone.
             </p>
           </div>
           
           {/* Product */}
           <div>
-            <h3 className="font-semibold mb-4">Produkt</h3>
+            <h3 className="font-semibold mb-4">Product</h3>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link to="/pricing" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Preise
+                  Pricing
                 </Link>
               </li>
               <li>
                 <Link to="/about" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Über uns
+                  About
                 </Link>
               </li>
               <li>
                 <Link to="/contact" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Kontakt
+                  Contact
                 </Link>
               </li>
             </ul>
@@ -40,16 +40,16 @@ const Footer = () => {
           
           {/* Legal */}
           <div>
-            <h3 className="font-semibold mb-4">Rechtliches</h3>
+            <h3 className="font-semibold mb-4">Legal</h3>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link to="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Datenschutz
+                  Privacy
                 </Link>
               </li>
               <li>
                 <Link to="/terms" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Nutzungsbedingungen
+                  Terms
                 </Link>
               </li>
             </ul>
@@ -79,7 +79,7 @@ const Footer = () => {
         </div>
         
         <div className="border-t mt-8 pt-8 text-center text-sm text-muted-foreground">
-          <p>&copy; 2025 Bread. Gemacht mit 🍞 und Liebe.</p>
+          <p>&copy; 2025 Bread. Made with 🍞 and love.</p>
         </div>
       </div>
     </footer>

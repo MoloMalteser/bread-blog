@@ -6,33 +6,33 @@ const Features = () => {
   const features = [
     {
       icon: '✍️',
-      title: 'Fokussiertes Schreiben',
-      description: 'Ein Editor wie Bear oder iA Writer - nur das Wesentliche, keine Ablenkungen.'
+      title: 'Focused Writing',
+      description: 'An editor like Bear or iA Writer - only the essentials, no distractions.'
     },
     {
       icon: '🎨',
-      title: 'Apple-inspiriertes Design',
-      description: 'Puristisches Schwarz-Weiß mit sanften Animationen und eleganten Übergängen.'
+      title: 'Apple-Inspired Design',
+      description: 'Purist black and white with smooth animations and elegant transitions.'
     },
     {
       icon: '🌓',
       title: 'Dark & Light Mode',
-      description: 'Automatische Anpassung an deine Systemeinstellungen oder manuell wählbar.'
+      description: 'Automatic adaptation to your system settings or manually selectable.'
     },
     {
       icon: '📱',
-      title: 'Vollständig Responsive',
-      description: 'Perfekt optimiert für Smartphone, Tablet und Desktop - überall elegant.'
+      title: 'Fully Responsive',
+      description: 'Perfectly optimized for smartphone, tablet and desktop - elegant everywhere.'
     },
     {
       icon: '🔗',
-      title: 'Eigene Profile-URL',
-      description: 'Deine persönliche URL wie bread.blog/username - teilbar ohne Anmeldung nötig.'
+      title: 'Custom Profile URL',
+      description: 'Your personal URL like bread.blog/username - shareable without login required.'
     },
     {
       icon: '🆓',
-      title: 'Kostenlos Lesen',
-      description: 'Alle Artikel sind öffentlich lesbar - keine Paywall, keine Popups, nur Storys.'
+      title: 'Free to Read',
+      description: 'All articles are publicly readable - no paywall, no popups, just stories.'
     }
   ];
 
@@ -41,10 +41,10 @@ const Features = () => {
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-semibold mb-4">
-            Blogging für alle, die Stil schätzen
+            Blogging for Those Who Value Style
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Ohne Schnickschnack, ohne Lärm. Bread verbindet Ästhetik mit Funktionalität.
+            No frills, no noise. Bread combines aesthetics with functionality.
           </p>
         </div>
         

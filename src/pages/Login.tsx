@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import BreadLogo from '@/components/BreadLogo';
+import BottomNavigation from '@/components/BottomNavigation';
 import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
@@ -29,14 +30,14 @@ const Login = () => {
           displayName: email.split('@')[0]
         }));
         toast({
-          title: "Erfolgreich angemeldet",
-          description: "Willkommen bei Bread!",
+          title: "Successfully signed in",
+          description: "Welcome to Bread!",
         });
         navigate('/dashboard');
       } else {
         toast({
-          title: "Fehler",
-          description: "Bitte alle Felder ausfüllen",
+          title: "Error",
+          description: "Please fill in all fields",
           variant: "destructive"
         });
       }
@@ -49,35 +50,35 @@ const Login = () => {
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <BreadLogo className="justify-center mb-4" />
-          <h2 className="text-2xl font-semibold">Willkommen zurück</h2>
+          <h2 className="text-2xl font-semibold">Welcome Back</h2>
           <p className="text-muted-foreground mt-2">
-            Melde dich an, um deine Gedanken zu teilen
+            Sign in to share your thoughts
           </p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Anmelden</CardTitle>
+            <CardTitle>Sign In</CardTitle>
             <CardDescription>
-              Gib deine Daten ein, um dich anzumelden
+              Enter your credentials to sign in
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">E-Mail</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="deine@email.de"
+                  placeholder="your@email.com"
                   required
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="password">Passwort</Label>
+                <Label htmlFor="password">Password</Label>
                 <Input
                   id="password"
                   type="password"
@@ -93,19 +94,21 @@ const Login = () => {
                 className="w-full" 
                 disabled={isLoading}
               >
-                {isLoading ? 'Anmelden...' : 'Anmelden'}
+                {isLoading ? 'Signing in...' : 'Sign In'}
               </Button>
             </form>
 
             <div className="mt-6 text-center text-sm">
-              <span className="text-muted-foreground">Noch kein Account? </span>
+              <span className="text-muted-foreground">Don't have an account? </span>
               <Link to="/register" className="text-primary hover:underline">
-                Jetzt registrieren
+                Register now
               </Link>
             </div>
           </CardContent>
         </Card>
       </div>
+      
+      <BottomNavigation />
     </div>
   );
 };

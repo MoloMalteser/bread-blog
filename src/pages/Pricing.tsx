@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import BreadLogo from '@/components/BreadLogo';
 import ThemeToggle from '@/components/ThemeToggle';
+import BottomNavigation from '@/components/BottomNavigation';
 import { Check, ArrowLeft, X } from 'lucide-react';
 
 const Pricing = () => {
@@ -23,7 +24,7 @@ const Pricing = () => {
               <Link to="/">
                 <Button variant="outline" size="sm">
                   <ArrowLeft className="h-4 w-4 mr-1" />
-                  Zurück
+                  Back
                 </Button>
               </Link>
             </div>
@@ -34,13 +35,13 @@ const Pricing = () => {
       {/* Content */}
       <main className="max-w-6xl mx-auto px-4 py-16">
         <div className="text-center mb-16">
-          <Badge variant="secondary" className="mb-4">Preise</Badge>
+          <Badge variant="secondary" className="mb-4">Pricing</Badge>
           <h1 className="text-4xl md:text-5xl font-semibold mb-4">
-            Einfach. Transparent. Für jeden.
+            Simple. Transparent. For Everyone.
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Bread bietet für jeden das richtige Paket - von kostenlosen persönlichen Blogs 
-            bis hin zu professionellen Unternehmenslösungen.
+            Bread offers the right package for everyone - from free personal blogs 
+            to professional enterprise solutions.
           </p>
         </div>
 
@@ -52,20 +53,20 @@ const Pricing = () => {
               <div className="text-4xl mb-4">🍞</div>
               <CardTitle className="text-2xl">Bread Free</CardTitle>
               <CardDescription>
-                Für alle, für immer
+                For everyone, forever
               </CardDescription>
-              <div className="text-4xl font-bold">0€</div>
-              <p className="text-muted-foreground">kostenlos</p>
+              <div className="text-4xl font-bold">$0</div>
+              <p className="text-muted-foreground">free</p>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-primary" />
-                  <span>Unbegrenzte Posts</span>
+                  <span>Unlimited Posts</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-primary" />
-                  <span>Eigene Profil-URL</span>
+                  <span>Custom Profile URL</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-primary" />
@@ -73,25 +74,25 @@ const Pricing = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-primary" />
-                  <span>Likes & Kommentare</span>
+                  <span>Likes & Comments</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-primary" />
-                  <span>Follow-System</span>
+                  <span>Follow System</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-primary" />
-                  <span>Push-Benachrichtigungen</span>
+                  <span>Push Notifications</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-primary" />
-                  <span>Anonyme Posts</span>
+                  <span>Anonymous Posts</span>
                 </div>
               </div>
               
               <Link to="/auth" className="block">
                 <Button className="w-full">
-                  Kostenlos starten
+                  Start Free
                 </Button>
               </Link>
             </CardContent>
@@ -103,16 +104,16 @@ const Pricing = () => {
               <div className="text-4xl mb-4">🎭</div>
               <CardTitle className="text-2xl">Bread Anonymous</CardTitle>
               <CardDescription>
-                Nur lesen, anonym
+                Read only, anonymous
               </CardDescription>
-              <div className="text-4xl font-bold">0€</div>
-              <p className="text-muted-foreground">kostenlos</p>
+              <div className="text-4xl font-bold">$0</div>
+              <p className="text-muted-foreground">free</p>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-primary" />
-                  <span>Alle Posts lesen</span>
+                  <span>Read all posts</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-primary" />
@@ -120,21 +121,21 @@ const Pricing = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <X className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Keine Posts erstellen</span>
+                  <span className="text-muted-foreground">No post creation</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <X className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Keine Interaktionen</span>
+                  <span className="text-muted-foreground">No interactions</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <X className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Kein Profil</span>
+                  <span className="text-muted-foreground">No profile</span>
                 </div>
               </div>
               
               <Link to="/" className="block">
                 <Button variant="outline" className="w-full">
-                  Anonym durchstöbern
+                  Browse Anonymously
                 </Button>
               </Link>
             </CardContent>
@@ -143,22 +144,22 @@ const Pricing = () => {
           {/* Pro Plan */}
           <Card className="border-2 border-orange-500 relative">
             <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-              <Badge className="bg-orange-500 text-white">Bald verfügbar</Badge>
+              <Badge className="bg-orange-500 text-white">Coming Soon</Badge>
             </div>
             <CardHeader className="text-center">
               <div className="text-4xl mb-4">🏢</div>
               <CardTitle className="text-2xl">Bread Pro</CardTitle>
               <CardDescription>
-                Für Unternehmen
+                For Enterprises
               </CardDescription>
-              <div className="text-4xl font-bold">0€</div>
-              <p className="text-muted-foreground">kostenlos (Beta)</p>
+              <div className="text-4xl font-bold">$0</div>
+              <p className="text-muted-foreground">free (Beta)</p>
             </CardHeader>
             <CardContent className="space-y-4 opacity-75">
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-primary" />
-                  <span>Alle Free Features</span>
+                  <span>All Free Features</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-primary" />
@@ -166,7 +167,7 @@ const Pricing = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-primary" />
-                  <span>Team-Management</span>
+                  <span>Team Management</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-primary" />
@@ -183,7 +184,7 @@ const Pricing = () => {
               </div>
               
               <Button className="w-full" disabled>
-                Bald verfügbar
+                Coming Soon
               </Button>
             </CardContent>
           </Card>
@@ -191,50 +192,52 @@ const Pricing = () => {
 
         {/* FAQ */}
         <div className="mt-16 text-center">
-          <h2 className="text-2xl font-semibold mb-8">Häufige Fragen</h2>
+          <h2 className="text-2xl font-semibold mb-8">Frequently Asked Questions</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
             <Card>
               <CardContent className="p-6">
-                <h3 className="font-semibold mb-2">Warum ist Bread kostenlos?</h3>
+                <h3 className="font-semibold mb-2">Why is Bread free?</h3>
                 <p className="text-muted-foreground text-sm">
-                  Wir glauben, dass jeder das Recht hat, seine Gedanken zu teilen. 
-                  Bread wird durch freiwillige Spenden und unser Engagement für die Community finanziert.
+                  We believe everyone has the right to share their thoughts. 
+                  Bread is funded through voluntary donations and our commitment to the community.
                 </p>
               </CardContent>
             </Card>
             
             <Card>
               <CardContent className="p-6">
-                <h3 className="font-semibold mb-2">Gibt es versteckte Kosten?</h3>
+                <h3 className="font-semibold mb-2">Are there hidden costs?</h3>
                 <p className="text-muted-foreground text-sm">
-                  Nein! Bread ist und bleibt komplett kostenlos. Keine Werbung, 
-                  keine Premium-Features, keine Überraschungen.
+                  No! Bread is and will remain completely free. No ads, 
+                  no premium features, no surprises.
                 </p>
               </CardContent>
             </Card>
             
             <Card>
               <CardContent className="p-6">
-                <h3 className="font-semibold mb-2">Wie finanziert sich Bread?</h3>
+                <h3 className="font-semibold mb-2">How is Bread funded?</h3>
                 <p className="text-muted-foreground text-sm">
-                  Durch freiwillige Spenden unserer Community und unsere Leidenschaft 
-                  für schönes, einfaches Blogging.
+                  Through voluntary donations from our community and our passion 
+                  for beautiful, simple blogging.
                 </p>
               </CardContent>
             </Card>
             
             <Card>
               <CardContent className="p-6">
-                <h3 className="font-semibold mb-2">Kann ich Bread unterstützen?</h3>
+                <h3 className="font-semibold mb-2">Can I support Bread?</h3>
                 <p className="text-muted-foreground text-sm">
-                  Ja! Teile Bread mit Freunden, schreibe großartige Inhalte 
-                  und hilf uns dabei, die Plattform zu verbessern.
+                  Yes! Share Bread with friends, write great content 
+                  and help us improve the platform.
                 </p>
               </CardContent>
             </Card>
           </div>
         </div>
       </main>
+      
+      <BottomNavigation />
     </div>
   );
 };
