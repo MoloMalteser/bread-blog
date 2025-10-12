@@ -51,7 +51,7 @@ export const useFeed = () => {
         .in('author_id', followingIds)
         .eq('is_public', true)
         .order('created_at', { ascending: false })
-        .limit(200);
+        .limit(500);
 
       if (error) {
         console.error('Error fetching feed posts:', error);
@@ -88,7 +88,7 @@ export const useFeed = () => {
         `)
         .eq('is_public', true)
         .order('created_at', { ascending: false })
-        .limit(300);
+        .limit(500);
 
       if (error) {
         console.error('Error fetching all posts:', error);

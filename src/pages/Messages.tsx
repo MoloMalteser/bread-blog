@@ -7,10 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Send, ArrowLeft } from "lucide-react";
+import { Send, ArrowLeft, Phone, PhoneOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import BottomNavigation from "@/components/BottomNavigation";
+import VoiceRecorder from "@/components/VoiceRecorder";
 
 interface Message {
   id: string;
@@ -39,6 +40,8 @@ const Messages = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isInCall, setIsInCall] = useState(false);
+  const [callChannel, setCallChannel] = useState<any>(null);
 
   useEffect(() => {
     if (user) {
@@ -171,6 +174,88 @@ const Messages = () => {
     }
   };
 
+  const handleVoiceMessageSent = async (url: string, duration: number) => {
+    if (!user || !selectedUser) return;
+
+    try {
+      const { error } = await supabase
+        .from('private_messages')
+        .insert({
+          sender_id: user.id,
+          receiver_id: selectedUser,
+          content: `🎤 Voice message (${duration}s): ${url}`
+        });
+
+      if (error) throw error;
+
+      fetchMessages(selectedUser);
+      fetchConversations();
+    } catch (error) {
+      console.error('Error sending voice message:', error);
+      toast({
+        title: t('error'),
+        description: "Failed to send voice message",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const startCall = async () => {
+    if (!user || !selectedUser) return;
+
+    try {
+      const channel = supabase.channel(`call:${user.id}-${selectedUser}`, {
+        config: {
+          broadcast: { self: true },
+          presence: { key: user.id }
+        }
+      });
+
+      channel
+        .on('presence', { event: 'sync' }, () => {
+          const state = channel.presenceState();
+          console.log('Call presence:', state);
+        })
+        .on('broadcast', { event: 'call-signal' }, ({ payload }) => {
+          console.log('Call signal received:', payload);
+          // Handle WebRTC signaling here
+        })
+        .subscribe(async (status) => {
+          if (status === 'SUBSCRIBED') {
+            await channel.track({ online_at: new Date().toISOString(), calling: true });
+            setIsInCall(true);
+            setCallChannel(channel);
+          }
+        });
+
+      toast({
+        title: 'Call Started',
+        description: 'Live call feature initiated'
+      });
+    } catch (error) {
+      console.error('Error starting call:', error);
+      toast({
+        title: 'Error',
+        description: 'Could not start call',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const endCall = async () => {
+    if (callChannel) {
+      await callChannel.untrack();
+      await supabase.removeChannel(callChannel);
+      setIsInCall(false);
+      setCallChannel(null);
+      
+      toast({
+        title: 'Call Ended',
+        description: 'Call has been terminated'
+      });
+    }
+  };
+
   if (!user) {
     return (
       <>
@@ -234,23 +319,32 @@ const Messages = () => {
           <Card className={`${selectedUser ? 'block' : 'hidden md:block'} md:col-span-2 flex flex-col`}>
             {selectedUser ? (
               <>
-                <div className="p-4 border-b flex items-center gap-3">
+                <div className="p-4 border-b flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="md:hidden"
+                      onClick={() => setSelectedUser(null)}
+                    >
+                      <ArrowLeft className="h-5 w-5" />
+                    </Button>
+                    <Avatar>
+                      <AvatarFallback>
+                        {conversations.find(c => c.user_id === selectedUser)?.username[0].toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <h3 className="font-semibold">
+                      {conversations.find(c => c.user_id === selectedUser)?.username}
+                    </h3>
+                  </div>
                   <Button
-                    variant="ghost"
+                    variant={isInCall ? "destructive" : "default"}
                     size="icon"
-                    className="md:hidden"
-                    onClick={() => setSelectedUser(null)}
+                    onClick={isInCall ? endCall : startCall}
                   >
-                    <ArrowLeft className="h-5 w-5" />
+                    {isInCall ? <PhoneOff className="h-4 w-4" /> : <Phone className="h-4 w-4" />}
                   </Button>
-                  <Avatar>
-                    <AvatarFallback>
-                      {conversations.find(c => c.user_id === selectedUser)?.username[0].toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <h3 className="font-semibold">
-                    {conversations.find(c => c.user_id === selectedUser)?.username}
-                  </h3>
                 </div>
 
                 <ScrollArea className="flex-1 p-4">
@@ -278,12 +372,14 @@ const Messages = () => {
                 </ScrollArea>
 
                 <div className="p-4 border-t">
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 items-end">
+                    <VoiceRecorder onVoiceMessageSent={handleVoiceMessageSent} />
                     <Input
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
                       placeholder={t('typeMessage')}
+                      className="flex-1"
                     />
                     <Button onClick={sendMessage} size="icon">
                       <Send className="h-4 w-4" />
