@@ -21,17 +21,17 @@ const Footer = () => {
             <h3 className="font-semibold mb-4">Product</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link to="/pricing" className="text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/en/pricing" className="text-muted-foreground hover:text-foreground transition-colors">
                   Pricing
                 </Link>
               </li>
               <li>
-                <Link to="/about" className="text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/en/about" className="text-muted-foreground hover:text-foreground transition-colors">
                   About
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/en/contact" className="text-muted-foreground hover:text-foreground transition-colors">
                   Contact
                 </Link>
               </li>
@@ -43,12 +43,12 @@ const Footer = () => {
             <h3 className="font-semibold mb-4">Legal</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link to="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/en/privacy" className="text-muted-foreground hover:text-foreground transition-colors">
                   Privacy
                 </Link>
               </li>
               <li>
-                <Link to="/terms" className="text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/en/terms" className="text-muted-foreground hover:text-foreground transition-colors">
                   Terms
                 </Link>
               </li>
@@ -60,18 +60,13 @@ const Footer = () => {
             <h3 className="font-semibold mb-4">Community</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Twitter
+                <a href="https://whatsapp.com/channel/0029VbBY6Tk1iUxZm2uYpu43" className="text-muted-foreground hover:text-foreground transition-colors">
+                  WhatsApp
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+                <a href="https://github.com/MoloMalteser/bread-blog/" className="text-muted-foreground hover:text-foreground transition-colors">
                   GitHub
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Discord
                 </a>
               </li>
             </ul>
