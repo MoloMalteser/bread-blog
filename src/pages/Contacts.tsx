@@ -8,14 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Send, ArrowLeft, Phone, PhoneOff, Search, UserPlus } from "lucide-react";
+import { Send, ArrowLeft, Phone, PhoneOff, Search, UserPlus, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import BottomNavigation from "@/components/BottomNavigation";
 import VoiceRecorder from "@/components/VoiceRecorder";
 import AudioPlayer from "@/components/AudioPlayer";
 import { useBreadGPT } from "@/hooks/useBreadGPT";
-import { Sparkles } from "lucide-react";
 
 interface Message {
   id: string;
@@ -32,19 +31,19 @@ interface Contact {
   bio?: string;
   last_message?: string;
   unread_count: number;
+  is_online?: boolean;
 }
 
-const TURN_SERVERS = [
-  {
-    urls: ["turn:breadcall.metered.live:3478?transport=udp", "turn:breadcall.metered.live:3478?transport=tcp"],
-    username: "d23c3e32e0bbccf26678ef0e",
-    credential: "Db/aW+i4Ipnma3Nk"
-  }
-];
+const TURN_CONFIG = {
+  iceServers: [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "turn:breadcall.metered.live:3478", username: "d23c3e32e0bbccf26678ef0e", credential: "Db/aW+i4Ipnma3Nk" },
+  ],
+};
 
 const Contacts = () => {
   const { user } = useAuth();
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const { toast } = useToast();
   const { friends, toggleFollow } = useSocial();
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -53,99 +52,56 @@ const Contacts = () => {
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [isInCall, setIsInCall] = useState(false);
-  const [callChannel, setCallChannel] = useState<any>(null);
   const [peerConnection, setPeerConnection] = useState<RTCPeerConnection | null>(null);
-  const localStreamRef = useRef<MediaStream | null>(null);
+  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  const remoteAudioRef = useRef<HTMLAudioElement>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Contact[]>([]);
   const { askBreadGPT, loading: isGenerating } = useBreadGPT();
-  const [isOnline, setIsOnline] = useState(false);
 
-  // Load contacts
+  // --- Load contacts with last messages ---
   useEffect(() => {
     if (user) loadContacts();
   }, [user, friends]);
 
-  // Presence tracking (Online green dot)
+  // --- Load messages and subscribe to realtime updates ---
   useEffect(() => {
-    if (!user) return;
-
-    const presenceChannel = supabase.channel(`presence:${user.id}`, {
-      config: { presence: { key: user.id } }
-    });
-
-    presenceChannel
-      .on("presence", { event: "sync" }, () => {
-        const state = presenceChannel.presenceState();
-        setIsOnline(Boolean(state[user.id]));
-      })
-      .subscribe();
-
-    return () => supabase.removeChannel(presenceChannel);
-  }, [user]);
-
-  // Realtime messages subscription
-  useEffect(() => {
-    if (!selectedContact || !user) return;
-
+    if (!user || !selectedContact) return;
     loadMessages(selectedContact);
 
-    const messageChannel = supabase
+    const msgChannel = supabase
       .channel("messages")
       .on(
         "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "private_messages",
-          filter: `receiver_id=eq.${user.id}`
-        },
+        { event: "INSERT", schema: "public", table: "private_messages" },
         (payload) => {
-          if (payload.new.sender_id === selectedContact) {
-            setMessages((prev) => [...prev, payload.new as Message]);
-            notify("New Message", payload.new.content);
+          const newMsg = payload.new as Message;
+          if (
+            (newMsg.sender_id === selectedContact && newMsg.receiver_id === user.id) ||
+            (newMsg.sender_id === user.id && newMsg.receiver_id === selectedContact)
+          ) {
+            setMessages((prev) => [...prev, newMsg]);
+            if (newMsg.sender_id === selectedContact) sendPushNotification(newMsg);
           }
         }
       )
       .subscribe();
 
-    return () => supabase.removeChannel(messageChannel);
-  }, [selectedContact, user]);
-
-  // Realtime incoming call notifications
-  useEffect(() => {
-    if (!user) return;
-
-    const callNotifChannel = supabase
-      .channel("incoming_calls")
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "calls",
-          filter: `receiver_id=eq.${user.id}`
-        },
-        (payload) => {
-          notify("Incoming Call", `${payload.new.sender_name} is calling`);
-        }
-      )
+    const presenceChannel = supabase
+      .channel("presence")
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "profiles" }, (payload) => {
+        const updated = payload.new as Contact;
+        setContacts((prev) =>
+          prev.map((c) => (c.id === updated.id ? { ...c, is_online: updated.is_online } : c))
+        );
+      })
       .subscribe();
 
-    return () => supabase.removeChannel(callNotifChannel);
-  }, [user]);
-
-  // Notifications helper
-  const notify = (title: string, body: string) => {
-    if (!("Notification" in window)) return;
-    if (Notification.permission === "granted") {
-      new Notification(title, { body });
-    } else if (Notification.permission !== "denied") {
-      Notification.requestPermission().then((permission) => {
-        if (permission === "granted") new Notification(title, { body });
-      });
-    }
-  };
+    return () => {
+      supabase.removeChannel(msgChannel);
+      supabase.removeChannel(presenceChannel);
+    };
+  }, [selectedContact, user]);
 
   const loadContacts = async () => {
     if (!user) return;
@@ -170,17 +126,19 @@ const Contacts = () => {
             .eq("sender_id", friend.id)
             .eq("is_read", false);
 
+          const { data: profile } = await supabase.from("profiles").select("is_online").eq("id", friend.id).single();
+
           return {
             ...friend,
             last_message: data?.content || "",
-            unread_count: count || 0
+            unread_count: count || 0,
+            is_online: profile?.is_online || false,
           };
         })
       );
-
       setContacts(contactsWithMessages);
-    } catch (error) {
-      console.error("Error loading contacts:", error);
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -188,7 +146,6 @@ const Contacts = () => {
 
   const loadMessages = async (contactId: string) => {
     if (!user) return;
-
     try {
       const { data, error } = await supabase
         .from("private_messages")
@@ -197,38 +154,29 @@ const Contacts = () => {
           `and(sender_id.eq.${user.id},receiver_id.eq.${contactId}),and(sender_id.eq.${contactId},receiver_id.eq.${user.id})`
         )
         .order("created_at", { ascending: true });
-
       if (error) throw error;
       setMessages(data || []);
 
-      // Mark as read
       await supabase
         .from("private_messages")
         .update({ is_read: true })
         .eq("receiver_id", user.id)
         .eq("sender_id", contactId);
-    } catch (error) {
-      console.error("Error loading messages:", error);
+    } catch (err) {
+      console.error(err);
     }
   };
 
   const sendMessage = async () => {
     if (!user || !selectedContact || !newMessage.trim()) return;
-
     try {
-      const { error } = await supabase.from("private_messages").insert({
-        sender_id: user.id,
-        receiver_id: selectedContact,
-        content: newMessage.trim()
-      });
-
-      if (error) throw error;
+      await supabase
+        .from("private_messages")
+        .insert([{ sender_id: user.id, receiver_id: selectedContact, content: newMessage.trim() }]);
       setNewMessage("");
-      loadMessages(selectedContact);
-      loadContacts();
-    } catch (error) {
-      console.error("Error sending message:", error);
-      toast({ title: t("error"), description: "Failed to send message", variant: "destructive" });
+    } catch (err) {
+      console.error(err);
+      toast({ title: "Error", description: "Failed to send message", variant: "destructive" });
     }
   };
 
@@ -238,126 +186,77 @@ const Contacts = () => {
       const prompt = "Generate a friendly message to send to a friend in chat";
       const generatedText = await askBreadGPT(prompt);
       if (generatedText) setNewMessage(generatedText);
-    } catch (error) {
-      console.error("Error generating message:", error);
-      toast({ title: "Error", description: "Could not generate message", variant: "destructive" });
+    } catch (err) {
+      console.error(err);
+      toast({ title: "Error", description: "Failed to generate message", variant: "destructive" });
     }
   };
 
   const handleVoiceMessageSent = async (url: string) => {
     if (!user || !selectedContact) return;
-
     try {
-      const { error } = await supabase.from("private_messages").insert({
-        sender_id: user.id,
-        receiver_id: selectedContact,
-        content: url
-      });
-      if (error) throw error;
-      loadMessages(selectedContact);
-      loadContacts();
-    } catch (error) {
-      console.error("Error sending voice message:", error);
-      toast({ title: t("error"), description: "Failed to send voice message", variant: "destructive" });
+      await supabase.from("private_messages").insert([{ sender_id: user.id, receiver_id: selectedContact, content: url }]);
+    } catch (err) {
+      console.error(err);
     }
   };
 
-  // --- WebRTC Audio Call Logic ---
+  // --- TURN WebRTC Call ---
   const startCall = async () => {
     if (!user || !selectedContact) return;
-
-    const pc = new RTCPeerConnection({ iceServers: TURN_SERVERS });
+    const pc = new RTCPeerConnection(TURN_CONFIG);
+    const remoteStream = new MediaStream();
     setPeerConnection(pc);
+    setRemoteStream(remoteStream);
 
-    try {
-      // Get local audio
-      const localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      localStreamRef.current = localStream;
-      localStream.getTracks().forEach((track) => pc.addTrack(track, localStream));
+    pc.ontrack = (event) => {
+      event.streams[0].getTracks().forEach((track) => remoteStream.addTrack(track));
+    };
 
-      // Remote audio
-      pc.ontrack = (event) => {
-        const audioEl = document.getElementById("remote-audio") as HTMLAudioElement;
-        if (audioEl) audioEl.srcObject = event.streams[0];
-      };
+    const localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    localStream.getTracks().forEach((track) => pc.addTrack(track, localStream));
 
-      // ICE Candidate handling
-      pc.onicecandidate = (event) => {
-        if (event.candidate && callChannel) {
-          callChannel.send({ type: "ice-candidate", candidate: event.candidate });
-        }
-      };
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
 
-      // Setup Supabase broadcast channel for call signaling
-      const channel = supabase.channel(`call:${user.id}-${selectedContact}`, {
-        config: { broadcast: { self: true }, presence: { key: user.id } }
-      });
+    await supabase.from("calls").insert([{ sender_id: user.id, receiver_id: selectedContact, sdp: offer.sdp }]);
+    setIsInCall(true);
 
-      channel.on("broadcast", { event: "call-signal" }, async ({ payload }) => {
-        if (!pc) return;
-        if (payload.sdp) {
-          await pc.setRemoteDescription(payload.sdp);
-          if (payload.sdp.type === "offer") {
-            const answer = await pc.createAnswer();
-            await pc.setLocalDescription(answer);
-            channel.send({ type: "call-signal", sdp: answer });
-          }
-        } else if (payload.candidate) {
-          try {
-            await pc.addIceCandidate(payload.candidate);
-          } catch {}
-        }
-      });
-
-      channel.subscribe();
-      setCallChannel(channel);
-      setIsInCall(true);
-
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-      channel.send({ type: "call-signal", sdp: offer });
-
-      notify("Call Started", `You are calling ${contacts.find(c => c.id === selectedContact)?.username}`);
-    } catch (error) {
-      console.error("Error starting call:", error);
-      toast({ title: "Error", description: "Could not start call", variant: "destructive" });
-    }
+    remoteAudioRef.current!.srcObject = remoteStream;
   };
 
   const endCall = async () => {
-    if (peerConnection) {
-      peerConnection.getTracks().forEach((t) => t.stop());
-      peerConnection.close();
-      setPeerConnection(null);
-    }
-
-    if (callChannel) {
-      await callChannel.unsubscribe();
-      setCallChannel(null);
-    }
-
+    if (peerConnection) peerConnection.close();
+    setPeerConnection(null);
+    setRemoteStream(null);
     setIsInCall(false);
-    notify("Call Ended", "Call has been terminated");
   };
 
-  // --- Search and Add Contact ---
+  // --- Push Notifications ---
+  const sendPushNotification = async (message: Message) => {
+    const { data } = await supabase.from("profiles").select("push_token").eq("id", message.receiver_id).single();
+    if (data?.push_token) {
+      await fetch("https://exp.host/--/api/v2/push/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer your-expo-access-token` },
+        body: JSON.stringify({ to: data.push_token, sound: "default", body: message.content }),
+      });
+    }
+  };
+
+  // --- Search & Add ---
   const handleSearch = async () => {
     if (!searchQuery.trim() || !user) return;
-
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("profiles")
         .select("*")
         .ilike("username", `%${searchQuery}%`)
         .neq("id", user.id)
         .limit(10);
-
-      if (error) throw error;
-      setSearchResults(
-        data?.map((profile) => ({ ...profile, last_message: "", unread_count: 0 })) || []
-      );
-    } catch (error) {
-      console.error("Error searching:", error);
+      setSearchResults(data?.map((p) => ({ ...p, last_message: "", unread_count: 0 })) || []);
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -368,20 +267,18 @@ const Contacts = () => {
     setSearchQuery("");
   };
 
-  if (!user) {
-    return (
-      <>
-        <Header />
-        <div className="min-h-screen flex items-center justify-center pb-20">
-          <Card className="p-8 text-center">
-            <h2 className="text-2xl font-bold mb-4">{t("loginRequired")}</h2>
-            <p className="text-muted-foreground">{t("loginRequiredDescription")}</p>
-          </Card>
-        </div>
-        <BottomNavigation />
-      </>
-    );
-  }
+  if (!user) return (
+    <>
+      <Header />
+      <div className="min-h-screen flex items-center justify-center pb-20">
+        <Card className="p-8 text-center">
+          <h2 className="text-2xl font-bold mb-4">{t("loginRequired")}</h2>
+          <p className="text-muted-foreground">{t("loginRequiredDescription")}</p>
+        </Card>
+      </div>
+      <BottomNavigation />
+    </>
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -403,21 +300,13 @@ const Contacts = () => {
                     <Search className="h-4 w-4" />
                   </Button>
                 </div>
-
                 {searchResults.length > 0 && (
                   <div className="mt-2 space-y-2">
                     {searchResults.map((result) => (
-                      <div
-                        key={result.id}
-                        className="flex items-center justify-between p-2 bg-muted rounded-lg relative"
-                      >
+                      <div key={result.id} className="flex items-center justify-between p-2 bg-muted rounded-lg">
                         <div className="flex items-center gap-2">
-                          <Avatar className="h-8 w-8 relative">
+                          <Avatar className="h-8 w-8">
                             <AvatarFallback>{result.username[0].toUpperCase()}</AvatarFallback>
-                            {/* Online green dot */}
-                            {result.isOnline && (
-                              <div className="w-3 h-3 bg-green-500 rounded-full absolute top-0 right-0 border border-white" />
-                            )}
                           </Avatar>
                           <span className="text-sm font-medium">{result.username}</span>
                         </div>
@@ -429,6 +318,7 @@ const Contacts = () => {
                   </div>
                 )}
               </div>
+
               <ScrollArea className="flex-1">
                 {loading ? (
                   <div className="p-8 text-center text-muted-foreground">Loading...</div>
@@ -443,15 +333,19 @@ const Contacts = () => {
                       <button
                         key={contact.id}
                         onClick={() => setSelectedContact(contact.id)}
-                        className="w-full p-3 rounded-lg text-left hover:bg-muted transition-colors relative"
+                        className="w-full p-3 rounded-lg text-left hover:bg-muted transition-colors"
                       >
                         <div className="flex items-center gap-3">
-                          <Avatar className="relative">
-                            <AvatarFallback>{contact.username[0].toUpperCase()}</AvatarFallback>
-                            {isOnline && (
-                              <div className="w-3 h-3 bg-green-500 rounded-full absolute top-0 right-0 border border-white" />
-                            )}
-                          </Avatar>
+                          <div className="relative">
+                            <Avatar>
+                              <AvatarFallback>{contact.username[0].toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <span
+                              className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border border-background ${
+                                contact.is_online ? "bg-green-500" : "bg-gray-500"
+                              }`}
+                            />
+                          </div>
                           <div className="flex-1 min-w-0">
                             <div className="font-medium truncate">{contact.username}</div>
                             {contact.last_message && (
@@ -472,26 +366,26 @@ const Contacts = () => {
             </div>
           ) : (
             <div className="h-full flex flex-col">
-              <div className="p-4 border-b bg-background/95 backdrop-blur flex items-center justify-between relative">
+              <div className="p-4 border-b bg-background/95 backdrop-blur flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Button variant="ghost" size="icon" onClick={() => setSelectedContact(null)}>
                     <ArrowLeft className="h-5 w-5" />
                   </Button>
-                  <Avatar className="relative">
-                    <AvatarFallback>
-                      {contacts.find((c) => c.id === selectedContact)?.username[0].toUpperCase()}
-                    </AvatarFallback>
-                    {isOnline && (
-                      <div className="w-3 h-3 bg-green-500 rounded-full absolute top-0 right-0 border border-white" />
-                    )}
-                  </Avatar>
+                  <div className="relative">
+                    <Avatar>
+                      <AvatarFallback>
+                        {contacts.find((c) => c.id === selectedContact)?.username[0].toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span
+                      className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border border-background ${
+                        contacts.find((c) => c.id === selectedContact)?.is_online ? "bg-green-500" : "bg-gray-500"
+                      }`}
+                    />
+                  </div>
                   <h3 className="font-semibold">{contacts.find((c) => c.id === selectedContact)?.username}</h3>
                 </div>
-                <Button
-                  variant={isInCall ? "destructive" : "default"}
-                  size="icon"
-                  onClick={isInCall ? endCall : startCall}
-                >
+                <Button variant={isInCall ? "destructive" : "default"} size="icon" onClick={isInCall ? endCall : startCall}>
                   {isInCall ? <PhoneOff className="h-4 w-4" /> : <Phone className="h-4 w-4" />}
                 </Button>
               </div>
@@ -499,10 +393,7 @@ const Contacts = () => {
               <ScrollArea className="flex-1 p-4">
                 <div className="space-y-4">
                   {messages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`flex ${msg.sender_id === user.id ? "justify-end" : "justify-start"}`}
-                    >
+                    <div key={msg.id} className={`flex ${msg.sender_id === user.id ? "justify-end" : "justify-start"}`}>
                       <div
                         className={`max-w-[70%] rounded-lg p-3 ${
                           msg.sender_id === user.id ? "bg-primary text-primary-foreground" : "bg-muted"
@@ -513,9 +404,7 @@ const Contacts = () => {
                         ) : (
                           <p className="break-words">{msg.content}</p>
                         )}
-                        <p className="text-xs mt-1 opacity-70">
-                          {new Date(msg.created_at).toLocaleTimeString()}
-                        </p>
+                        <p className="text-xs mt-1 opacity-70">{new Date(msg.created_at).toLocaleTimeString()}</p>
                       </div>
                     </div>
                   ))}
@@ -545,12 +434,11 @@ const Contacts = () => {
                 </Button>
               </div>
 
-              <audio id="remote-audio" autoPlay />
+              <audio ref={remoteAudioRef} autoPlay />
             </div>
           )}
         </div>
       </div>
-
       <BottomNavigation />
     </div>
   );
