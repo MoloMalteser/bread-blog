@@ -45,85 +45,218 @@ const Contacts = () => {
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [isInCall, setIsInCall] = useState(false);
-  const [callStartRef, setCallStartRef] = useState<Date | null>(null);
-  const peerRef = useRef<RTCPeerConnection | null>(null);
-  const localStreamRef = useRef<MediaStream | null>(null);
+  const [callStart, setCallStart] = useState<Date | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  const localStreamRef = useRef<MediaStream | null>(null);
+  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
+  const [callChannel, setCallChannel] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Contact[]>([]);
   const { askBreadGPT, loading: isGenerating } = useBreadGPT();
 
-  // --- Load contacts ---
-  useEffect(() => { if(user) loadContacts(); }, [user, friends]);
-
-  const loadContacts = async () => {
-    if(!user) return;
-    setLoading(true);
-    try {
-      const contactsWithMessages = await Promise.all(friends.map(async (friend) => {
-        const { data } = await supabase.from('private_messages').select('*').or(`and(sender_id.eq.${user.id},receiver_id.eq.${friend.id}),and(sender_id.eq.${friend.id},receiver_id.eq.${user.id})`).order('created_at',{ascending:false}).limit(1).single();
-        const { count } = await supabase.from('private_messages').select('*',{count:'exact', head:true}).eq('receiver_id', user.id).eq('sender_id', friend.id).eq('is_read', false);
-        return {...friend, last_message: data?.content||'', unread_count: count||0};
-      }));
-      setContacts(contactsWithMessages);
-    } catch(e){ console.error(e); } finally{ setLoading(false); }
-  };
-
-  // --- Load messages + Realtime subscription ---
+  // Load contacts when user or friends list changes
   useEffect(() => {
-    if(selectedContact && user){
-      const load = async () => {
-        const { data } = await supabase.from('private_messages').select('*').or(`and(sender_id.eq.${user.id},receiver_id.eq.${selectedContact}),and(sender_id.eq.${selectedContact},receiver_id.eq.${user.id})`).order('created_at',{ascending:true});
-        setMessages(data||[]);
-        await supabase.from('private_messages').update({is_read:true}).eq('receiver_id', user.id).eq('sender_id', selectedContact);
-      };
-      load();
+    if (user) loadContacts();
+  }, [user, friends]);
 
-      const channel = supabase.channel(`messages-${user.id}`)
-        .on('postgres_changes',{event:'INSERT', schema:'public', table:'private_messages'}, ({new: newMsg}:any) => {
-          if((newMsg.sender_id === selectedContact || newMsg.receiver_id === selectedContact)){
-            setMessages(prev => [...prev,newMsg]);
+  // Load messages and subscribe to new messages
+  useEffect(() => {
+    if (!selectedContact || !user) return;
+
+    loadMessages(selectedContact);
+
+    const channel = supabase
+      .channel("messages")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "private_messages",
+          filter: `receiver_id=eq.${user.id}`,
+        },
+        (payload) => {
+          if (payload.new.sender_id === selectedContact) {
+            setMessages((prev) => [...prev, payload.new as Message]);
           }
-        }).subscribe();
-      return ()=>supabase.removeChannel(channel);
-    }
+        }
+      )
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
   }, [selectedContact, user]);
 
+  const loadContacts = async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const contactsWithMessages = await Promise.all(
+        friends.map(async (friend) => {
+          const { data } = await supabase
+            .from("private_messages")
+            .select("*")
+            .or(
+              `and(sender_id.eq.${user.id},receiver_id.eq.${friend.id}),and(sender_id.eq.${friend.id},receiver_id.eq.${user.id})`
+            )
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .single();
+
+          const { count } = await supabase
+            .from("private_messages")
+            .select("*", { count: "exact", head: true })
+            .eq("receiver_id", user.id)
+            .eq("sender_id", friend.id)
+            .eq("is_read", false);
+
+          return { ...friend, last_message: data?.content || "", unread_count: count || 0 };
+        })
+      );
+      setContacts(contactsWithMessages);
+    } catch (error) {
+      console.error("Error loading contacts:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadMessages = async (contactId: string) => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from("private_messages")
+        .select("*")
+        .or(
+          `and(sender_id.eq.${user.id},receiver_id.eq.${contactId}),and(sender_id.eq.${contactId},receiver_id.eq.${user.id})`
+        )
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      setMessages(data || []);
+
+      // Mark messages as read
+      await supabase
+        .from("private_messages")
+        .update({ is_read: true })
+        .eq("receiver_id", user.id)
+        .eq("sender_id", contactId);
+    } catch (error) {
+      console.error("Error loading messages:", error);
+    }
+  };
+
   const sendMessage = async () => {
-    if(!user || !selectedContact || !newMessage.trim()) return;
-    await supabase.from('private_messages').insert({sender_id:user.id, receiver_id:selectedContact, content:newMessage.trim()});
-    setNewMessage("");
+    if (!user || !selectedContact || !newMessage.trim()) return;
+    try {
+      const { error } = await supabase.from("private_messages").insert({
+        sender_id: user.id,
+        receiver_id: selectedContact,
+        content: newMessage.trim(),
+      });
+      if (error) throw error;
+      setNewMessage("");
+      loadMessages(selectedContact);
+      loadContacts();
+    } catch (error) {
+      console.error("Error sending message:", error);
+      toast({ title: t("error"), description: "Failed to send message", variant: "destructive" });
+    }
   };
 
   const handleBreadGPTGenerate = async () => {
-    if(!selectedContact) return;
-    const generatedText = await askBreadGPT("Generate a friendly message to send to a friend in chat");
-    if(generatedText) setNewMessage(generatedText);
-  };
-
-  // --- Audio Call Logic (WebRTC) ---
-  const startCall = async () => {
-    if(!user || !selectedContact) return;
-    const pc = new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}, {urls:'turn:YOUR_TURN_SERVER_URL', username:'user', credential:'pass'}]});
-    peerRef.current = pc;
-    localStreamRef.current = await navigator.mediaDevices.getUserMedia({audio:true});
-    localStreamRef.current.getTracks().forEach(track => pc.addTrack(track, localStreamRef.current!));
-    pc.ontrack = e => setRemoteStream(e.streams[0]);
-    pc.onicecandidate = async e => { if(e.candidate) await supabase.from('calls').insert({caller_id:user.id, callee_id:selectedContact, signal:JSON.stringify(e.candidate)}); };
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-    await supabase.from('calls').insert({caller_id:user.id, callee_id:selectedContact, signal:JSON.stringify({sdp:offer})});
-    setIsInCall(true); setCallStartRef(new Date());
-  };
-
-  const endCall = async () => {
-    if(peerRef.current) peerRef.current.close();
-    setIsInCall(false); setRemoteStream(null);
-    if(callStartRef){
-      const duration = Math.floor((new Date().getTime()-callStartRef.getTime())/1000);
-      await supabase.from('private_messages').insert({sender_id:user.id, receiver_id:selectedContact, content:`[call] audio-call duration:${duration}s`});
-      setCallStartRef(null);
+    if (!selectedContact) return;
+    try {
+      const prompt = "Generate a friendly message to send to a friend in chat";
+      const generatedText = await askBreadGPT(prompt);
+      if (generatedText) setNewMessage(generatedText);
+    } catch (error) {
+      console.error("Error generating message:", error);
+      toast({ title: "Error", description: "Could not generate message", variant: "destructive" });
     }
+  };
+
+  const handleVoiceMessageSent = async (url: string, duration: number) => {
+    if (!user || !selectedContact) return;
+    try {
+      const { error } = await supabase.from("private_messages").insert({
+        sender_id: user.id,
+        receiver_id: selectedContact,
+        content: url,
+      });
+      if (error) throw error;
+      loadMessages(selectedContact);
+      loadContacts();
+    } catch (error) {
+      console.error("Error sending voice message:", error);
+      toast({ title: t("error"), description: "Failed to send voice message", variant: "destructive" });
+    }
+  };
+
+  // --------- AUDIO CALL LOGIC ---------
+  const startCall = async () => {
+    if (!user || !selectedContact) return;
+
+    try {
+      const pc = new RTCPeerConnection();
+      peerConnectionRef.current = pc;
+
+      const localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      localStreamRef.current = localStream;
+      localStream.getTracks().forEach((track) => pc.addTrack(track, localStream));
+
+      pc.ontrack = (event) => setRemoteStream(event.streams[0]);
+      pc.onconnectionstatechange = () => {
+        if (pc.connectionState === "disconnected" || pc.connectionState === "closed") endCall();
+      };
+
+      const channel = supabase.channel(`call:${user.id}-${selectedContact}`);
+      setCallChannel(channel);
+      await channel.subscribe();
+
+      setIsInCall(true);
+      setCallStart(new Date());
+
+      toast({ title: "Call Started", description: "Audio call initiated" });
+    } catch (error) {
+      console.error("Error starting call:", error);
+      toast({ title: "Error", description: "Could not start call", variant: "destructive" });
+    }
+  };
+
+  const endCall = () => {
+    peerConnectionRef.current?.close();
+    localStreamRef.current?.getTracks().forEach((t) => t.stop());
+    setRemoteStream(null);
+    setIsInCall(false);
+    setCallStart(null);
+    if (callChannel) supabase.removeChannel(callChannel);
+    setCallChannel(null);
+    toast({ title: "Call Ended", description: "Call has been terminated" });
+  };
+  // -----------------------------------
+
+  const handleSearch = async () => {
+    if (!searchQuery.trim() || !user) return;
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .ilike("username", `%${searchQuery}%`)
+        .neq("id", user.id)
+        .limit(10);
+      if (error) throw error;
+      setSearchResults(
+        data?.map((profile) => ({ ...profile, last_message: "", unread_count: 0 })) || []
+      );
+    } catch (error) {
+      console.error("Error searching:", error);
+    }
+  };
+
+  const handleAddContact = async (userId: string) => {
+    await toggleFollow(userId);
+    loadContacts();
+    setSearchResults([]);
+    setSearchQuery("");
   };
 
   if (!user) {
@@ -132,8 +265,8 @@ const Contacts = () => {
         <Header />
         <div className="min-h-screen flex items-center justify-center pb-20">
           <Card className="p-8 text-center">
-            <h2 className="text-2xl font-bold mb-4">{t('loginRequired')}</h2>
-            <p className="text-muted-foreground">{t('loginRequiredDescription')}</p>
+            <h2 className="text-2xl font-bold mb-4">{t("loginRequired")}</h2>
+            <p className="text-muted-foreground">{t("loginRequiredDescription")}</p>
           </Card>
         </div>
         <BottomNavigation />
@@ -145,8 +278,168 @@ const Contacts = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <div className="pt-16 pb-20 h-screen flex flex-col">
-        {/* Original UI unchanged: Contact list, chat view, search, input, voice recorder, audio player, buttons */}
+        {!selectedContact ? (
+          <div className="h-full flex flex-col">
+            {/* Search bar + results */}
+            <div className="p-4 border-b bg-background/95 backdrop-blur">
+              <div className="flex gap-2">
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+                  placeholder="Search users..."
+                  className="flex-1"
+                />
+                <Button onClick={handleSearch} size="icon">
+                  <Search className="h-4 w-4" />
+                </Button>
+              </div>
+              {searchResults.length > 0 && (
+                <div className="mt-2 space-y-2">
+                  {searchResults.map((result) => (
+                    <div key={result.id} className="flex items-center justify-between p-2 bg-muted rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-8 w-8">
+                          <AvatarFallback>{result.username[0].toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm font-medium">{result.username}</span>
+                      </div>
+                      <Button size="sm" variant="outline" onClick={() => handleAddContact(result.id)}>
+                        <UserPlus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Contacts list */}
+            <ScrollArea className="flex-1">
+              {loading ? (
+                <div className="p-8 text-center text-muted-foreground">Loading...</div>
+              ) : contacts.length === 0 ? (
+                <div className="p-8 text-center">
+                  <p className="text-muted-foreground mb-4">No contacts yet</p>
+                  <p className="text-sm text-muted-foreground">Add friends to start messaging</p>
+                </div>
+              ) : (
+                <div className="p-2 space-y-1">
+                  {contacts.map((contact) => (
+                    <button
+                      key={contact.id}
+                      onClick={() => setSelectedContact(contact.id)}
+                      className="w-full p-3 rounded-lg text-left hover:bg-muted transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Avatar>
+                          <AvatarFallback>{contact.username[0].toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium truncate">{contact.username}</div>
+                          {contact.last_message && (
+                            <div className="text-sm text-muted-foreground truncate">{contact.last_message}</div>
+                          )}
+                        </div>
+                        {contact.unread_count > 0 && (
+                          <div className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs">
+                            {contact.unread_count}
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
+          </div>
+        ) : (
+          <div className="h-full flex flex-col">
+            {/* Chat header */}
+            <div className="p-4 border-b bg-background/95 backdrop-blur flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Button variant="ghost" size="icon" onClick={() => setSelectedContact(null)}>
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <Avatar>
+                  <AvatarFallback>
+                    {contacts.find((c) => c.id === selectedContact)?.username[0].toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <h3 className="font-semibold">
+                  {contacts.find((c) => c.id === selectedContact)?.username}
+                </h3>
+              </div>
+              <Button
+                variant={isInCall ? "destructive" : "default"}
+                size="icon"
+                onClick={isInCall ? endCall : startCall}
+              >
+                {isInCall ? <PhoneOff className="h-4 w-4" /> : <Phone className="h-4 w-4" />}
+              </Button>
+            </div>
+
+            {/* Call audio UI */}
+            {isInCall && remoteStream && (
+              <div className="p-4 border-b bg-background/90">
+                <audio autoPlay ref={(el) => el && (el.srcObject = remoteStream)} />
+                <p>Call duration: {callStart ? Math.floor((Date.now() - callStart.getTime()) / 1000) : 0}s</p>
+              </div>
+            )}
+
+            {/* Messages */}
+            <ScrollArea className="flex-1 p-4">
+              <div className="space-y-4">
+                {messages.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={`flex ${msg.sender_id === user.id ? "justify-end" : "justify-start"}`}
+                  >
+                    <div
+                      className={`max-w-[70%] rounded-lg p-3 ${
+                        msg.sender_id === user.id ? "bg-primary text-primary-foreground" : "bg-muted"
+                      }`}
+                    >
+                      {msg.content.startsWith("https://") && msg.content.includes("supabase.co/storage") ? (
+                        <AudioPlayer url={msg.content} />
+                      ) : (
+                        <p className="break-words">{msg.content}</p>
+                      )}
+                      <p className="text-xs mt-1 opacity-70">{new Date(msg.created_at).toLocaleTimeString()}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+
+            {/* Message input */}
+            <div className="p-4 border-t bg-background/95 backdrop-blur">
+              <div className="flex gap-2 items-end">
+                <VoiceRecorder onVoiceMessageSent={handleVoiceMessageSent} />
+                <Input
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && sendMessage()}
+                  placeholder="Type a message..."
+                  className="flex-1"
+                />
+                <Button
+                  onClick={handleBreadGPTGenerate}
+                  size="icon"
+                  variant="outline"
+                  disabled={isGenerating}
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0"
+                >
+                  <Sparkles className="h-4 w-4" />
+                </Button>
+                <Button onClick={sendMessage} size="icon">
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
+
       <BottomNavigation />
     </div>
   );
