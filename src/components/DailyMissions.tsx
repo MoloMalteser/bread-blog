@@ -30,7 +30,7 @@ const DailyMissions = () => {
     return (
       <Card>
         <CardContent className="p-6">
-          <p className="text-muted-foreground">Lade Missionen...</p>
+          <p className="text-muted-foreground">Loading Missions...</p>
         </CardContent>
       </Card>
     );
@@ -47,7 +47,7 @@ const DailyMissions = () => {
           <CardContent className="p-4 text-center">
             <Trophy className="h-8 w-8 mx-auto mb-2 text-yellow-500" />
             <div className="text-2xl font-bold">{completedCount}/{totalMissions}</div>
-            <p className="text-sm text-muted-foreground">Missionen heute</p>
+            <p className="text-sm text-muted-foreground">Missions Today</p>
           </CardContent>
         </Card>
         
@@ -55,7 +55,7 @@ const DailyMissions = () => {
           <CardContent className="p-4 text-center">
             <Star className="h-8 w-8 mx-auto mb-2 text-blue-500" />
             <div className="text-2xl font-bold">{totalPoints}</div>
-            <p className="text-sm text-muted-foreground">Gesamtpunkte</p>
+            <p className="text-sm text-muted-foreground">Total points</p>
           </CardContent>
         </Card>
         
@@ -65,7 +65,7 @@ const DailyMissions = () => {
             <div className="text-2xl font-bold">
               {totalMissions > 0 ? Math.round((completedCount / totalMissions) * 100) : 0}%
             </div>
-            <p className="text-sm text-muted-foreground">Tagesfortschritt</p>
+            <p className="text-sm text-muted-foreground">Daily Progress</p>
           </CardContent>
         </Card>
       </div>
@@ -75,7 +75,7 @@ const DailyMissions = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Clock className="h-5 w-5" />
-            Tägliche Missionen
+            Daily Missions
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -127,7 +127,7 @@ const DailyMissions = () => {
                 {isCompleted && missionProgress?.completed_at && (
                   <div className="mt-3 flex items-center gap-2 text-sm text-green-600">
                     <CheckCircle className="h-4 w-4" />
-                    <span>Abgeschlossen um {new Date(missionProgress.completed_at).toLocaleTimeString('de-DE')}</span>
+                    <span>Finished at {new Date(missionProgress.completed_at).toLocaleTimeString('en-US')}</span>
                   </div>
                 )}
               </div>
@@ -135,9 +135,9 @@ const DailyMissions = () => {
           }) : (
             <div className="text-center py-8">
               <Clock className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
-              <h3 className="font-medium mb-1">Keine Missionen verfügbar</h3>
+              <h3 className="font-medium mb-1">No Missions available</h3>
               <p className="text-sm text-muted-foreground">
-                Neue Missionen werden täglich hinzugefügt.
+                New Missions are added soon.
               </p>
             </div>
           )}
@@ -150,11 +150,11 @@ const DailyMissions = () => {
           <CardContent className="p-6 text-center">
             <Trophy className="h-12 w-12 mx-auto mb-3 text-yellow-500" />
             <h3 className="text-lg font-semibold text-yellow-800 mb-2">
-              Alle Missionen abgeschlossen! 🎉
+              All Missions completed! 🎉
             </h3>
             <p className="text-yellow-700">
-              Fantastisch! Du hast heute alle täglichen Missionen erfolgreich abgeschlossen.
-              Komm morgen wieder für neue Herausforderungen!
+              Fantastic! You successfully completed all the daily missions today.
+Come back soon for new challenges!
             </p>
           </CardContent>
         </Card>
