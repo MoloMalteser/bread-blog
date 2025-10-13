@@ -116,7 +116,7 @@ const Dashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer rounded-xl border-2 border-transparent hover:border-primary/20" onClick={() => navigate('/webbuilder')}>
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer rounded-xl border-2 border-transparent hover:border-primary/20" onClick={() => navigate('/en/webbuilder')}>
                 <CardContent className="p-4 md:p-6 text-center">
                   <div className="text-xl md:text-2xl mb-2 md:mb-3">🏗️</div>
                   <h3 className="font-semibold text-sm md:text-base mb-1">Neue Website</h3>
