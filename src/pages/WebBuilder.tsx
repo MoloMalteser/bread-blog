@@ -29,7 +29,7 @@ const WebBuilder = () => {
 
   useEffect(() => {
     if (!user) {
-      navigate('/auth');
+      navigate('/de/auth');
       return;
     }
     
