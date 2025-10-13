@@ -66,7 +66,7 @@ const Auth = () => {
     const { error } = await signIn(email, password);
     
     if (!error) {
-      navigate('/dashboard');
+      navigate(`/${language}/feed`);
     }
     
     setLoading(false);
@@ -79,7 +79,7 @@ const Auth = () => {
     const { error } = await signUp(email, password, username);
     
     if (!error) {
-      navigate('/dashboard');
+      navigate(`/${language}/feed`);
     }
     
     setLoading(false);
@@ -90,7 +90,7 @@ const Auth = () => {
     // Store anonymous session
     localStorage.setItem('anonymous-session', 'true');
     setTimeout(() => {
-      navigate('/feed');
+      navigate(`/${language}/feed`);
       setLoading(false);
     }, 1000);
   };

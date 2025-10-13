@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import Header from '@/components/Header';
 import RichContentRenderer from '@/components/RichContentRenderer';
 import { PollDisplay } from '@/components/PollDisplay';
+import TranslateButton from '@/components/TranslateButton';
 import { useFeed } from '@/hooks/useFeed';
 import { useSocial } from '@/hooks/useSocial';
 import { useAuth } from '@/hooks/useAuth';
@@ -29,6 +30,7 @@ const Feed = () => {
   const [reposts, setReposts] = useState<Record<string, { count: number; isReposted: boolean }>>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
+  const [translatedPosts, setTranslatedPosts] = useState<Record<string, { title: string; content: string }>>({});
   
   const { feedPosts, allPosts, loading, fetchFeedPosts, fetchAllPosts } = useFeed();
   const { toggleLike, getLikeInfo, addComment, getComments, incrementViewCount } = useSocial();
@@ -156,9 +158,16 @@ const Feed = () => {
     }));
 
     toast({
-      title: newRepostState ? "Post geteilt" : "Geteilter Post entfernt",
-      description: newRepostState ? "Der Post wurde in deinem Feed geteilt" : "Der Post wurde aus deinem Feed entfernt",
+      title: newRepostState ? "Post geteilt" : "Repost entfernt",
+      description: newRepostState ? "Der Post wurde geteilt" : "Der Repost wurde entfernt"
     });
+  };
+
+  const handleTranslate = (postId: string, content: string, title: string, targetLang: string) => {
+    setTranslatedPosts(prev => ({
+      ...prev,
+      [postId]: { content, title }
+    }));
   };
 
   const handleAddFriend = () => {
@@ -325,12 +334,25 @@ const Feed = () => {
                     className="block mb-4"
                   >
                     <h3 className="text-xl font-semibold mb-2 hover:text-primary transition-colors">
-                      {post.title}
+                      {translatedPosts[post.id]?.title || post.title}
                     </h3>
                     <div className="text-muted-foreground">
-                      <RichContentRenderer content={post.content.substring(0, 200) + '...'} />
+                      <RichContentRenderer 
+                        content={(translatedPosts[post.id]?.content || post.content).substring(0, 200) + '...'} 
+                      />
                     </div>
                   </Link>
+
+                  {/* Translate Button for /en feed */}
+                  {language === 'en' && !translatedPosts[post.id] && (
+                    <div className="mb-4">
+                      <TranslateButton
+                        content={post.content}
+                        title={post.title}
+                        onTranslated={(content, title) => handleTranslate(post.id, content, title, 'en')}
+                      />
+                    </div>
+                  )}
 
                   {/* Poll Display */}
                   <PollDisplay postId={post.id} />

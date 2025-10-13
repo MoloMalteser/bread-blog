@@ -27,7 +27,7 @@ export const useNotifications = () => {
     requestPermission();
 
     // Listen for new posts from followed users
-    const channel = supabase
+    const postsChannel = supabase
       .channel('new-posts')
       .on(
         'postgres_changes',
@@ -64,8 +64,45 @@ export const useNotifications = () => {
       )
       .subscribe();
 
+    // Listen for new direct messages
+    const messagesChannel = supabase
+      .channel('new-messages')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'private_messages',
+          filter: `receiver_id=eq.${user.id}`
+        },
+        async (payload) => {
+          // Get sender info
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('username')
+            .eq('id', payload.new.sender_id)
+            .single();
+
+          if (Notification.permission === 'granted') {
+            const notification = new Notification(`New message from ${profile?.username}`, {
+              body: payload.new.content.substring(0, 100),
+              icon: '/favicon.ico',
+              tag: 'new-message',
+              requireInteraction: true
+            });
+
+            notification.onclick = () => {
+              window.focus();
+              window.location.href = `/contacts?chat=${payload.new.sender_id}`;
+            };
+          }
+        }
+      )
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(postsChannel);
+      supabase.removeChannel(messagesChannel);
     };
   }, [user, toast]);
 

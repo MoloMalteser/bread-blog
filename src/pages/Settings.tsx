@@ -14,11 +14,41 @@ import { useToast } from '@/hooks/use-toast';
 
 const Settings = () => {
   const { user, signOut } = useAuth();
-  const { language, setLanguage, t } = useLanguage();
+  const { language, setLanguage } = useLanguage();
   const { requestNotificationPermission } = useNotifications();
   const { toast } = useToast();
   const [notifications, setNotifications] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+
+  const text = {
+    de: {
+      title: 'Einstellungen',
+      account: 'Account',
+      email: 'E-Mail',
+      username: 'Benutzername',
+      notifications: 'Benachrichtigungen',
+      pushNotifications: 'Push-Benachrichtigungen',
+      pushNotificationsDesc: 'Erhalte Benachrichtigungen für neue Posts von Freunden',
+      notificationsDisabled: 'Benachrichtigungen deaktiviert',
+      notificationsDisabledDesc: 'Du erhältst keine Benachrichtigungen mehr. Du kannst sie in den Browser-Einstellungen wieder aktivieren.',
+      language: 'Sprache',
+      logout: 'Abmelden'
+    },
+    en: {
+      title: 'Settings',
+      account: 'Account',
+      email: 'Email',
+      username: 'Username',
+      notifications: 'Notifications',
+      pushNotifications: 'Push Notifications',
+      pushNotificationsDesc: 'Receive notifications for new posts from friends',
+      notificationsDisabled: 'Notifications disabled',
+      notificationsDisabledDesc: 'You will no longer receive notifications. You can enable them again in your browser settings.',
+      language: 'Language',
+      logout: 'Sign Out'
+    }
+  };
+
+  const t = text[language as keyof typeof text];
 
   useEffect(() => {
     // Check current notification permission
@@ -34,8 +64,8 @@ const Settings = () => {
     } else {
       setNotifications(false);
       toast({
-        title: "Benachrichtigungen deaktiviert",
-        description: "Du erhältst keine Benachrichtigungen mehr. Du kannst sie in den Browser-Einstellungen wieder aktivieren.",
+        title: t.notificationsDisabled,
+        description: t.notificationsDisabledDesc,
       });
     }
   };
@@ -49,7 +79,7 @@ const Settings = () => {
       <Header />
       
       <main className="pt-20 max-w-2xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-semibold mb-8">Einstellungen</h1>
+        <h1 className="text-3xl font-semibold mb-8">{t.title}</h1>
 
         <div className="space-y-6">
           {/* Account Settings */}
@@ -57,16 +87,16 @@ const Settings = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="h-5 w-5" />
-                Account
+                {t.account}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label>E-Mail</Label>
+                <Label>{t.email}</Label>
                 <p className="text-muted-foreground">{user?.email}</p>
               </div>
               <div>
-                <Label>Benutzername</Label>
+                <Label>{t.username}</Label>
                 <p className="text-muted-foreground">
                   {user?.user_metadata?.username || user?.email?.split('@')[0]}
                 </p>
@@ -79,15 +109,15 @@ const Settings = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Bell className="h-5 w-5" />
-                Benachrichtigungen
+                {t.notifications}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <Label>Push-Benachrichtigungen</Label>
+                  <Label>{t.pushNotifications}</Label>
                   <p className="text-sm text-muted-foreground">
-                    Erhalte Benachrichtigungen für neue Posts von Freunden
+                    {t.pushNotificationsDesc}
                   </p>
                 </div>
                 <Switch
@@ -103,7 +133,7 @@ const Settings = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Globe className="h-5 w-5" />
-                Sprache
+                {t.language}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -132,7 +162,7 @@ const Settings = () => {
                 onClick={handleLogout}
                 className="w-full"
               >
-                Abmelden
+                {t.logout}
               </Button>
             </CardContent>
           </Card>

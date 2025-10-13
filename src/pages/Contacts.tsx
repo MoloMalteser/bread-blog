@@ -13,6 +13,9 @@ import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import BottomNavigation from "@/components/BottomNavigation";
 import VoiceRecorder from "@/components/VoiceRecorder";
+import AudioPlayer from "@/components/AudioPlayer";
+import { useBreadGPT } from "@/hooks/useBreadGPT";
+import { Sparkles } from "lucide-react";
 
 interface Message {
   id: string;
@@ -45,6 +48,7 @@ const Contacts = () => {
   const [callChannel, setCallChannel] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Contact[]>([]);
+  const { askBreadGPT, loading: isGenerating } = useBreadGPT();
 
   useEffect(() => {
     if (user) {
@@ -171,6 +175,26 @@ const Contacts = () => {
     }
   };
 
+  const handleBreadGPTGenerate = async () => {
+    if (!selectedContact) return;
+    
+    try {
+      const prompt = "Generate a friendly message to send to a friend in chat";
+      const generatedText = await askBreadGPT(prompt);
+      
+      if (generatedText) {
+        setNewMessage(generatedText);
+      }
+    } catch (error) {
+      console.error('Error generating message:', error);
+      toast({
+        title: 'Error',
+        description: 'Could not generate message',
+        variant: 'destructive'
+      });
+    }
+  };
+
   const handleVoiceMessageSent = async (url: string, duration: number) => {
     if (!user || !selectedContact) return;
 
@@ -180,7 +204,7 @@ const Contacts = () => {
         .insert({
           sender_id: user.id,
           receiver_id: selectedContact,
-          content: `🎤 Voice message (${duration}s): ${url}`
+          content: url
         });
 
       if (error) throw error;
@@ -429,7 +453,11 @@ const Contacts = () => {
                             : 'bg-muted'
                         }`}
                       >
-                        <p className="break-words">{msg.content}</p>
+                        {msg.content.startsWith('https://') && msg.content.includes('supabase.co/storage') ? (
+                          <AudioPlayer url={msg.content} />
+                        ) : (
+                          <p className="break-words">{msg.content}</p>
+                        )}
                         <p className="text-xs mt-1 opacity-70">
                           {new Date(msg.created_at).toLocaleTimeString()}
                         </p>
@@ -450,6 +478,15 @@ const Contacts = () => {
                     placeholder="Type a message..."
                     className="flex-1"
                   />
+                  <Button 
+                    onClick={handleBreadGPTGenerate} 
+                    size="icon"
+                    variant="outline"
+                    disabled={isGenerating}
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                  </Button>
                   <Button onClick={sendMessage} size="icon">
                     <Send className="h-4 w-4" />
                   </Button>
