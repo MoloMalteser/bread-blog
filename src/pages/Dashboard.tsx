@@ -36,8 +36,8 @@ const Dashboard = () => {
     const success = await deletePost(postId);
     if (success) {
       toast({
-        title: "Post gelöscht",
-        description: "Der Post wurde erfolgreich gelöscht",
+        title: "Post deleted",
+        description: "The Post was deleted succesfully",
       });
     }
   };
@@ -60,10 +60,10 @@ const Dashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-semibold mb-2">
-                Willkommen zurück, {user.user_metadata?.username || user.email?.split('@')[0]}!
+                Welcome back, {user.user_metadata?.username || user.email?.split('@')[0]}!
               </h1>
               <p className="text-muted-foreground">
-                Dein persönlicher Schreibbereich bei Bread
+                Your personal Writing-Space at Bread
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -108,26 +108,26 @@ const Dashboard = () => {
           <TabsContent value="posts" className="space-y-8">
             {/* Quick Actions */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer rounded-xl border-2 border-transparent hover:border-primary/20" onClick={() => navigate('/editor')}>
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer rounded-xl border-2 border-transparent hover:border-primary/20" onClick={() => navigate('/en/editor')}>
                 <CardContent className="p-4 md:p-6 text-center">
                   <PlusCircle className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2 md:mb-3 text-primary" />
-                  <h3 className="font-semibold text-sm md:text-base mb-1">Neuer Post</h3>
-                  <p className="text-xs md:text-sm text-muted-foreground">Teile deine Gedanken</p>
+                  <h3 className="font-semibold text-sm md:text-base mb-1">New Post</h3>
+                  <p className="text-xs md:text-sm text-muted-foreground">Share your thougts</p>
                 </CardContent>
               </Card>
 
               <Card className="hover:shadow-lg transition-shadow cursor-pointer rounded-xl border-2 border-transparent hover:border-primary/20" onClick={() => navigate('/en/webbuilder')}>
                 <CardContent className="p-4 md:p-6 text-center">
                   <div className="text-xl md:text-2xl mb-2 md:mb-3">🏗️</div>
-                  <h3 className="font-semibold text-sm md:text-base mb-1">Neue Website</h3>
-                  <p className="text-xs md:text-sm text-muted-foreground">Erstelle eine Website</p>
+                  <h3 className="font-semibold text-sm md:text-base mb-1">New Blog-Website</h3>
+                  <p className="text-xs md:text-sm text-muted-foreground">Create a new Blog-Website</p>
                 </CardContent>
               </Card>
 
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer rounded-xl border-2 border-transparent hover:border-primary/20" onClick={() => navigate(`/profile/${user.user_metadata?.username || user.email?.split('@')[0]}`)}>
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer rounded-xl border-2 border-transparent hover:border-primary/20" onClick={() => navigate(`/en/profile/${user.user_metadata?.username || user.email?.split('@')[0]}`)}>
                 <CardContent className="p-4 md:p-6 text-center">
                   <Eye className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2 md:mb-3 text-primary" />
-                  <h3 className="font-semibold text-sm md:text-base mb-1">Mein Profil</h3>
+                  <h3 className="font-semibold text-sm md:text-base mb-1">My Profile</h3>
                   <p className="text-xs md:text-sm text-muted-foreground break-all">
                     bread.blog/{user.user_metadata?.username || user.email?.split('@')[0]}
                   </p>
@@ -137,9 +137,9 @@ const Dashboard = () => {
               <Card className="rounded-xl border-2 border-transparent">
                 <CardContent className="p-4 md:p-6 text-center">
                   <Calendar className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2 md:mb-3 text-primary" />
-                  <h3 className="font-semibold text-sm md:text-base mb-1">Statistiken</h3>
+                  <h3 className="font-semibold text-sm md:text-base mb-1">Statistics</h3>
                   <p className="text-xs md:text-sm text-muted-foreground">
-                    {publishedPosts.reduce((sum, post) => sum + (post.view_count || 0), 0)} Aufrufe gesamt
+                    {publishedPosts.reduce((sum, post) => sum + (post.view_count || 0), 0)} Total Views
                   </p>
                 </CardContent>
               </Card>
@@ -150,16 +150,16 @@ const Dashboard = () => {
               {/* Published Posts */}
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold">Veröffentlichte Posts ({publishedPosts.length})</h2>
+                  <h2 className="text-xl font-semibold">Published Posts ({publishedPosts.length})</h2>
                 </div>
                 
                 <div className="space-y-4">
                   {publishedPosts.length === 0 ? (
                     <Card className="rounded-xl">
                       <CardContent className="p-6 text-center text-muted-foreground">
-                        <p>Noch keine veröffentlichten Posts.</p>
-                        <Button className="mt-4 rounded-lg" onClick={() => navigate('/editor')}>
-                          Ersten Post schreiben
+                        <p>No published Posts.</p>
+                        <Button className="mt-4 rounded-lg" onClick={() => navigate('/en/editor')}>
+                          Write your First Post
                         </Button>
                       </CardContent>
                     </Card>
@@ -198,14 +198,14 @@ const Dashboard = () => {
               {/* Draft Posts */}
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold">Entwürfe ({draftPosts.length})</h2>
+                  <h2 className="text-xl font-semibold">Drafts ({draftPosts.length})</h2>
                 </div>
                 
                 <div className="space-y-4">
                   {draftPosts.length === 0 ? (
                     <Card className="rounded-xl">
                       <CardContent className="p-6 text-center text-muted-foreground">
-                        <p>Keine Entwürfe vorhanden.</p>
+                        <p>No existing Drafts.</p>
                       </CardContent>
                     </Card>
                   ) : (
@@ -219,7 +219,7 @@ const Dashboard = () => {
                                 {post.content.substring(0, 120)}...
                               </p>
                               <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                                <Badge variant="outline" className="text-xs rounded-lg">Entwurf</Badge>
+                                <Badge variant="outline" className="text-xs rounded-lg">Draft</Badge>
                                 <span>•</span>
                                 <span>{new Date(post.created_at).toLocaleDateString('de-DE')}</span>
                               </div>
@@ -246,10 +246,10 @@ const Dashboard = () => {
             {/* Websites Management */}
             <div>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-semibold">Meine Websites ({websites.length})</h2>
-                <Button onClick={() => navigate('/webbuilder')}>
+                <h2 className="text-2xl font-semibold">My Blog-Websites ({websites.length})</h2>
+                <Button onClick={() => navigate('/en/webbuilder')}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Neue Website
+                  New Blog
                 </Button>
               </div>
               
@@ -258,10 +258,10 @@ const Dashboard = () => {
                   <Card className="col-span-full">
                     <CardContent className="p-8 text-center text-muted-foreground">
                       <Globe className="h-12 w-12 mx-auto mb-4" />
-                      <p className="text-lg mb-2">Noch keine Websites erstellt</p>
-                      <p className="mb-6">Erstelle deine erste Website mit dem WebBuilder</p>
-                      <Button onClick={() => navigate('/webbuilder')}>
-                        Website erstellen
+                      <p className="text-lg mb-2">You have 0 Blog-Websites created</p>
+                      <p className="mb-6">Create your first Blog with the WebBuilder</p>
+                      <Button onClick={() => navigate('/en/webbuilder')}>
+                        Create Blog
                       </Button>
                     </CardContent>
                   </Card>
@@ -277,10 +277,10 @@ const Dashboard = () => {
                             </p>
                             <div className="flex items-center gap-2 mb-4">
                               <Badge variant={website.is_published ? "default" : "secondary"}>
-                                {website.is_published ? "Veröffentlicht" : "Entwurf"}
+                                {website.is_published ? "Public" : "Draft"}
                               </Badge>
                               <span className="text-xs text-muted-foreground">
-                                {new Date(website.updated_at).toLocaleDateString('de-DE')}
+                                {new Date(website.updated_at).toLocaleDateString('en-US')}
                               </span>
                             </div>
                           </div>
@@ -290,7 +290,7 @@ const Dashboard = () => {
                           <Button 
                             variant="outline" 
                             size="sm" 
-                            onClick={() => navigate(`/webbuilder/${website.id}`)}
+                            onClick={() => navigate(`/en/webbuilder/${website.id}`)}
                           >
                             <Edit3 className="h-4 w-4 mr-1" />
                             Bearbeiten
@@ -300,7 +300,7 @@ const Dashboard = () => {
                             <Button 
                               variant="outline" 
                               size="sm" 
-                              onClick={() => window.open(`/pages/${website.slug}`, '_blank')}
+                              onClick={() => window.open(`/en/pages/${website.slug}`, '_blank')}
                             >
                               <Eye className="h-4 w-4 mr-1" />
                               Ansehen
@@ -336,8 +336,8 @@ const Dashboard = () => {
             {/* Wiki Section */}
             <div>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-semibold">Wiki & Wissen</h2>
-                <Button onClick={() => navigate('/wiki')} className="rounded-lg">
+                <h2 className="text-2xl font-semibold">Wiki & Knowledge</h2>
+                <Button onClick={() => navigate('/en/wiki')} className="rounded-lg">
                   <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                   </svg>
@@ -350,10 +350,10 @@ const Dashboard = () => {
                   <svg className="h-12 w-12 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                   </svg>
-                  <p className="text-lg mb-2">Gemeinsames Wissen schaffen</p>
-                  <p className="mb-6">Trage zum Community-Wiki bei und teile dein Wissen mit anderen</p>
+                  <p className="text-lg mb-2">Creating knowledge together</p>
+                  <p className="mb-6">Contribute to the community wiki and share your knowledge with others</p>
                   <Button onClick={() => navigate('/wiki')} className="rounded-lg">
-                    Wiki besuchen
+                    Visit Wiki
                   </Button>
                 </CardContent>
               </Card>
