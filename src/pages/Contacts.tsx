@@ -53,24 +53,8 @@ const Contacts = () => {
   const [searchResults, setSearchResults] = useState<Contact[]>([]);
   const { askBreadGPT, loading: isGenerating } = useBreadGPT();
 
-  // Load contacts on user or friends change
+  // --- Load contacts ---
   useEffect(() => { if(user) loadContacts(); }, [user, friends]);
-
-  // Load messages and subscribe to realtime
-  useEffect(() => {
-    if (selectedContact && user) {
-      loadMessages(selectedContact);
-      const channel = supabase
-        .channel('messages')
-        .on('postgres_changes', {event:'INSERT', schema:'public', table:'private_messages', filter: `receiver_id=eq.${user.id}`}, (payload) => {
-          if(payload.new.sender_id===selectedContact){
-            setMessages(prev => [...prev, payload.new as Message]);
-          }
-        })
-        .subscribe();
-      return () => supabase.removeChannel(channel);
-    }
-  }, [selectedContact, user]);
 
   const loadContacts = async () => {
     if(!user) return;
@@ -85,12 +69,25 @@ const Contacts = () => {
     } catch(e){ console.error(e); } finally{ setLoading(false); }
   };
 
-  const loadMessages = async (contactId:string) => {
-    if(!user) return;
-    const { data } = await supabase.from('private_messages').select('*').or(`and(sender_id.eq.${user.id},receiver_id.eq.${contactId}),and(sender_id.eq.${contactId},receiver_id.eq.${user.id})`).order('created_at',{ascending:true});
-    setMessages(data||[]);
-    await supabase.from('private_messages').update({is_read:true}).eq('receiver_id', user.id).eq('sender_id', contactId);
-  };
+  // --- Load messages + Realtime subscription ---
+  useEffect(() => {
+    if(selectedContact && user){
+      const load = async () => {
+        const { data } = await supabase.from('private_messages').select('*').or(`and(sender_id.eq.${user.id},receiver_id.eq.${selectedContact}),and(sender_id.eq.${selectedContact},receiver_id.eq.${user.id})`).order('created_at',{ascending:true});
+        setMessages(data||[]);
+        await supabase.from('private_messages').update({is_read:true}).eq('receiver_id', user.id).eq('sender_id', selectedContact);
+      };
+      load();
+
+      const channel = supabase.channel(`messages-${user.id}`)
+        .on('postgres_changes',{event:'INSERT', schema:'public', table:'private_messages'}, ({new: newMsg}:any) => {
+          if((newMsg.sender_id === selectedContact || newMsg.receiver_id === selectedContact)){
+            setMessages(prev => [...prev,newMsg]);
+          }
+        }).subscribe();
+      return ()=>supabase.removeChannel(channel);
+    }
+  }, [selectedContact, user]);
 
   const sendMessage = async () => {
     if(!user || !selectedContact || !newMessage.trim()) return;
@@ -104,7 +101,7 @@ const Contacts = () => {
     if(generatedText) setNewMessage(generatedText);
   };
 
-  // WebRTC Audio Call
+  // --- Audio Call Logic (WebRTC) ---
   const startCall = async () => {
     if(!user || !selectedContact) return;
     const pc = new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}, {urls:'turn:YOUR_TURN_SERVER_URL', username:'user', credential:'pass'}]});
@@ -148,7 +145,7 @@ const Contacts = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <div className="pt-16 pb-20 h-screen flex flex-col">
-        {/* Original UI components (contact list, chat view, search, input, voice recorder, audio player) remain intact */}
+        {/* Original UI unchanged: Contact list, chat view, search, input, voice recorder, audio player, buttons */}
       </div>
       <BottomNavigation />
     </div>
