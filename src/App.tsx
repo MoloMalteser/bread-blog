@@ -15,7 +15,7 @@ import Profile from "./pages/Profile";
 import Post from "./pages/Post";
 import Feed from "./pages/Feed";
 import Friends from "./pages/Friends";
-import Messages from "./pages/Messages";
+import Contacts from "./pages/Contacts";
 import Pricing from "./pages/Pricing";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
@@ -57,7 +57,7 @@ const AppContent = () => {
         <Route path="/de/post/:slug" element={<Post />} />
         <Route path="/de/feed" element={<Feed />} />
         <Route path="/de/friends" element={<Friends />} />
-        <Route path="/de/messages" element={<Messages />} />
+        <Route path="/de/contacts" element={<Contacts />} />
         <Route path="/de/settings" element={<Settings />} />
         <Route path="/de/webbuilder" element={<WebBuilder />} />
         <Route path="/de/webbuilder/:id" element={<WebBuilder />} />
@@ -78,7 +78,7 @@ const AppContent = () => {
         <Route path="/en/post/:slug" element={<Post />} />
         <Route path="/en/feed" element={<Feed />} />
         <Route path="/en/friends" element={<Friends />} />
-        <Route path="/en/messages" element={<Messages />} />
+        <Route path="/en/contacts" element={<Contacts />} />
         <Route path="/en/settings" element={<Settings />} />
         <Route path="/en/webbuilder" element={<WebBuilder />} />
         <Route path="/en/webbuilder/:id" element={<WebBuilder />} />

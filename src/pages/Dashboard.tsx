@@ -15,6 +15,7 @@ import { useWebsites } from '@/hooks/useWebsites';
 import { Globe, Plus } from 'lucide-react';
 import LanguageSelector from '@/components/LanguageSelector';
 import { useLanguage } from '@/hooks/useLanguage';
+import BottomNavigation from '@/components/BottomNavigation';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -369,6 +370,8 @@ const Dashboard = () => {
       <div className="fixed bottom-4 right-4 z-50">
         <LanguageSelector />
       </div>
+      
+      <BottomNavigation />
     </div>
   );
 };

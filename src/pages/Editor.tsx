@@ -15,6 +15,7 @@ import RichContentRenderer from '@/components/RichContentRenderer';
 import { usePolls } from '@/hooks/usePolls';
 import EditorToolbar from '@/components/EditorToolbar';
 import { useLanguage } from '@/hooks/useLanguage';
+import BottomNavigation from '@/components/BottomNavigation';
 
 const Editor = () => {
   const { postId } = useParams();
@@ -480,8 +481,9 @@ const Editor = () => {
           </Card>
         </div>
       </main>
+      
+      <BottomNavigation />
     </div>
   );
 };
-
 export default Editor;

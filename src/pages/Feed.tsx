@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Header from '@/components/Header';
 import RichContentRenderer from '@/components/RichContentRenderer';
+import { PollDisplay } from '@/components/PollDisplay';
 import { useFeed } from '@/hooks/useFeed';
 import { useSocial } from '@/hooks/useSocial';
 import { useAuth } from '@/hooks/useAuth';
@@ -17,6 +18,7 @@ import { Heart, MessageCircle, Eye, Calendar, User, Send, Plus, Search, Repeat2,
 import { format } from 'date-fns';
 import { de, enUS } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
+import BottomNavigation from '@/components/BottomNavigation';
 
 const Feed = () => {
   const [currentView, setCurrentView] = useState<'feed' | 'all'>('all'); // Default to 'all' for anonymous users
@@ -330,6 +332,9 @@ const Feed = () => {
                     </div>
                   </Link>
 
+                  {/* Poll Display */}
+                  <PollDisplay postId={post.id} />
+
                   {/* Post Actions */}
                   <div className="flex items-center gap-6 pb-4 border-b">
                     <Button
@@ -437,6 +442,8 @@ const Feed = () => {
           </div>
         )}
       </main>
+      
+      <BottomNavigation />
     </div>
   );
 };

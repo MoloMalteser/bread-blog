@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Home, User, Settings, LayoutDashboard, PlusCircle, Users, MessageSquare, Zap, HelpCircle, BookOpen } from 'lucide-react';
+import { Home, User, Settings, LayoutDashboard, PlusCircle, Users, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { withLanguage } from '@/lib/languageUtils';
 
@@ -49,13 +49,13 @@ const BottomNavigation = () => {
           </Button>
         </Link>
 
-        <Link to={withLanguage('friends')}>
+        <Link to={withLanguage('contacts')}>
           <Button 
-            variant={isActive(withLanguage('friends')) ? 'gradient' : 'ghost'} 
+            variant={isActive(withLanguage('contacts')) ? 'gradient' : 'ghost'} 
             size="icon-sm" 
             className="flex flex-col items-center gap-1 h-auto py-3 px-3 rounded-2xl min-w-[60px] transition-all duration-300 hover:scale-105"
           >
-            <Users className="h-4 w-4" />
+            <MessageSquare className="h-4 w-4" />
           </Button>
         </Link>
         
