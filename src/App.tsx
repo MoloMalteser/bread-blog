@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { LanguageProvider } from "@/hooks/useLanguage";
+import { useNotifications } from "@/hooks/useNotifications";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -33,13 +34,13 @@ const queryClient = new QueryClient();
 
 const AppContent = () => {
   const { user } = useAuth();
+  useNotifications();
   
   useEffect(() => {
-    if (user && 'serviceWorker' in navigator) {
-      // Register service worker for notifications
+    if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(console.error);
     }
-  }, [user]);
+  }, []);
 
   return (
     <div>

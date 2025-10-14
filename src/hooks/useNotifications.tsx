@@ -9,22 +9,24 @@ export const useNotifications = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!user || !('Notification' in window)) return;
+    if (!('Notification' in window)) return;
 
-    // Request permission for notifications
+    // Always request permission for notifications on every load
     const requestPermission = async () => {
-      if (Notification.permission === 'default') {
+      if (Notification.permission === 'default' || Notification.permission === 'denied') {
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
           toast({
             title: "Benachrichtigungen aktiviert",
-            description: "Du erhältst jetzt Benachrichtigungen für neue Posts von Freunden",
+            description: "Du erhältst jetzt Benachrichtigungen für neue Nachrichten, Anrufe und Posts",
           });
         }
       }
     };
 
     requestPermission();
+    
+    if (!user) return;
 
     // Listen for new posts from followed users
     const postsChannel = supabase
@@ -101,8 +103,8 @@ export const useNotifications = () => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(postsChannel);
-      supabase.removeChannel(messagesChannel);
+      if (postsChannel) supabase.removeChannel(postsChannel);
+      if (messagesChannel) supabase.removeChannel(messagesChannel);
     };
   }, [user, toast]);
 

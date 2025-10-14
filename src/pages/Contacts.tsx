@@ -56,25 +56,9 @@ const Contacts = () => {
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   
-  // --- Push Notifications Setup ---
-  const subscribeToPush = async () => {
-    if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
-    try {
-      const registration = await navigator.serviceWorker.register("/sw.js");
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-      });
-      await supabase.from("push_subscriptions").upsert({ user_id: user?.id, subscription });
-    } catch (err) {
-      console.error("Push subscription error:", err);
-    }
-  };
-
   useEffect(() => {
     if (user) {
       loadContacts();
-      subscribeToPush();
     }
   }, [user, friends]);
 
@@ -239,7 +223,7 @@ const Contacts = () => {
           if (payload.sdp.type === "offer") {
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
-            channel.send({ type: "answer", sdp: answer });
+            channel.send({ type: "broadcast", event: "call-signal", payload: { sdp: answer } });
           }
         } else if (payload.candidate) {
           await pc.addIceCandidate(payload.candidate);
@@ -250,7 +234,7 @@ const Contacts = () => {
 
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
-      channel.send({ type: "offer", sdp: offer });
+      channel.send({ type: "broadcast", event: "call-signal", payload: { sdp: offer } });
     } catch (err) {
       console.error("Call error:", err);
       toast({ title: "Error", description: "Cannot start call", variant: "destructive" });
