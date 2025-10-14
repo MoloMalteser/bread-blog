@@ -33,6 +33,18 @@ export const useBreadGPT = () => {
     if (!user) return true;
 
     try {
+      // Check if user is a supporter (no cooldown)
+      const { data: subscription } = await supabase
+        .from('user_subscriptions')
+        .select('plan')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (subscription?.plan === 'supporter') {
+        updateGlobalCooldown(null);
+        return true;
+      }
+
       const { data, error } = await supabase
         .from('breadgpt_cooldowns')
         .select('last_question_at')
@@ -49,8 +61,9 @@ export const useBreadGPT = () => {
         const now = new Date();
         const diffSeconds = (now.getTime() - lastQuestion.getTime()) / 1000;
         
-        if (diffSeconds < 30) {
-          const cooldownEnd = new Date(lastQuestion.getTime() + 30000);
+        // 1 hour cooldown for non-supporters
+        if (diffSeconds < 3600) {
+          const cooldownEnd = new Date(lastQuestion.getTime() + 3600000);
           updateGlobalCooldown(cooldownEnd);
           return false;
         }
@@ -107,8 +120,8 @@ export const useBreadGPT = () => {
           last_question_at: new Date().toISOString()
         });
 
-      // Set global cooldown
-      updateGlobalCooldown(new Date(Date.now() + 30000));
+      // Set global cooldown (1 hour for non-supporters, checked by checkCooldown)
+      await checkCooldown();
 
       // Call the Edge Function
       const { data, error } = await supabase.functions.invoke('breadgpt-chat', {

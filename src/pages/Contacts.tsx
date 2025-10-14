@@ -15,7 +15,9 @@ import BottomNavigation from "@/components/BottomNavigation";
 import VoiceRecorder from "@/components/VoiceRecorder";
 import AudioPlayer from "@/components/AudioPlayer";
 import { useBreadGPT } from "@/hooks/useBreadGPT";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Plus, Share2, Image as ImageIcon, Film, FileText } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import ImageUploadDialog from "@/components/ImageUploadDialog";
 
 interface Message {
   id: string;
@@ -55,6 +57,8 @@ const Contacts = () => {
   const { askBreadGPT, loading: isGenerating } = useBreadGPT();
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
+  const [showMediaMenu, setShowMediaMenu] = useState(false);
+  const [uploadDialogType, setUploadDialogType] = useState<'image' | 'video' | 'file' | null>(null);
   
   useEffect(() => {
     if (user) {
@@ -286,6 +290,52 @@ const Contacts = () => {
     }
   };
 
+  const handleMediaUpload = async (url: string, type: 'image' | 'video' | 'file') => {
+    if (!user || !selectedContact) return;
+    try {
+      let content = url;
+      if (type === 'image') content = `[IMAGE]${url}`;
+      else if (type === 'video') content = `[VIDEO]${url}`;
+      else if (type === 'file') content = `[FILE]${url}`;
+
+      const { error } = await supabase.from("private_messages").insert({ 
+        sender_id: user.id, 
+        receiver_id: selectedContact, 
+        content 
+      });
+      if (error) throw error;
+      loadMessages(selectedContact);
+      loadContacts();
+      setUploadDialogType(null);
+    } catch (err) {
+      console.error(err);
+      toast({ title: t("error"), description: "Failed to send media", variant: "destructive" });
+    }
+  };
+
+  const handleBreadGPTGenerate = async () => {
+    const result = await askBreadGPT("Generate a friendly greeting message in German");
+    if (result) {
+      setNewMessage(result);
+    }
+  };
+
+  const renderMessageContent = (content: string) => {
+    if (content.startsWith('[IMAGE]')) {
+      const url = content.substring(7);
+      return <img src={url} alt="Shared" className="max-w-xs rounded-lg" />;
+    } else if (content.startsWith('[VIDEO]')) {
+      const url = content.substring(7);
+      return <video src={url} controls className="max-w-xs rounded-lg" />;
+    } else if (content.startsWith('[FILE]')) {
+      const url = content.substring(6);
+      return <a href={url} target="_blank" rel="noopener noreferrer" className="text-primary underline">Datei öffnen</a>;
+    } else if (content.startsWith("https://") && content.includes("supabase.co/storage")) {
+      return <AudioPlayer url={content} />;
+    }
+    return <p className="break-words">{content}</p>;
+  };
+
   if (!user) return <><Header /><div className="min-h-screen flex items-center justify-center pb-20"><Card className="p-8 text-center"><h2 className="text-2xl font-bold mb-4">{t("loginRequired")}</h2><p className="text-muted-foreground">{t("loginRequiredDescription")}</p></Card></div><BottomNavigation /></>;
 
   return (
@@ -344,7 +394,7 @@ const Contacts = () => {
                 <div className="space-y-4">{messages.map(msg => (
                   <div key={msg.id} className={`flex ${msg.sender_id === user.id ? "justify-end" : "justify-start"}`}>
                     <div className={`max-w-[70%] rounded-lg p-3 ${msg.sender_id === user.id ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-                      {msg.content.startsWith("https://") && msg.content.includes("supabase.co/storage") ? <AudioPlayer url={msg.content} /> : <p className="break-words">{msg.content}</p>}
+                      {renderMessageContent(msg.content)}
                       <p className="text-xs mt-1 opacity-70">{new Date(msg.created_at).toLocaleTimeString()}</p>
                     </div>
                   </div>
@@ -354,10 +404,42 @@ const Contacts = () => {
                 <div className="flex gap-2 items-end">
                   <VoiceRecorder onVoiceMessageSent={handleVoiceMessageSent} />
                   <Input value={newMessage} onChange={e => setNewMessage(e.target.value)} onKeyPress={e => e.key === "Enter" && sendMessage()} placeholder="Type a message..." className="flex-1" />
-                  <Button onClick={async () => { if(selectedContact) setNewMessage(await askBreadGPT("Generate friendly message")) }} size="icon" variant="outline" disabled={isGenerating} className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0"><Sparkles className="h-4 w-4" /></Button>
+                  
+                  <Popover open={showMediaMenu} onOpenChange={setShowMediaMenu}>
+                    <PopoverTrigger asChild>
+                      <Button size="icon" variant="outline">
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-48">
+                      <div className="grid gap-2">
+                        <Button variant="ghost" className="justify-start" onClick={() => { setUploadDialogType('image'); setShowMediaMenu(false); }}>
+                          <ImageIcon className="h-4 w-4 mr-2" />
+                          Foto/Video teilen
+                        </Button>
+                        <Button variant="ghost" className="justify-start" onClick={() => { setUploadDialogType('file'); setShowMediaMenu(false); }}>
+                          <FileText className="h-4 w-4 mr-2" />
+                          Dateien teilen
+                        </Button>
+                        <Button variant="ghost" className="justify-start" onClick={() => { handleBreadGPTGenerate(); setShowMediaMenu(false); }}>
+                          <Sparkles className="h-4 w-4 mr-2" />
+                          BreadGPT fragen
+                        </Button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                  
                   <Button onClick={sendMessage} size="icon"><Send className="h-4 w-4" /></Button>
                 </div>
               </div>
+              {uploadDialogType && (
+                <ImageUploadDialog
+                  open={uploadDialogType !== null}
+                  onClose={() => setUploadDialogType(null)}
+                  onImageUploaded={handleMediaUpload}
+                  type={uploadDialogType}
+                />
+              )}
               <audio id="remoteAudio" autoPlay />
             </div>
           )}

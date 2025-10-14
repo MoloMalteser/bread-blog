@@ -5,14 +5,27 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { useImageUpload } from '@/hooks/useImageUpload';
 
 interface ImageUploadDialogProps {
-  onImageUploaded: (url: string) => void;
+  open?: boolean;
+  onClose?: () => void;
+  onImageUploaded: (url: string, type?: 'image' | 'video' | 'file') => void;
+  type?: 'image' | 'video' | 'file';
   className?: string;
 }
 
-const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({ onImageUploaded, className = '' }) => {
+const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({ 
+  open, 
+  onClose, 
+  onImageUploaded, 
+  type = 'image',
+  className = '' 
+}) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { uploadImage, uploading } = useImageUpload();
   const [isOpen, setIsOpen] = useState(false);
+  
+  const isControlled = open !== undefined;
+  const dialogOpen = isControlled ? open : isOpen;
+  const setDialogOpen = isControlled ? (onClose || (() => {})) : (value: boolean) => setIsOpen(value);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -20,8 +33,12 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({ onImageUploaded, 
 
     const url = await uploadImage(file);
     if (url) {
-      onImageUploaded(url);
-      setIsOpen(false);
+      onImageUploaded(url, type);
+      if (isControlled && onClose) {
+        onClose();
+      } else {
+        setIsOpen(false);
+      }
     }
 
     // Reset input
@@ -34,30 +51,34 @@ const ImageUploadDialog: React.FC<ImageUploadDialogProps> = ({ onImageUploaded, 
     fileInputRef.current?.click();
   };
 
+  const accept = type === 'image' ? 'image/*' : type === 'video' ? 'video/*' : '*/*';
+  const Icon = type === 'image' ? Image : type === 'video' ? Upload : Upload;
+  const title = type === 'image' ? 'Bild hochladen' : type === 'video' ? 'Video hochladen' : 'Datei hochladen';
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
+    <Dialog open={dialogOpen} onOpenChange={isControlled ? onClose : setDialogOpen}>
+      {!isControlled && <DialogTrigger asChild>
         <Button
           variant="ghost"
           size="sm"
           className="h-9 w-9 p-0 rounded-lg hover:bg-background"
           title="Bild hochladen"
         >
-          <Image className="h-4 w-4" />
+          <Icon className="h-4 w-4" />
         </Button>
-      </DialogTrigger>
+      </DialogTrigger>}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Bild hochladen</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
-            Wähle ein Bild von deinem Gerät aus, um es in deinen Post einzufügen.
+            Wähle eine Datei von deinem Gerät aus.
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col items-center gap-6 py-6">
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept={accept}
             onChange={handleFileSelect}
             className="hidden"
           />

@@ -46,7 +46,7 @@ const Pricing = () => {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
           {/* Free Plan */}
           <Card className="border-2 border-primary">
             <CardHeader className="text-center">
@@ -136,6 +136,57 @@ const Pricing = () => {
               <Link to="/" className="block">
                 <Button variant="outline" className="w-full">
                   Browse Anonymously
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          {/* Supporter Plan */}
+          <Card className="border-2 border-primary">
+            <CardHeader className="text-center">
+              <div className="text-4xl mb-4">❤️</div>
+              <CardTitle className="text-2xl">Bread Supporter</CardTitle>
+              <CardDescription>
+                Unterstütze uns mit Werbung
+              </CardDescription>
+              <div className="text-4xl font-bold">$0</div>
+              <p className="text-muted-foreground">kostenlos mit Werbung</p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-primary" />
+                  <span>Alle Free Features</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-primary" />
+                  <span>Supporter Badge</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-primary" />
+                  <span>Unbegrenztes BreadGPT</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-primary" />
+                  <span>Unbegrenzte Websites</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-primary" />
+                  <span>Höhere Post-Priorität</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-primary" />
+                  <span>Feature Requests</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-primary" />
+                  <span>Früher Zugriff auf Features</span>
+                </div>
+              </div>
+              
+              <Link to="/auth" className="block">
+                <Button className="w-full">
+                  Supporter werden
                 </Button>
               </Link>
             </CardContent>

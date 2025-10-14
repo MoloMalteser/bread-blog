@@ -28,6 +28,7 @@ import Flappybread from "./pages/secret"
 import WebBuilder from "./pages/WebBuilder";
 import PublishedWebsite from "./pages/PublishedWebsite";
 import Settings from "./pages/Settings";
+import Admin from "./pages/Admin";
 import LanguageRedirect from "./components/LanguageRedirect";
 
 const queryClient = new QueryClient();
@@ -92,6 +93,7 @@ const AppContent = () => {
         
         {/* Special routes (no language prefix) */}
         <Route path="/adminmenu" element={<SecretAdminMenu/>} />
+        <Route path="/admin" element={<Admin/>} />
         <Route path="/game" element={<Flappybread/>} />
         
         <Route path="*" element={<NotFound />} />

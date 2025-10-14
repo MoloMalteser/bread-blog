@@ -62,6 +62,51 @@ export type Database = {
         }
         Relationships: []
       }
+      calls: {
+        Row: {
+          accepted: boolean | null
+          callee_id: string
+          caller_id: string
+          created_at: string | null
+          duration_seconds: number | null
+          id: string
+          signal: Json | null
+        }
+        Insert: {
+          accepted?: boolean | null
+          callee_id: string
+          caller_id: string
+          created_at?: string | null
+          duration_seconds?: number | null
+          id?: string
+          signal?: Json | null
+        }
+        Update: {
+          accepted?: boolean | null
+          callee_id?: string
+          caller_id?: string
+          created_at?: string | null
+          duration_seconds?: number | null
+          id?: string
+          signal?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calls_callee_id_fkey"
+            columns: ["callee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calls_caller_id_fkey"
+            columns: ["caller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comments: {
         Row: {
           content: string
@@ -217,6 +262,36 @@ export type Database = {
         }
         Relationships: []
       }
+      feature_requests: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       follows: {
         Row: {
           created_at: string
@@ -340,6 +415,47 @@ export type Database = {
         }
         Relationships: []
       }
+      post_reports: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          reason: string
+          reporter_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          reason: string
+          reporter_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          reason?: string
+          reporter_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_reports_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       posts: {
         Row: {
           author_id: string
@@ -410,22 +526,52 @@ export type Database = {
       }
       profiles: {
         Row: {
+          badges: string[] | null
           bio: string | null
           created_at: string
           id: string
           username: string
         }
         Insert: {
+          badges?: string[] | null
           bio?: string | null
           created_at?: string
           id: string
           username: string
         }
         Update: {
+          badges?: string[] | null
           bio?: string | null
           created_at?: string
           id?: string
           username?: string
+        }
+        Relationships: []
+      }
+      user_devices: {
+        Row: {
+          created_at: string
+          device_name: string
+          device_type: string | null
+          id: string
+          last_active: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_name: string
+          device_type?: string | null
+          id?: string
+          last_active?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_name?: string
+          device_type?: string | null
+          id?: string
+          last_active?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -518,6 +664,30 @@ export type Database = {
           total_points?: number | null
           user_id?: string
           wiki_contributions?: number | null
+        }
+        Relationships: []
+      }
+      user_subscriptions: {
+        Row: {
+          created_at: string
+          id: string
+          plan: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          plan?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          plan?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -674,6 +844,10 @@ export type Database = {
       generate_slug: {
         Args: { title: string }
         Returns: string
+      }
+      get_breadgpt_cooldown_seconds: {
+        Args: { user_id: string }
+        Returns: number
       }
       has_role: {
         Args: {
