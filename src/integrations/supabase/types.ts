@@ -672,6 +672,7 @@ export type Database = {
           created_at: string
           id: string
           plan: string
+          show_ads: boolean | null
           updated_at: string
           user_id: string
         }
@@ -679,6 +680,7 @@ export type Database = {
           created_at?: string
           id?: string
           plan?: string
+          show_ads?: boolean | null
           updated_at?: string
           user_id: string
         }
@@ -686,6 +688,7 @@ export type Database = {
           created_at?: string
           id?: string
           plan?: string
+          show_ads?: boolean | null
           updated_at?: string
           user_id?: string
         }

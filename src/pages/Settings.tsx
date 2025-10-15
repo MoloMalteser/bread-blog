@@ -8,6 +8,7 @@ import Header from '@/components/Header';
 import BottomNavigation from '@/components/BottomNavigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/hooks/useLanguage';
+import { useSubscription } from '@/hooks/useSubscription';
 import { useNotifications } from '@/hooks/useNotifications';
 import { Bell, Globe, Moon, Sun, Shield, Smartphone, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -20,6 +21,7 @@ const Settings = () => {
   const { user, signOut } = useAuth();
   const { language, setLanguage } = useLanguage();
   const { requestNotificationPermission } = useNotifications();
+  const { showAds, toggleAds } = useSubscription();
   const { toast } = useToast();
   const [notifications, setNotifications] = useState(false);
   const [devices, setDevices] = useState<any[]>([]);
@@ -46,7 +48,12 @@ const Settings = () => {
       enterPassword: 'Passwort eingeben',
       password: 'Passwort',
       confirm: 'Bestätigen',
-      cancel: 'Abbrechen'
+      cancel: 'Abbrechen',
+      support: 'Unterstützung',
+      supportBreadWithAds: 'Unterstütze Bread mit Werbung!',
+      supportDescription: 'Hilf uns, Bread kostenlos zu halten, indem du Werbung aktivierst.',
+      adsEnabled: 'Werbung aktiviert',
+      adsDisabled: 'Werbung deaktiviert',
     },
     en: {
       title: 'Settings',
@@ -66,7 +73,12 @@ const Settings = () => {
       enterPassword: 'Enter password',
       password: 'Password',
       confirm: 'Confirm',
-      cancel: 'Cancel'
+      cancel: 'Cancel',
+      support: 'Support',
+      supportBreadWithAds: 'Support Bread with ads!',
+      supportDescription: 'Help us keep Bread free by enabling ads.',
+      adsEnabled: 'Ads enabled',
+      adsDisabled: 'Ads disabled',
     }
   };
 
@@ -159,10 +171,11 @@ const Settings = () => {
         <h1 className="text-3xl font-semibold mb-8">{t.title}</h1>
 
         <Tabs defaultValue="account" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="account">Account</TabsTrigger>
             <TabsTrigger value="notifications">{t.notifications}</TabsTrigger>
             <TabsTrigger value="devices">{t.devices}</TabsTrigger>
+            <TabsTrigger value="support">{t.support}</TabsTrigger>
             <TabsTrigger value="language">{t.language}</TabsTrigger>
           </TabsList>
 
@@ -290,8 +303,36 @@ const Settings = () => {
               </div>
             </CardContent>
           </Card>
+          </TabsContent>
 
-        </TabsContent>
+          <TabsContent value="support" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>{t.support}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>{t.supportBreadWithAds}</Label>
+                    <p className="text-sm text-muted-foreground">
+                      {t.supportDescription}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={showAds}
+                    onCheckedChange={async (checked) => {
+                      const success = await toggleAds(checked);
+                      if (success) {
+                        toast({
+                          title: checked ? t.adsEnabled : t.adsDisabled,
+                        });
+                      }
+                    }}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
 
         <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
