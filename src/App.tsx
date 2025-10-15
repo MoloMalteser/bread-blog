@@ -30,6 +30,8 @@ import PublishedWebsite from "./pages/PublishedWebsite";
 import Settings from "./pages/Settings";
 import Admin from "./pages/Admin";
 import Supporter from "./pages/Supporter";
+import SupporterLogin from "./pages/SupporterLogin";
+import SupporterInfo from "./pages/SupporterInfo";
 import LanguageRedirect from "./components/LanguageRedirect";
 
 const queryClient = new QueryClient();
@@ -96,6 +98,8 @@ const AppContent = () => {
         <Route path="/adminmenu" element={<SecretAdminMenu/>} />
         <Route path="/admin" element={<Admin/>} />
         <Route path="/supporter" element={<Supporter />} />
+        <Route path="/supporter-login" element={<SupporterLogin />} />
+        <Route path="/supporter-info" element={<SupporterInfo />} />
         <Route path="/game" element={<Flappybread/>} />
         
         <Route path="*" element={<NotFound />} />

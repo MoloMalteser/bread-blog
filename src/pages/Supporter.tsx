@@ -1,19 +1,21 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useLanguage } from '@/hooks/useLanguage';
 import Header from '@/components/Header';
 import { Card } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 
 const Supporter = () => {
   const { isSupporter, loading } = useSubscription();
+  const { language } = useLanguage();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!loading && !isSupporter) {
-      navigate('/pricing');
+      navigate(`/${language}/pricing`);
     }
-  }, [isSupporter, loading, navigate]);
+  }, [isSupporter, loading, navigate, language]);
 
   useEffect(() => {
     // Load the supporter ad script
