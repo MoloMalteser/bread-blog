@@ -6,9 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import BreadLogo from '@/components/BreadLogo';
 import ThemeToggle from '@/components/ThemeToggle';
+import AdBanner from '@/components/AdBanner';
 import { ArrowLeft, Calendar, Eye, Edit3, Share2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
+import { useSubscription } from '@/hooks/useSubscription';
 import RichContentRenderer from '@/components/RichContentRenderer';
 import TranslateButton from '@/components/TranslateButton';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -26,6 +28,7 @@ interface Post {
   authorId: string;
   authorUsername: string;
   authorDisplayName: string;
+  authorBadges?: string[];
 }
 
 const Post = () => {
@@ -33,6 +36,7 @@ const Post = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { language } = useLanguage();
+  const { showAds } = useSubscription();
   const [post, setPost] = useState<Post | null>(null);
   const [isOwner, setIsOwner] = useState(false);
   const [translatedContent, setTranslatedContent] = useState<string | null>(null);
@@ -51,7 +55,8 @@ const Post = () => {
             *,
             profiles (
               username,
-              bio
+              bio,
+              badges
             )
           `)
           .eq('slug', slug)
@@ -71,7 +76,8 @@ const Post = () => {
             views: supabaseData.view_count || 0,
             authorId: supabaseData.author_id,
             authorUsername: supabaseData.profiles?.username || 'unknown',
-            authorDisplayName: supabaseData.profiles?.username || 'Anonym'
+            authorDisplayName: supabaseData.profiles?.username || 'Anonym',
+            authorBadges: supabaseData.profiles?.badges || []
           };
           
           setPost(mappedPost);
@@ -171,6 +177,7 @@ const Post = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {showAds && <AdBanner />}
       {/* Header */}
       <header className="border-b">
         <div className="max-w-4xl mx-auto px-4 py-4">
@@ -204,12 +211,24 @@ const Post = () => {
           
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4 text-muted-foreground">
-              <Link 
-                to={`/profile/${post.authorUsername}`}
-                className="hover:text-foreground transition-colors"
-              >
-                Von {post.authorDisplayName}
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link 
+                  to={`/profile/${post.authorUsername}`}
+                  className="hover:text-foreground transition-colors"
+                >
+                  Von {post.authorDisplayName}
+                </Link>
+                {post.authorBadges?.includes('supporter') && (
+                  <Badge variant="default" className="text-xs">
+                    ⭐ Supporter
+                  </Badge>
+                )}
+                {post.authorBadges?.includes('admin') && (
+                  <Badge variant="destructive" className="text-xs">
+                    👑 Admin
+                  </Badge>
+                )}
+              </div>
               <span>•</span>
               <div className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />

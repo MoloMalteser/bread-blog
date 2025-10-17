@@ -8,12 +8,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Header from '@/components/Header';
+import AdBanner from '@/components/AdBanner';
 import RichContentRenderer from '@/components/RichContentRenderer';
 import { PollDisplay } from '@/components/PollDisplay';
 import TranslateButton from '@/components/TranslateButton';
 import { useFeed } from '@/hooks/useFeed';
 import { useSocial } from '@/hooks/useSocial';
 import { useAuth } from '@/hooks/useAuth';
+import { useSubscription } from '@/hooks/useSubscription';
 import { useLanguage } from '@/hooks/useLanguage';
 import { Heart, MessageCircle, Eye, Calendar, User, Send, Plus, Search, Repeat2, UserPlus } from 'lucide-react';
 import { format } from 'date-fns';
@@ -35,6 +37,7 @@ const Feed = () => {
   const { feedPosts, allPosts, loading, fetchFeedPosts, fetchAllPosts } = useFeed();
   const { toggleLike, getLikeInfo, addComment, getComments, incrementViewCount } = useSocial();
   const { user } = useAuth();
+  const { showAds } = useSubscription();
   const { language, t } = useLanguage();
   const { toast } = useToast();
 
@@ -215,6 +218,7 @@ const Feed = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      {showAds && <AdBanner />}
       
       <main className="pt-20 max-w-4xl mx-auto px-4 py-8">
         {/* Navigation Pills with additional buttons */}
@@ -308,12 +312,24 @@ const Feed = () => {
                       {post.is_anonymous ? (
                         <span className="font-semibold text-muted-foreground">Anonym</span>
                       ) : (
-                        <Link 
-                          to={`/${language}/profile/${post.profiles?.username}`}
-                          className="font-semibold hover:text-primary transition-colors"
-                        >
-                          {post.profiles?.username}
-                        </Link>
+                        <div className="flex items-center gap-2">
+                          <Link 
+                            to={`/${language}/profile/${post.profiles?.username}`}
+                            className="font-semibold hover:text-primary transition-colors"
+                          >
+                            {post.profiles?.username}
+                          </Link>
+                          {post.profiles?.badges?.includes('supporter') && (
+                            <Badge variant="default" className="text-xs">
+                              ⭐ Supporter
+                            </Badge>
+                          )}
+                          {post.profiles?.badges?.includes('admin') && (
+                            <Badge variant="destructive" className="text-xs">
+                              👑 Admin
+                            </Badge>
+                          )}
+                        </div>
                       )}
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Calendar className="h-4 w-4" />
@@ -418,9 +434,21 @@ const Feed = () => {
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="font-medium text-sm">
-                                {comment.profiles?.username}
-                              </span>
+                              <div className="flex items-center gap-1">
+                                <span className="font-medium text-sm">
+                                  {comment.profiles?.username}
+                                </span>
+                                {comment.profiles?.badges?.includes('supporter') && (
+                                  <Badge variant="default" className="text-[10px] h-4 px-1">
+                                    ⭐
+                                  </Badge>
+                                )}
+                                {comment.profiles?.badges?.includes('admin') && (
+                                  <Badge variant="destructive" className="text-[10px] h-4 px-1">
+                                    👑
+                                  </Badge>
+                                )}
+                              </div>
                               <span className="text-xs text-muted-foreground">
                                 {format(new Date(comment.created_at), 'PPp', { locale: dateLocale })}
                               </span>

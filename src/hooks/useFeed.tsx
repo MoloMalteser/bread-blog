@@ -45,7 +45,8 @@ export const useFeed = () => {
           *,
           profiles (
             username,
-            bio
+            bio,
+            badges
           )
         `)
         .in('author_id', followingIds)
@@ -83,7 +84,8 @@ export const useFeed = () => {
           *,
           profiles (
             username,
-            bio
+            bio,
+            badges
           )
         `)
         .eq('is_public', true)

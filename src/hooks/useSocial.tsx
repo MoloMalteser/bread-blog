@@ -19,6 +19,7 @@ export interface Comment {
   created_at: string;
   profiles?: {
     username: string;
+    badges?: string[];
   };
 }
 
@@ -33,6 +34,7 @@ export interface UserProfile {
   id: string;
   username: string;
   bio?: string;
+  badges?: string[];
 }
 
 export const useSocial = () => {
@@ -162,7 +164,8 @@ export const useSocial = () => {
       .select(`
         *,
         profiles (
-          username
+          username,
+          badges
         )
       `)
       .single();
@@ -187,7 +190,8 @@ export const useSocial = () => {
       .select(`
         *,
         profiles (
-          username
+          username,
+          badges
         )
       `)
       .eq('post_id', postId)

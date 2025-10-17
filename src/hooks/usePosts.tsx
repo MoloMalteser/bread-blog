@@ -16,6 +16,7 @@ export interface Post {
   profiles?: {
     username: string;
     bio?: string;
+    badges?: string[];
   };
 }
 
@@ -44,7 +45,8 @@ export const usePosts = () => {
           *,
           profiles (
             username,
-            bio
+            bio,
+            badges
           )
         `)
         .eq('author_id', user.id)

@@ -7,11 +7,13 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Header from '@/components/Header';
 import DailyMissions from '@/components/DailyMissions';
+import AdBanner from '@/components/AdBanner';
 import { PlusCircle, Edit3, Eye, Calendar, Trash2, Trophy, Target } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { usePosts } from '@/hooks/usePosts';
 import { useAuth } from '@/hooks/useAuth';
 import { useWebsites } from '@/hooks/useWebsites';
+import { useSubscription } from '@/hooks/useSubscription';
 import { Globe, Plus } from 'lucide-react';
 import LanguageSelector from '@/components/LanguageSelector';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -21,6 +23,7 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { posts, loading, deletePost } = usePosts();
   const { websites, deleteWebsite, publishWebsite } = useWebsites();
+  const { showAds } = useSubscription();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { language, t } = useLanguage();
@@ -54,6 +57,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       <Header />
+      {showAds && <AdBanner />}
       
       <main className="pt-20 pb-20 max-w-6xl mx-auto px-4 py-8 min-h-screen">
         <div className="mb-8">

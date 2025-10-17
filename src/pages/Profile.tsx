@@ -32,6 +32,7 @@ interface UserProfile {
   username: string;
   bio?: string;
   created_at: string;
+  badges?: string[];
 }
 
 const Profile = () => {
@@ -223,7 +224,19 @@ const Profile = () => {
       <div className="max-w-4xl mx-auto px-4 py-12">
         <div className="text-center space-y-4">
           <div className="text-6xl mb-4">🍞</div>
-          <h1 className="text-3xl font-semibold">{user?.username}</h1>
+          <div className="flex items-center justify-center gap-2">
+            <h1 className="text-3xl font-semibold">{user?.username}</h1>
+            {user?.badges?.includes('supporter') && (
+              <Badge variant="default" className="text-sm">
+                ⭐ Supporter
+              </Badge>
+            )}
+            {user?.badges?.includes('admin') && (
+              <Badge variant="destructive" className="text-sm">
+                👑 Admin
+              </Badge>
+            )}
+          </div>
           <p className="text-lg text-muted-foreground">@{user?.username}</p>
           
           {/* Bio Section */}
