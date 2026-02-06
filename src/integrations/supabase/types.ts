@@ -844,10 +844,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      generate_slug: {
-        Args: { title: string }
-        Returns: string
-      }
+      generate_slug: { Args: { title: string }; Returns: string }
       get_breadgpt_cooldown_seconds: {
         Args: { user_id: string }
         Returns: number
@@ -859,10 +856,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      increment_view_count: {
-        Args: { post_id: string }
-        Returns: undefined
-      }
+      increment_view_count: { Args: { post_id: string }; Returns: undefined }
       vote_on_poll: {
         Args: { option_index: number; poll_id: string }
         Returns: undefined
