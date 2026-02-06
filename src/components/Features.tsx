@@ -1,73 +1,88 @@
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { motion } from 'framer-motion';
+
+const features = [
+  {
+    icon: '💬',
+    title: 'Social Feed',
+    description: 'A beautiful, infinite scroll feed with reactions, comments, and real-time updates.'
+  },
+  {
+    icon: '🫧',
+    title: 'Glassy Design',
+    description: 'Every surface is translucent and alive — frosted glass, soft shadows, fluid motion.'
+  },
+  {
+    icon: '🌊',
+    title: 'Fluid Interactions',
+    description: 'Draggable tab bar, spring physics, and buttery smooth 60fps animations everywhere.'
+  },
+  {
+    icon: '🌓',
+    title: 'Adaptive Themes',
+    description: 'Automatic dark & light mode with aqua-tinted glass that adjusts to your environment.'
+  },
+  {
+    icon: '📱',
+    title: 'Mobile First',
+    description: 'Designed for your thumb. PWA-ready, installable, and feels native on every device.'
+  },
+  {
+    icon: '🆓',
+    title: 'Open & Free',
+    description: 'No paywalls, no algorithmic feeds. Just your people, your posts, your feed.'
+  }
+];
+
+const container = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.08 } }
+};
+
+const item = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } }
+};
 
 const Features = () => {
-  const features = [
-    {
-      icon: '✍️',
-      title: 'Focused Writing',
-      description: 'An editor like Bear or iA Writer - only the essentials, no distractions.'
-    },
-    {
-      icon: '🎨',
-      title: 'Apple-Inspired Design',
-      description: 'Purist black and white with smooth animations and elegant transitions.'
-    },
-    {
-      icon: '🌓',
-      title: 'Dark & Light Mode',
-      description: 'Automatic adaptation to your system settings or manually selectable.'
-    },
-    {
-      icon: '📱',
-      title: 'Fully Responsive',
-      description: 'Perfectly optimized for smartphone, tablet and desktop - elegant everywhere.'
-    },
-    {
-      icon: '🔗',
-      title: 'Custom Profile URL',
-      description: 'Your personal URL like bread.blog/username - shareable without login required.'
-    },
-    {
-      icon: '🆓',
-      title: 'Free to Read',
-      description: 'All articles are publicly readable - no paywall, no popups, just stories.'
-    }
-  ];
-
   return (
-    <section id="features" className="py-20 px-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-semibold mb-4">
-            Blogging for Those Who Value Style
+    <section id="features" className="py-24 px-4 relative">
+      <div className="max-w-5xl mx-auto">
+        <motion.div
+          className="text-center mb-16"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
+          <h2 className="text-3xl md:text-5xl font-semibold mb-4 tracking-tight">
+            Built different.
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            No frills, no noise. Bread combines aesthetics with functionality.
+          <p className="text-lg text-muted-foreground max-w-md mx-auto">
+            No noise. No clutter. Just a beautiful social experience.
           </p>
-        </div>
+        </motion.div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+          variants={container}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true }}
+        >
           {features.map((feature, index) => (
-            <Card 
-              key={index} 
-              className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border glass-effect"
+            <motion.div
+              key={index}
+              variants={item}
+              className="group glass-card p-6 hover:shadow-xl transition-shadow duration-300"
             >
-              <CardContent className="p-6">
-                <div className="text-3xl mb-4 group-hover:animate-gentle-bounce">
-                  {feature.icon}
-                </div>
-                <h3 className="text-lg font-semibold mb-2">
-                  {feature.title}
-                </h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  {feature.description}
-                </p>
-              </CardContent>
-            </Card>
+              <div className="text-3xl mb-4">{feature.icon}</div>
+              <h3 className="text-base font-semibold mb-1.5">{feature.title}</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

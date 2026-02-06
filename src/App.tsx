@@ -1,5 +1,5 @@
-
 import React, { useEffect } from 'react';
+import TabBar from '@/components/TabBar';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -94,7 +94,7 @@ const AppContent = () => {
         <Route path="/en/privacy" element={<Privacy />} />
         <Route path="/en/terms" element={<Terms />} />
         
-        {/* Special routes (no language prefix) */}
+        {/* Special routes */}
         <Route path="/adminmenu" element={<SecretAdminMenu/>} />
         <Route path="/admin" element={<Admin/>} />
         <Route path="/supporter" element={<Supporter />} />
@@ -104,6 +104,7 @@ const AppContent = () => {
         
         <Route path="*" element={<NotFound />} />
       </Routes>
+      <TabBar />
     </div>
   );
 };

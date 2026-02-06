@@ -6,9 +6,8 @@ const ThemeToggle = () => {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
   useEffect(() => {
-    // Check system preference
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const savedTheme = localStorage.getItem('bread-theme') as 'light' | 'dark' | null;
+    const savedTheme = localStorage.getItem('coconut-theme') as 'light' | 'dark' | null;
     
     if (savedTheme) {
       setTheme(savedTheme);
@@ -16,9 +15,8 @@ const ThemeToggle = () => {
       setTheme(mediaQuery.matches ? 'dark' : 'light');
     }
     
-    // Listen for system changes
     const handleChange = (e: MediaQueryListEvent) => {
-      if (!localStorage.getItem('bread-theme')) {
+      if (!localStorage.getItem('coconut-theme')) {
         setTheme(e.matches ? 'dark' : 'light');
       }
     };
@@ -33,7 +31,7 @@ const ThemeToggle = () => {
     } else {
       document.documentElement.classList.remove('dark');
     }
-    localStorage.setItem('bread-theme', theme);
+    localStorage.setItem('coconut-theme', theme);
   }, [theme]);
 
   const toggleTheme = () => {
@@ -45,15 +43,11 @@ const ThemeToggle = () => {
       variant="ghost"
       size="sm"
       onClick={toggleTheme}
-      className="w-9 h-9 p-0 hover:bg-accent focus-ring transition-all duration-200"
+      className="w-9 h-9 p-0 rounded-full hover:bg-accent/50 transition-colors duration-200"
       title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
     >
-      <div className="relative w-5 h-5">
-        {theme === 'light' ? (
-          <div className="animate-fade-in-up">🌙</div>
-        ) : (
-          <div className="animate-fade-in-up">☀️</div>
-        )}
+      <div className="text-base">
+        {theme === 'light' ? '🌙' : '☀️'}
       </div>
     </Button>
   );

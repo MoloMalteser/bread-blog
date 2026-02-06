@@ -1,82 +1,80 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { useLanguage } from '@/hooks/useLanguage';
 
 const Hero = () => {
+  const { language } = useLanguage();
+  const langPrefix = `/${language}`;
+
   return (
-    <section className="min-h-screen flex items-center justify-center px-4 pt-16">
-      <div className="max-w-4xl mx-auto text-center">
-        {/* Main Heading */}
-        <div className="animate-fade-in-up">
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-light tracking-tight mb-6">
-            Bread is
-            <span className="block font-semibold">digital blogging</span>
-            <span className="block text-muted-foreground font-light">reimagined</span>
-          </h1>
-        </div>
+    <section className="min-h-[100dvh] flex items-center justify-center px-4 pt-16 pb-24 relative overflow-hidden">
+      {/* Ambient background blobs */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-20 -left-32 w-96 h-96 rounded-full bg-primary/8 blur-3xl animate-breathe" />
+        <div className="absolute bottom-32 -right-24 w-80 h-80 rounded-full bg-accent/20 blur-3xl animate-breathe" style={{ animationDelay: '1.5s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/5 blur-3xl" />
+      </div>
+
+      <div className="max-w-3xl mx-auto text-center relative z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-effect text-sm text-muted-foreground mb-8">
+            <span>🥥</span>
+            <span>A new kind of social</span>
+          </div>
+        </motion.div>
+
+        <motion.h1
+          className="text-5xl md:text-7xl lg:text-8xl font-semibold tracking-tight mb-6 leading-[0.95]"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <span className="block">Share</span>
+          <span className="block bg-gradient-to-r from-primary to-info bg-clip-text text-transparent">
+            everything.
+          </span>
+        </motion.h1>
         
-        {/* Subtitle */}
-        <div className="animate-fade-in-up" style={{animationDelay: '0.2s'}}>
-          <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
-            A purist black-and-white design meets Apple-inspired elegance. 
-            Write without distraction. Share with style.
-          </p>
-        </div>
+        <motion.p
+          className="text-lg md:text-xl text-muted-foreground mb-10 max-w-lg mx-auto leading-relaxed"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
+        >
+          A glassy, fluid social feed where your posts, stories, and moments come alive.
+        </motion.p>
         
-        {/* CTA Buttons */}
-        <div className="animate-fade-in-up flex flex-col sm:flex-row gap-4 justify-center mb-12" style={{animationDelay: '0.4s'}}>
-          <Button 
-            size="lg" 
-            className="text-base px-8 py-3 bg-primary text-primary-foreground hover:bg-primary/90 focus-ring transition-all duration-200 hover:scale-105"
-          >
-            Start Free
-          </Button>
-          <Button 
-            variant="outline" 
-            size="lg"
-            className="text-base px-8 py-3 focus-ring transition-all duration-200 hover:scale-105"
-          >
-            View Demo
-          </Button>
-        </div>
-        
-        {/* Preview Card */}
-        <div className="animate-fade-in-up" style={{animationDelay: '0.6s'}}>
-          <Card className="max-w-2xl mx-auto p-8 glass-effect border shadow-2xl">
-            <div className="text-left">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-br from-muted to-muted-foreground/20 rounded-full"></div>
-                <div>
-                  <div className="font-medium">@yourusername</div>
-                  <div className="text-sm text-muted-foreground">2 minutes ago</div>
-                </div>
-              </div>
-              
-              <h3 className="text-xl font-semibold mb-3">
-                On the Art of Minimalist Writing
-              </h3>
-              
-              <p className="text-muted-foreground leading-relaxed mb-4">
-                Sometimes less is more. In a world full of distractions, we need places 
-                that help us find peace. Bread is such a place...
-              </p>
-              
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span>✨ 42 Reactions</span>
-                <span>📖 3 Min. Read</span>
-                <span>#minimalism #writing</span>
-              </div>
-            </div>
-          </Card>
-        </div>
-        
-        {/* Tagline */}
-        <div className="animate-fade-in-up mt-12" style={{animationDelay: '0.8s'}}>
-          <p className="text-sm text-muted-foreground italic">
-            Simply you. Your thoughts. Your bread.
-          </p>
-        </div>
+        <motion.div
+          className="flex flex-col sm:flex-row gap-3 justify-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <Link to={`${langPrefix}/auth`}>
+            <Button 
+              size="lg" 
+              className="text-base px-8 py-3 rounded-full gradient-primary text-primary-foreground border-0 shadow-lg hover:shadow-xl transition-shadow"
+            >
+              {language === 'de' ? 'Jetzt starten' : 'Get Started'}
+            </Button>
+          </Link>
+          <a href="#features">
+            <Button 
+              variant="outline" 
+              size="lg"
+              className="text-base px-8 py-3 rounded-full glass-effect border-border/40 hover:bg-accent/50 transition-colors"
+            >
+              {language === 'de' ? 'Entdecken' : 'Explore'}
+            </Button>
+          </a>
+        </motion.div>
       </div>
     </section>
   );
