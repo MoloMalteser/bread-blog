@@ -103,7 +103,7 @@ export const TabBar = () => {
   };
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-sm z-50 px-4 animate-slide-up">
+    <div className="fixed bottom-6 inset-x-0 mx-auto w-full max-w-sm z-50 px-4 animate-fade-in-up">
       <div
         ref={containerRef}
         className="relative w-full h-14 rounded-full pill-container touch-none overflow-hidden flex items-center"
