@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRoles } from '@/hooks/useUserRoles';
 import Header from '@/components/Header';
-import BottomNavigation from '@/components/BottomNavigation';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -274,7 +274,6 @@ const Admin = () => {
           </TabsContent>
         </Tabs>
       </main>
-      <BottomNavigation />
     </div>
   );
 };

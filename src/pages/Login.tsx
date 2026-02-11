@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import BreadLogo from '@/components/BreadLogo';
-import BottomNavigation from '@/components/BottomNavigation';
+
 import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
@@ -107,8 +107,7 @@ const Login = () => {
           </CardContent>
         </Card>
       </div>
-      
-      <BottomNavigation />
+
     </div>
   );
 };

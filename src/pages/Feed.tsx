@@ -21,7 +21,7 @@ import { Heart, MessageCircle, Eye, Calendar, User, Send, Plus, Search, Repeat2,
 import { format } from 'date-fns';
 import { de, enUS } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
-import BottomNavigation from '@/components/BottomNavigation';
+
 
 const Feed = () => {
   const [currentView, setCurrentView] = useState<'feed' | 'all'>('all'); // Default to 'all' for anonymous users
@@ -492,8 +492,7 @@ const Feed = () => {
           </div>
         )}
       </main>
-      
-      <BottomNavigation />
+
     </div>
   );
 };

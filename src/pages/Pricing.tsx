@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import BreadLogo from '@/components/BreadLogo';
 import ThemeToggle from '@/components/ThemeToggle';
-import BottomNavigation from '@/components/BottomNavigation';
+
 import { Check, ArrowLeft, X } from 'lucide-react';
 
 const Pricing = () => {
@@ -287,8 +287,7 @@ const Pricing = () => {
           </div>
         </div>
       </main>
-      
-      <BottomNavigation />
+
     </div>
   );
 };

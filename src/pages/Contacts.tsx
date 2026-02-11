@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Send, ArrowLeft, Phone, PhoneOff, Search, UserPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
-import BottomNavigation from "@/components/BottomNavigation";
+
 import VoiceRecorder from "@/components/VoiceRecorder";
 import AudioPlayer from "@/components/AudioPlayer";
 import { useBreadGPT } from "@/hooks/useBreadGPT";
@@ -336,7 +336,7 @@ const Contacts = () => {
     return <p className="break-words">{content}</p>;
   };
 
-  if (!user) return <><Header /><div className="min-h-screen flex items-center justify-center pb-20"><Card className="p-8 text-center"><h2 className="text-2xl font-bold mb-4">{t("loginRequired")}</h2><p className="text-muted-foreground">{t("loginRequiredDescription")}</p></Card></div><BottomNavigation /></>;
+  if (!user) return <><Header /><div className="min-h-screen flex items-center justify-center pb-20"><Card className="p-8 text-center"><h2 className="text-2xl font-bold mb-4">{t("loginRequired")}</h2><p className="text-muted-foreground">{t("loginRequiredDescription")}</p></Card></div></>;
 
   return (
     <div className="min-h-screen bg-background">
@@ -445,7 +445,6 @@ const Contacts = () => {
           )}
         </div>
       </div>
-      <BottomNavigation />
     </div>
   );
 };
