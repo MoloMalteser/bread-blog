@@ -9,7 +9,7 @@ import { ArrowLeft, Save, Globe, Palette, Eye } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useWebsites, Website } from '@/hooks/useWebsites';
 import Header from '@/components/Header';
-import BottomNavigation from '@/components/BottomNavigation';
+
 
 // Simple template-based website builder
 
@@ -471,7 +471,6 @@ const WebBuilder = () => {
         </div>
       </main>
 
-      <BottomNavigation />
     </div>
   );
 };

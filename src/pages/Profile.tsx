@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import BreadLogo from '@/components/BreadLogo';
 import ThemeToggle from '@/components/ThemeToggle';
-import BottomNavigation from '@/components/BottomNavigation';
+
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import { Calendar, Eye, ArrowLeft, Share2, Users, Edit2, Save, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -358,7 +358,6 @@ const Profile = () => {
         )}
       </div>
 
-      <BottomNavigation />
     </div>
   );
 };

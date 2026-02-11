@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import Header from '@/components/Header';
-import BottomNavigation from '@/components/BottomNavigation';
+
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -371,7 +371,6 @@ const Settings = () => {
         </Dialog>
       </main>
 
-      <BottomNavigation />
     </div>
   );
 };
