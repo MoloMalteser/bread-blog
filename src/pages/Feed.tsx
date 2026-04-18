@@ -22,6 +22,8 @@ import { format } from 'date-fns';
 import { de, enUS } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
+import StoriesBar from '@/components/stories/StoriesBar';
+import VibeRooms from '@/components/VibeRooms';
 
 const REACTIONS = [
   { emoji: '❤️', icon: Heart, label: 'Love' },
@@ -166,6 +168,12 @@ const Feed = () => {
       {showAds && <AdBanner />}
       
       <main className="pt-20 pb-28 max-w-lg mx-auto px-4">
+        {/* Stories at top */}
+        <StoriesBar />
+
+        {/* Live audio rooms */}
+        <VibeRooms />
+
         {/* Sticky Search & Filter Bar */}
         <motion.div 
           initial={{ opacity: 0, y: -10 }} 

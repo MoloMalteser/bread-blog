@@ -220,6 +220,14 @@ const Contacts = () => {
       };
       peerConnectionRef.current = pc;
 
+      // Insert call record so the recipient gets a ringing notification via Realtime
+      await supabase.from("calls").insert({
+        caller_id: user.id,
+        callee_id: selectedContact,
+        accepted: null,
+        signal: { initiated: true }
+      });
+
       const channel = supabase.channel(`call:${user.id}-${selectedContact}`, { config: { broadcast: { self: true } } });
       channel.on("broadcast", { event: "call-signal" }, async ({ payload }) => {
         if (payload.sdp) {

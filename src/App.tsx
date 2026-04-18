@@ -33,6 +33,7 @@ import Supporter from "./pages/Supporter";
 import SupporterLogin from "./pages/SupporterLogin";
 import SupporterInfo from "./pages/SupporterInfo";
 import LanguageRedirect from "./components/LanguageRedirect";
+import IncomingCallRinger from "./components/IncomingCallRinger";
 
 const queryClient = new QueryClient();
 
@@ -105,6 +106,7 @@ const AppContent = () => {
         <Route path="*" element={<NotFound />} />
       </Routes>
       <TabBar />
+      <IncomingCallRinger />
     </div>
   );
 };
