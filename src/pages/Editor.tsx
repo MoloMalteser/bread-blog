@@ -13,6 +13,7 @@ import RichContentRenderer from '@/components/RichContentRenderer';
 import { usePolls } from '@/hooks/usePolls';
 import { useLanguage } from '@/hooks/useLanguage';
 import { motion, AnimatePresence } from 'framer-motion';
+import ImageContentEditor from '@/components/editor/ImageContentEditor';
 
 type ContentType = 'text' | 'image' | 'voice' | 'poll';
 
@@ -178,29 +179,7 @@ const Editor = () => {
             )}
 
             {contentType === 'image' && (
-              <div className="space-y-4">
-                <div className="glass-card rounded-2xl p-8 text-center cursor-pointer hover:bg-muted/30 transition-colors">
-                  <div className="text-4xl mb-3">📸</div>
-                  <p className="text-sm text-muted-foreground">
-                    {language === 'de' ? 'Bild-URL einfügen' : 'Paste image URL'}
-                  </p>
-                </div>
-                <Input
-                  placeholder={language === 'de' ? "Bild-URL..." : "Image URL..."}
-                  onChange={(e) => setContent(`![Image](${e.target.value})`)}
-                  className="rounded-xl"
-                />
-                <Textarea
-                  placeholder={language === 'de' ? "Bildunterschrift..." : "Caption..."}
-                  value={content.replace(/!\[.*\]\(.*\)\n?/, '')}
-                  onChange={(e) => {
-                    const urlMatch = content.match(/!\[.*\]\(.*\)/);
-                    setContent((urlMatch?.[0] || '') + '\n' + e.target.value);
-                  }}
-                  className="min-h-[80px] rounded-xl resize-none"
-                  rows={2}
-                />
-              </div>
+              <ImageContentEditor content={content} setContent={setContent} language={language} />
             )}
 
             {contentType === 'voice' && (

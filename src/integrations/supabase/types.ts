@@ -415,6 +415,30 @@ export type Database = {
         }
         Relationships: []
       }
+      post_reactions: {
+        Row: {
+          created_at: string
+          emoji: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          emoji: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       post_reports: {
         Row: {
           created_at: string
@@ -547,6 +571,71 @@ export type Database = {
           username?: string
         }
         Relationships: []
+      }
+      stories: {
+        Row: {
+          background_color: string | null
+          content: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          media_url: string | null
+          mood: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          background_color?: string | null
+          content?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          media_url?: string | null
+          mood?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          background_color?: string | null
+          content?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          media_url?: string | null
+          mood?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      story_views: {
+        Row: {
+          id: string
+          story_id: string
+          viewed_at: string
+          viewer_id: string
+        }
+        Insert: {
+          id?: string
+          story_id: string
+          viewed_at?: string
+          viewer_id: string
+        }
+        Update: {
+          id?: string
+          story_id?: string
+          viewed_at?: string
+          viewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_views_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "stories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_devices: {
         Row: {
@@ -691,6 +780,71 @@ export type Database = {
           show_ads?: boolean | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      vibe_room_participants: {
+        Row: {
+          id: string
+          is_speaking: boolean | null
+          joined_at: string
+          room_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          is_speaking?: boolean | null
+          joined_at?: string
+          room_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          is_speaking?: boolean | null
+          joined_at?: string
+          room_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vibe_room_participants_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "vibe_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vibe_rooms: {
+        Row: {
+          created_at: string
+          ended_at: string | null
+          host_id: string
+          id: string
+          is_active: boolean
+          mood: string | null
+          title: string
+          topic: string | null
+        }
+        Insert: {
+          created_at?: string
+          ended_at?: string | null
+          host_id: string
+          id?: string
+          is_active?: boolean
+          mood?: string | null
+          title: string
+          topic?: string | null
+        }
+        Update: {
+          created_at?: string
+          ended_at?: string | null
+          host_id?: string
+          id?: string
+          is_active?: boolean
+          mood?: string | null
+          title?: string
+          topic?: string | null
         }
         Relationships: []
       }
@@ -844,6 +998,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_stories: { Args: never; Returns: undefined }
       generate_slug: { Args: { title: string }; Returns: string }
       get_breadgpt_cooldown_seconds: {
         Args: { user_id: string }
