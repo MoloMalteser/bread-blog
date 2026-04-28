@@ -38,8 +38,8 @@ const Feed = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const [translatedPosts, setTranslatedPosts] = useState<Record<string, { title: string; content: string }>>({});
-  const [activeReactions, setActiveReactions] = useState<Record<string, string>>({});
-  
+  const [resonanceData, setResonanceData] = useState<Record<string, { reactions: number; comments: number; likes: number }>>({});
+
   const { feedPosts, allPosts, loading, fetchFeedPosts, fetchAllPosts } = useFeed();
   const { toggleLike, getLikeInfo, addComment, getComments, incrementViewCount } = useSocial();
   const { user } = useAuth();
@@ -51,12 +51,35 @@ const Feed = () => {
   const currentPosts = currentView === 'feed' ? feedPosts : allPosts;
   const dateLocale = language === 'de' ? de : enUS;
 
-  const filteredPosts = currentPosts.filter(post => 
-    searchQuery === '' || 
+  const searched = currentPosts.filter(post =>
+    searchQuery === '' ||
     post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
     post.profiles?.username?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // For You tab: sort by resonance score (engagement × time decay)
+  const filteredPosts = currentView === 'feed'
+    ? [...searched].sort((a, b) => {
+        const da = resonanceData[a.id] || { reactions: 0, comments: 0, likes: 0 };
+        const db = resonanceData[b.id] || { reactions: 0, comments: 0, likes: 0 };
+        const sa = resonanceScore({
+          createdAt: a.created_at,
+          views: a.view_count || 0,
+          likes: da.likes,
+          comments: da.comments,
+          reactions: da.reactions,
+        });
+        const sb = resonanceScore({
+          createdAt: b.created_at,
+          views: b.view_count || 0,
+          likes: db.likes,
+          comments: db.comments,
+          reactions: db.reactions,
+        });
+        return sb - sa;
+      })
+    : searched;
 
   useEffect(() => {
     if (isAnonymousUser) {
