@@ -155,12 +155,25 @@ const Feed = () => {
     setTranslatedPosts(prev => ({ ...prev, [postId]: { content, title } }));
   };
 
-  const handleReaction = (postId: string, emoji: string) => {
-    setActiveReactions(prev => ({
-      ...prev,
-      [postId]: prev[postId] === emoji ? '' : emoji
-    }));
-  };
+  // Load aggregate counts for resonance scoring on the For You tab
+  useEffect(() => {
+    if (currentView !== 'feed' || filteredPosts.length === 0) return;
+    const ids = filteredPosts.map((p) => p.id);
+    (async () => {
+      const [{ data: rxs }, { data: cms }, { data: lks }] = await Promise.all([
+        supabase.from('post_reactions').select('post_id').in('post_id', ids),
+        supabase.from('comments').select('post_id').in('post_id', ids),
+        supabase.from('likes').select('post_id').in('post_id', ids),
+      ]);
+      const agg: Record<string, { reactions: number; comments: number; likes: number }> = {};
+      ids.forEach((id) => (agg[id] = { reactions: 0, comments: 0, likes: 0 }));
+      (rxs || []).forEach((r: any) => agg[r.post_id] && (agg[r.post_id].reactions += 1));
+      (cms || []).forEach((r: any) => agg[r.post_id] && (agg[r.post_id].comments += 1));
+      (lks || []).forEach((r: any) => agg[r.post_id] && (agg[r.post_id].likes += 1));
+      setResonanceData(agg);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentView, filteredPosts.length]);
 
   if (!user && !isAnonymousUser) {
     return (
@@ -339,21 +352,7 @@ const Feed = () => {
                       <PollDisplay postId={post.id} />
 
                       {/* Reactions Row */}
-                      <div className="flex items-center gap-1 mb-3 overflow-x-auto">
-                        {REACTIONS.map(r => (
-                          <button
-                            key={r.emoji}
-                            onClick={() => handleReaction(post.id, r.emoji)}
-                            className={`text-lg px-2 py-1 rounded-full transition-all duration-200 ${
-                              activeReactions[post.id] === r.emoji 
-                                ? 'bg-primary/15 scale-110' 
-                                : 'hover:bg-muted/50 hover:scale-105'
-                            }`}
-                          >
-                            {r.emoji}
-                          </button>
-                        ))}
-                      </div>
+                      <PostReactions postId={post.id} disabled={!user} />
 
                       {/* Actions */}
                       <div className="flex items-center gap-1 border-t border-border/30 pt-3">
