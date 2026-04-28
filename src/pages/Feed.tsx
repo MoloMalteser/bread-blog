@@ -17,7 +17,7 @@ import { useSocial } from '@/hooks/useSocial';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useLanguage } from '@/hooks/useLanguage';
-import { Heart, MessageCircle, Eye, Send, Search, Repeat2, Sparkles, Flame, Laugh, ThumbsUp, Zap } from 'lucide-react';
+import { Heart, MessageCircle, Eye, Send, Search, Repeat2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { de, enUS } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
