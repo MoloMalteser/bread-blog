@@ -19,6 +19,9 @@ const getTabs = (langPrefix: string): TabItem[] => [
   { id: "profile", icon: User, path: `${langPrefix}/dashboard` },
 ];
 
+const INDICATOR_W = 44;
+const INDICATOR_H = 40;
+
 export const TabBar = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -29,22 +32,20 @@ export const TabBar = () => {
 
   const getActiveTab = () => {
     const path = location.pathname;
-    const found = tabs.find(t => path.startsWith(t.path));
+    const found = tabs.find((t) => path.startsWith(t.path));
     return found?.id || "home";
   };
 
   const [activeTab, setActiveTab] = useState(getActiveTab());
   const containerRef = useRef<HTMLDivElement>(null);
-  const [width, setWidth] = useState(320);
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [tabCenters, setTabCenters] = useState<number[]>([]);
 
-  const indicatorWidth = 44;
-  const indicatorHeight = 36;
-  const tabWidth = width / tabs.length;
   const activeIndex = tabs.findIndex((t) => t.id === activeTab);
 
-  const x = useMotionValue(activeIndex * tabWidth + tabWidth / 2 - indicatorWidth / 2);
-  const springX = useSpring(x, { stiffness: 800, damping: 45 });
+  const x = useMotionValue(0);
+  const springX = useSpring(x, { stiffness: 700, damping: 40 });
   const scaleX = useMotionValue(1);
   const scaleY = useMotionValue(1);
   const springScaleX = useSpring(scaleX, { stiffness: 400, damping: 15 });
@@ -57,30 +58,45 @@ export const TabBar = () => {
     setActiveTab(getActiveTab());
   }, [location.pathname]);
 
+  // Measure each tab's center relative to the container.
   useEffect(() => {
-    if (!containerRef.current) return;
-    const update = () => setWidth(containerRef.current!.getBoundingClientRect().width);
-    update();
-    const ro = new ResizeObserver(update);
-    ro.observe(containerRef.current);
-    return () => ro.disconnect();
+    const measure = () => {
+      if (!containerRef.current) return;
+      const cRect = containerRef.current.getBoundingClientRect();
+      const centers = tabRefs.current.map((el) => {
+        if (!el) return 0;
+        const r = el.getBoundingClientRect();
+        return r.left - cRect.left + r.width / 2;
+      });
+      setTabCenters(centers);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (containerRef.current) ro.observe(containerRef.current);
+    window.addEventListener("resize", measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+    };
   }, []);
 
+  // Snap indicator to the active tab's center when not dragging.
   useEffect(() => {
-    if (!isDragging) {
-      x.set(activeIndex * tabWidth + tabWidth / 2 - indicatorWidth / 2);
-    }
-  }, [activeIndex, isDragging, tabWidth, x]);
+    if (isDragging) return;
+    const c = tabCenters[activeIndex];
+    if (c == null || c === 0) return;
+    x.set(c - INDICATOR_W / 2);
+  }, [activeIndex, isDragging, tabCenters, x]);
 
-  const isAnonymousUser = !user && localStorage.getItem('anonymous-session') === 'true';
+  const isAnonymousUser = !user && localStorage.getItem("anonymous-session") === "true";
   if (!user && !isAnonymousUser) return null;
 
   const setFromClientX = (clientX: number) => {
-    if (!containerRef.current) return;
+    if (!containerRef.current || !tabCenters.length) return;
     const rect = containerRef.current.getBoundingClientRect();
     const local = clientX - rect.left;
-    const max = width - indicatorWidth;
-    x.set(Math.max(0, Math.min(local - indicatorWidth / 2, max)));
+    const max = rect.width - INDICATOR_W;
+    x.set(Math.max(0, Math.min(local - INDICATOR_W / 2, max)));
   };
 
   const wobble = (clientX: number) => {
@@ -95,9 +111,18 @@ export const TabBar = () => {
   };
 
   const snap = () => {
-    const current = x.get();
-    const index = Math.round((current + indicatorWidth / 2 - tabWidth / 2) / tabWidth);
-    const tab = tabs[Math.max(0, Math.min(index, tabs.length - 1))];
+    if (!tabCenters.length) return;
+    const indicatorCenter = x.get() + INDICATOR_W / 2;
+    let bestIdx = 0;
+    let bestDist = Infinity;
+    tabCenters.forEach((c, i) => {
+      const d = Math.abs(c - indicatorCenter);
+      if (d < bestDist) {
+        bestDist = d;
+        bestIdx = i;
+      }
+    });
+    const tab = tabs[bestIdx];
     setActiveTab(tab.id);
     navigate(tab.path);
   };
@@ -106,8 +131,9 @@ export const TabBar = () => {
     <div className="fixed bottom-6 inset-x-0 mx-auto w-full max-w-sm z-50 px-4 animate-fade-in-up">
       <div
         ref={containerRef}
-        className="relative w-full h-14 rounded-full pill-container touch-none overflow-hidden flex items-center"
+        className="relative w-full h-14 rounded-full pill-container touch-none overflow-hidden"
         onPointerDown={(e) => {
+          (e.target as Element).setPointerCapture?.(e.pointerId);
           setIsDragging(true);
           scaleX.set(1.3);
           scaleY.set(0.7);
@@ -133,33 +159,46 @@ export const TabBar = () => {
           snap();
         }}
       >
+        {/* Indicator pill */}
         <motion.div
-          className={`absolute rounded-full z-40 ${isDragging ? "pill-indicator-dragging" : "pill-indicator"}`}
+          className={`absolute rounded-full z-10 top-1/2 ${
+            isDragging ? "pill-indicator-dragging" : "pill-indicator"
+          }`}
           style={{
-            width: indicatorWidth,
-            height: indicatorHeight,
+            width: INDICATOR_W,
+            height: INDICATOR_H,
             left: 0,
-            top: "50%",
-            y: "-50%",
             x: springX,
+            y: "-50%",
             scaleX: springScaleX,
             scaleY: springScaleY,
-            originY: "center",
           }}
         />
 
-        <div className="absolute inset-0 grid grid-cols-5 z-50 pointer-events-none items-center">
-          {tabs.map((t) => {
+        {/* Tab buttons */}
+        <div className="absolute inset-0 flex items-center z-20">
+          {tabs.map((t, i) => {
             const Icon = t.icon;
             const active = t.id === activeTab;
             return (
-              <div key={t.id} className="flex justify-center items-center">
+              <button
+                key={t.id}
+                ref={(el) => (tabRefs.current[i] = el)}
+                type="button"
+                className="flex-1 h-full flex items-center justify-center"
+                onClick={(e) => {
+                  // Click is fine since pointerup also navigates; allow keyboard
+                  e.preventDefault();
+                }}
+              >
                 <Icon
-                  className={`transition-colors duration-200 ${active ? "text-primary-foreground" : "text-muted-foreground"}`}
+                  className={`transition-colors duration-200 ${
+                    active ? "text-primary-foreground" : "text-muted-foreground"
+                  }`}
                   size={22}
-                  strokeWidth={active ? 2.5 : 1.5}
+                  strokeWidth={active ? 2.5 : 1.75}
                 />
-              </div>
+              </button>
             );
           })}
         </div>

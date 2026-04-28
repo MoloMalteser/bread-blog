@@ -17,21 +17,16 @@ import { useSocial } from '@/hooks/useSocial';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useLanguage } from '@/hooks/useLanguage';
-import { Heart, MessageCircle, Eye, Send, Search, Repeat2, Sparkles, Flame, Laugh, ThumbsUp, Zap } from 'lucide-react';
+import { Heart, MessageCircle, Eye, Send, Search, Repeat2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { de, enUS } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import StoriesBar from '@/components/stories/StoriesBar';
 import VibeRooms from '@/components/VibeRooms';
-
-const REACTIONS = [
-  { emoji: '❤️', icon: Heart, label: 'Love' },
-  { emoji: '🔥', icon: Flame, label: 'Fire' },
-  { emoji: '😂', icon: Laugh, label: 'Haha' },
-  { emoji: '👍', icon: ThumbsUp, label: 'Like' },
-  { emoji: '⚡', icon: Zap, label: 'Mind-blown' },
-];
+import PostReactions from '@/components/PostReactions';
+import { resonanceScore } from '@/lib/resonance';
+import { supabase } from '@/integrations/supabase/client';
 
 const Feed = () => {
   const [currentView, setCurrentView] = useState<'feed' | 'all'>('all');
@@ -43,8 +38,8 @@ const Feed = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const [translatedPosts, setTranslatedPosts] = useState<Record<string, { title: string; content: string }>>({});
-  const [activeReactions, setActiveReactions] = useState<Record<string, string>>({});
-  
+  const [resonanceData, setResonanceData] = useState<Record<string, { reactions: number; comments: number; likes: number }>>({});
+
   const { feedPosts, allPosts, loading, fetchFeedPosts, fetchAllPosts } = useFeed();
   const { toggleLike, getLikeInfo, addComment, getComments, incrementViewCount } = useSocial();
   const { user } = useAuth();
@@ -56,12 +51,35 @@ const Feed = () => {
   const currentPosts = currentView === 'feed' ? feedPosts : allPosts;
   const dateLocale = language === 'de' ? de : enUS;
 
-  const filteredPosts = currentPosts.filter(post => 
-    searchQuery === '' || 
+  const searched = currentPosts.filter(post =>
+    searchQuery === '' ||
     post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
     post.profiles?.username?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // For You tab: sort by resonance score (engagement × time decay)
+  const filteredPosts = currentView === 'feed'
+    ? [...searched].sort((a, b) => {
+        const da = resonanceData[a.id] || { reactions: 0, comments: 0, likes: 0 };
+        const db = resonanceData[b.id] || { reactions: 0, comments: 0, likes: 0 };
+        const sa = resonanceScore({
+          createdAt: a.created_at,
+          views: a.view_count || 0,
+          likes: da.likes,
+          comments: da.comments,
+          reactions: da.reactions,
+        });
+        const sb = resonanceScore({
+          createdAt: b.created_at,
+          views: b.view_count || 0,
+          likes: db.likes,
+          comments: db.comments,
+          reactions: db.reactions,
+        });
+        return sb - sa;
+      })
+    : searched;
 
   useEffect(() => {
     if (isAnonymousUser) {
@@ -137,12 +155,25 @@ const Feed = () => {
     setTranslatedPosts(prev => ({ ...prev, [postId]: { content, title } }));
   };
 
-  const handleReaction = (postId: string, emoji: string) => {
-    setActiveReactions(prev => ({
-      ...prev,
-      [postId]: prev[postId] === emoji ? '' : emoji
-    }));
-  };
+  // Load aggregate counts for resonance scoring on the For You tab
+  useEffect(() => {
+    if (currentView !== 'feed' || filteredPosts.length === 0) return;
+    const ids = filteredPosts.map((p) => p.id);
+    (async () => {
+      const [{ data: rxs }, { data: cms }, { data: lks }] = await Promise.all([
+        supabase.from('post_reactions').select('post_id').in('post_id', ids),
+        supabase.from('comments').select('post_id').in('post_id', ids),
+        supabase.from('likes').select('post_id').in('post_id', ids),
+      ]);
+      const agg: Record<string, { reactions: number; comments: number; likes: number }> = {};
+      ids.forEach((id) => (agg[id] = { reactions: 0, comments: 0, likes: 0 }));
+      (rxs || []).forEach((r: any) => agg[r.post_id] && (agg[r.post_id].reactions += 1));
+      (cms || []).forEach((r: any) => agg[r.post_id] && (agg[r.post_id].comments += 1));
+      (lks || []).forEach((r: any) => agg[r.post_id] && (agg[r.post_id].likes += 1));
+      setResonanceData(agg);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentView, filteredPosts.length]);
 
   if (!user && !isAnonymousUser) {
     return (
@@ -321,21 +352,7 @@ const Feed = () => {
                       <PollDisplay postId={post.id} />
 
                       {/* Reactions Row */}
-                      <div className="flex items-center gap-1 mb-3 overflow-x-auto">
-                        {REACTIONS.map(r => (
-                          <button
-                            key={r.emoji}
-                            onClick={() => handleReaction(post.id, r.emoji)}
-                            className={`text-lg px-2 py-1 rounded-full transition-all duration-200 ${
-                              activeReactions[post.id] === r.emoji 
-                                ? 'bg-primary/15 scale-110' 
-                                : 'hover:bg-muted/50 hover:scale-105'
-                            }`}
-                          >
-                            {r.emoji}
-                          </button>
-                        ))}
-                      </div>
+                      <PostReactions postId={post.id} disabled={!user} />
 
                       {/* Actions */}
                       <div className="flex items-center gap-1 border-t border-border/30 pt-3">

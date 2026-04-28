@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Radio, Plus, Users, X } from 'lucide-react';
+import { Radio, Plus, Users, Mic, MicOff, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useVibeRoomAudio } from '@/hooks/useVibeRoomAudio';
 
 interface VibeRoom {
   id: string;
@@ -18,6 +20,11 @@ interface VibeRoom {
   participantCount?: number;
 }
 
+interface Participant {
+  user_id: string;
+  username: string;
+}
+
 const VibeRooms = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -26,6 +33,9 @@ const VibeRooms = () => {
   const [title, setTitle] = useState('');
   const [topic, setTopic] = useState('');
   const [activeRoom, setActiveRoom] = useState<string | null>(null);
+  const [participants, setParticipants] = useState<Participant[]>([]);
+
+  const { speakingPeers, muted, toggleMute, connected } = useVibeRoomAudio(activeRoom);
 
   const load = async () => {
     const { data } = await supabase
@@ -47,17 +57,45 @@ const VibeRooms = () => {
     setRooms(withCounts);
   };
 
+  const loadParticipants = async (roomId: string) => {
+    const { data } = await supabase
+      .from('vibe_room_participants')
+      .select('user_id')
+      .eq('room_id', roomId);
+    if (!data) return setParticipants([]);
+    const ids = data.map((d) => d.user_id);
+    if (ids.length === 0) return setParticipants([]);
+    const { data: profs } = await supabase
+      .from('profiles')
+      .select('id, username')
+      .in('id', ids);
+    setParticipants(
+      ids.map((id) => ({
+        user_id: id,
+        username: profs?.find((p) => p.id === id)?.username || 'guest',
+      }))
+    );
+  };
+
   useEffect(() => {
     load();
     const ch = supabase
       .channel('vibe-rooms')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'vibe_rooms' }, load)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'vibe_room_participants' }, load)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vibe_room_participants' }, () => {
+        load();
+        if (activeRoom) loadParticipants(activeRoom);
+      })
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
     };
-  }, []);
+  }, [activeRoom]);
+
+  useEffect(() => {
+    if (activeRoom) loadParticipants(activeRoom);
+    else setParticipants([]);
+  }, [activeRoom]);
 
   const createRoom = async () => {
     if (!user || !title.trim()) return;
@@ -94,7 +132,6 @@ const VibeRooms = () => {
       .eq('room_id', activeRoom)
       .eq('user_id', user.id);
 
-    // If host, end room
     const room = rooms.find((r) => r.id === activeRoom);
     if (room?.host_id === user.id) {
       await supabase
@@ -106,6 +143,8 @@ const VibeRooms = () => {
   };
 
   if (rooms.length === 0 && !creating && !user) return null;
+
+  const activeRoomData = rooms.find((r) => r.id === activeRoom);
 
   return (
     <>
@@ -166,14 +205,14 @@ const VibeRooms = () => {
             No live rooms — be the first to start one ✨
           </p>
         ) : (
-          <div className="flex gap-2 overflow-x-auto pb-1">
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
             {rooms.map((r) => (
               <button
                 key={r.id}
-                onClick={() => (activeRoom === r.id ? leaveRoom() : joinRoom(r.id))}
+                onClick={() => (activeRoom === r.id ? null : joinRoom(r.id))}
                 className={`shrink-0 rounded-2xl p-3 min-w-[160px] text-left transition-all ${
                   activeRoom === r.id
-                    ? 'bg-gradient-to-br from-primary to-accent-foreground text-primary-foreground'
+                    ? 'bg-gradient-to-br from-primary to-info text-primary-foreground'
                     : 'bg-muted/30 hover:bg-muted/50'
                 }`}
               >
@@ -184,13 +223,84 @@ const VibeRooms = () => {
                 <p className="text-sm font-semibold line-clamp-1">{r.title}</p>
                 {r.topic && <p className="text-[11px] opacity-70 line-clamp-1">{r.topic}</p>}
                 <p className="text-[10px] mt-1 opacity-80">
-                  {activeRoom === r.id ? '✓ In room — tap to leave' : 'Tap to join'}
+                  {activeRoom === r.id ? '✓ In room' : 'Tap to join'}
                 </p>
               </button>
             ))}
           </div>
         )}
       </motion.div>
+
+      {/* Active room sheet */}
+      <AnimatePresence>
+        {activeRoom && activeRoomData && (
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            className="fixed bottom-24 inset-x-0 mx-auto max-w-sm px-4 z-40"
+          >
+            <div className="glass-heavy rounded-3xl p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 text-[10px] text-destructive mb-0.5">
+                    <Radio className="h-3 w-3 animate-pulse" />
+                    {connected ? 'CONNECTED' : 'CONNECTING…'}
+                  </div>
+                  <p className="text-sm font-semibold line-clamp-1">{activeRoomData.title}</p>
+                </div>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={leaveRoom}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <div className="flex flex-wrap gap-3 mb-3 min-h-[60px]">
+                {participants.map((p) => {
+                  const speaking = !!speakingPeers[p.user_id];
+                  return (
+                    <div key={p.user_id} className="flex flex-col items-center gap-1">
+                      <div className="relative">
+                        {speaking && (
+                          <motion.span
+                            className="absolute inset-0 rounded-full bg-primary/40"
+                            animate={{ scale: [1, 1.4, 1], opacity: [0.6, 0, 0.6] }}
+                            transition={{ duration: 1.2, repeat: Infinity }}
+                          />
+                        )}
+                        <Avatar
+                          className={`h-12 w-12 ring-2 transition-all ${
+                            speaking ? 'ring-primary scale-105' : 'ring-border/50'
+                          }`}
+                        >
+                          <AvatarFallback className="text-sm bg-gradient-to-br from-primary/30 to-accent">
+                            {p.username[0]?.toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        {p.user_id === activeRoomData.host_id && (
+                          <span className="absolute -top-1 -right-1 text-[10px]">👑</span>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-muted-foreground line-clamp-1 max-w-[60px]">
+                        {p.username}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <Button
+                size="sm"
+                variant={muted ? 'destructive' : 'default'}
+                className="w-full rounded-full gap-2"
+                onClick={toggleMute}
+              >
+                {muted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                {muted ? 'Unmute' : 'Mute'}
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 };
