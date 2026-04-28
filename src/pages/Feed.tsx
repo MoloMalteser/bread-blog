@@ -24,14 +24,9 @@ import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import StoriesBar from '@/components/stories/StoriesBar';
 import VibeRooms from '@/components/VibeRooms';
-
-const REACTIONS = [
-  { emoji: '❤️', icon: Heart, label: 'Love' },
-  { emoji: '🔥', icon: Flame, label: 'Fire' },
-  { emoji: '😂', icon: Laugh, label: 'Haha' },
-  { emoji: '👍', icon: ThumbsUp, label: 'Like' },
-  { emoji: '⚡', icon: Zap, label: 'Mind-blown' },
-];
+import PostReactions from '@/components/PostReactions';
+import { resonanceScore } from '@/lib/resonance';
+import { supabase } from '@/integrations/supabase/client';
 
 const Feed = () => {
   const [currentView, setCurrentView] = useState<'feed' | 'all'>('all');
