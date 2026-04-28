@@ -1,9 +1,11 @@
 
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/hooks/useLanguage';
+
+const FluidGlass = lazy(() => import('@/components/FluidGlass'));
 
 const Hero = () => {
   const { language } = useLanguage();
@@ -17,6 +19,13 @@ const Hero = () => {
         <div className="absolute bottom-32 -right-24 w-80 h-80 rounded-full bg-accent/20 blur-3xl animate-breathe" style={{ animationDelay: '1.5s' }} />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/5 blur-3xl" />
       </div>
+
+      {/* FluidGlass lens that follows the cursor over the gradient */}
+      <Suspense fallback={null}>
+        <div className="absolute inset-0 z-0">
+          <FluidGlass />
+        </div>
+      </Suspense>
 
       <div className="max-w-3xl mx-auto text-center relative z-10">
         <motion.div
